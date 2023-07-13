@@ -1,0 +1,14 @@
+version: "3.5"
+
+services:
+  vscode:
+    container_name: orleans.streaming.grains
+    image: surveily/developer.dotnet:7.0-sdk
+    volumes:
+      - ../:/workspace:delegated
+      - ~/.ssh:/home/vscode/.ssh-localhost:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    cap_add:
+      - SYS_PTRACE
+    command: /bin/sh -c "while sleep 1000; do :; done"
+    user: vscode

@@ -1,0 +1,45 @@
+{
+    "name": "orleans.streaming.grains",
+    "service": "vscode",
+    "workspaceFolder": "/workspace",
+    "dockerComposeFile": "./docker-compose.yml",
+    "extensions": [
+        "kosunix.guid",
+        "eamodio.gitlens",
+        "k--kato.docomment",
+        "redhat.vscode-yaml",
+        "zxh404.vscode-proto3",
+        "mikeburgh.xml-format",
+        "donjayamanne.githistory",
+        "wayou.vscode-todo-highlight",
+        "ms-azuretools.vscode-docker",
+        "ms-azure-devops.azure-pipelines",
+        "kreativ-software.csharpextensions",
+        "tintoy.msbuild-project-tools",
+        "streetsidesoftware.code-spell-checker",
+        "ms-kubernetes-tools.vscode-kubernetes-tools",
+        // .NET
+        "ms-dotnettools.csharp",
+        "ms-dotnettools.csdevkit",
+        "ms-dotnettools.vscodeintellicode-csharp",
+        "ms-dotnettools.dotnet-interactive-vscode",
+    ],
+    "settings": {
+        "extensions.autoUpdate": false,
+        "omnisharp.useGlobalMono": "never",
+        "csharpextensions.privateMemberPrefix": "_",
+        "csharpextensions.useThisForCtorAssignments": false,
+        "files.exclude": {
+            "**/CVS": true,
+            "**/bin": true,
+            "**/obj": true,
+            "**/.hg": true,
+            "**/.svn": true,
+            "**/.git": true,
+            "**/.DS_Store": true,
+            "**/BenchmarkDotNet.Artifacts": true
+        }
+    },
+    "postCreateCommand": "mkdir -p ~/.ssh && cp -r ~/.ssh-localhost/* ~/.ssh && chmod 700 ~/.ssh",
+    "shutdownAction": "stopCompose"
+}

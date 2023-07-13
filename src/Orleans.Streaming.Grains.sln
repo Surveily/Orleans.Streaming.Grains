@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Orleans.Streaming.Grains", "Orleans.Streaming.Grains\Orleans.Streaming.Grains.csproj", "{55DB45CB-F204-45E9-9AFF-8E6E78B5BAE7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Orleans.Streaming.Grains.Tests", "Orleans.Streaming.Grains.Tests\Orleans.Streaming.Grains.Tests.csproj", "{879111A9-A73A-4BE1-B493-902D9627C84D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{55DB45CB-F204-45E9-9AFF-8E6E78B5BAE7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{55DB45CB-F204-45E9-9AFF-8E6E78B5BAE7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{55DB45CB-F204-45E9-9AFF-8E6E78B5BAE7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{55DB45CB-F204-45E9-9AFF-8E6E78B5BAE7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{879111A9-A73A-4BE1-B493-902D9627C84D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{879111A9-A73A-4BE1-B493-902D9627C84D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{879111A9-A73A-4BE1-B493-902D9627C84D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{879111A9-A73A-4BE1-B493-902D9627C84D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
