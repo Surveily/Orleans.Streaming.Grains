@@ -106,6 +106,11 @@ namespace Orleans.Streaming.NATS.Test.Scenarios
 
                 Processor!.Setup(x => x.Process(It.IsAny<byte[]>()))
                           .Callback<byte[]>(x => result = x);
+
+                for (var i = 0; i < 1024; i++)
+                {
+                    expected[i] = Convert.ToByte(i % 2);
+                }
             }
 
             public override async Task Act()
