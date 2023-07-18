@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 using Orleans.Runtime;
 using Orleans.Streams;
 
-namespace Orleans.Streaming.NATS.Test
+namespace Orleans.Streaming.Grains.Tests.Streams
 {
     public static class StreamFactory
     {

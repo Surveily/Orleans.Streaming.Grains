@@ -9,6 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Orleans.Configuration;
 using Orleans.Hosting;
+using Orleans.Streaming.Grains.Streams;
 using Orleans.TestingHost;
 #pragma warning disable CS0618
 
@@ -22,11 +23,18 @@ namespace Orleans.Streaming.Grains.Test
         {
             siloBuilder.ConfigureServices(Configure)
                        .AddMemoryGrainStorageAsDefault()
-                       .AddMemoryGrainStorage("PubSubStore");
+                       .AddMemoryGrainStorage("PubSubStore")
+                       .AddPersistentStreams("Default", GrainsQueueAdapterFactory.Create, config => config.Configure<GrainsOptions>(options =>
+                       {
+                       }));
         }
 
         public void Configure(IConfiguration configuration, IClientBuilder clientBuilder)
         {
+            clientBuilder.ConfigureServices(Configure)
+                         .AddPersistentStreams("Default", GrainsQueueAdapterFactory.Create, config => config.Configure<GrainsOptions>(options =>
+                         {
+                         }));
         }
     }
 }
