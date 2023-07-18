@@ -11,7 +11,6 @@
     <AdditionalFiles Include="..\stylecop.json" Link="stylecop.json" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="NATS.Client" Version="0.14.8" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.1.118" />
   </ItemGroup>
   <ItemGroup>

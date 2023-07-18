@@ -59,7 +59,7 @@ namespace Orleans.Streaming.Grains.Streams
         public static GrainsQueueAdapterFactory Create(IServiceProvider services, string name)
         {
             var clusterOptions = services.GetProviderClusterOptions(name);
-            var natsOptions = services.GetOptionsByName<GrainsOptions>(name);
+            var grainsOptions = services.GetOptionsByName<GrainsOptions>(name);
             var cacheOptions = services.GetOptionsByName<SimpleQueueCacheOptions>(name);
             var queueMapperOptions = services.GetOptionsByName<HashRingStreamQueueMapperOptions>(name);
 

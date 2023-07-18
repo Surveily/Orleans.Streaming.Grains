@@ -9,5 +9,7 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Grains
         Task SendAsync(string text);
 
         Task SendAsync(byte[] data);
+
+        Task SendAsync(string text, byte[] data);
     }
 }

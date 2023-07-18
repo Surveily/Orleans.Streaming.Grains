@@ -5,8 +5,6 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
-using NATS.Client;
-using NATS.Client.JetStream;
 using NUnit.Framework;
 using Orleans.Hosting;
 using Orleans.Streaming.Grains.Abstract;
@@ -16,7 +14,7 @@ using Orleans.Streaming.Grains.Test;
 using Orleans.Streaming.Grains.Tests.Streams.Grains;
 using Orleans.Streaming.Grains.Tests.Streams.Messages;
 
-namespace Orleans.Streaming.NATS.Test.Scenarios
+namespace Orleans.Streaming.Grains.Test.Scenarios
 {
     public class OneToOne
     {

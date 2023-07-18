@@ -3,8 +3,6 @@
 // </copyright>
 
 using System.Diagnostics;
-using NATS.Client;
-using NATS.Client.JetStream;
 using NUnit.Framework;
 using Orleans.Runtime;
 using Orleans.TestingHost;
@@ -18,7 +16,6 @@ namespace Orleans.Streaming.Grains.Test
         where T : ISiloConfigurator, IClientBuilderConfigurator, new()
     {
         public const int QueueNumber = 8;
-        public const string NatsConnection = "nats://nats:4222";
 
         private readonly AsyncRetryPolicy _retryPolicy;
 

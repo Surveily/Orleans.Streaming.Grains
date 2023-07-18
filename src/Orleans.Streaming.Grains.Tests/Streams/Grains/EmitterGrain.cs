@@ -13,6 +13,7 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Grains
     {
         private IAsyncStream<BlobMessage> _blobStream;
         private IAsyncStream<SimpleMessage> _simpleStream;
+        private IAsyncStream<CompoundMessage> _compoundStream;
 
         public override async Task OnActivateAsync(CancellationToken cancellationToken)
         {
@@ -21,6 +22,7 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Grains
 
             _blobStream = StreamFactory.Create<BlobMessage>(streamProvider, id);
             _simpleStream = StreamFactory.Create<SimpleMessage>(streamProvider, id);
+            _compoundStream = StreamFactory.Create<CompoundMessage>(streamProvider, id);
 
             await base.OnActivateAsync(cancellationToken);
         }
@@ -42,6 +44,18 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Grains
             {
                 await _blobStream.OnNextAsync(new BlobMessage
                 {
+                    Data = new Immutable<byte[]>(data),
+                });
+            }
+        }
+
+        public async Task SendAsync(string text, byte[] data)
+        {
+            if (_compoundStream != null)
+            {
+                await _compoundStream.OnNextAsync(new CompoundMessage
+                {
+                    Text = new Immutable<string>(text),
                     Data = new Immutable<byte[]>(data),
                 });
             }
