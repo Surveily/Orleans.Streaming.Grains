@@ -10,6 +10,7 @@
     <Authors>Surveily Sp. z o.o.</Authors>
     <Description>Stream provider that uses Stateful Grains as Queues.</Description>
     <Copyright>Copyright © Surveily Sp. z o.o.</Copyright>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
     <IsPackable>true</IsPackable>
   </PropertyGroup>
   <PropertyGroup>
@@ -19,6 +20,7 @@
     <AdditionalFiles Include="..\stylecop.json" Link="stylecop.json" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\"/>
     <PackageReference Include="StyleCop.Analyzers" Version="1.1.118" />
   </ItemGroup>
   <ItemGroup>
