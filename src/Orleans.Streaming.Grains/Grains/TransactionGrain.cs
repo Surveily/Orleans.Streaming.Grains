@@ -12,16 +12,19 @@ using Orleans;
 using Orleans.Streaming.Grains.Abstract;
 using Orleans.Streaming.Grains.State;
 using Orleans.Streaming.Grains.Streams;
+using Orleans.Utilities;
 
 namespace Orleans.Streaming.Grains.Grains
 {
     public class TransactionGrain : Grain<TransactionGrainState>, ITransactionGrain
     {
         private readonly GrainsOptions _options;
+        private readonly ObserverManager<ITransactionObserver> _subscriptions;
 
-        public TransactionGrain(GrainsOptions options)
+        public TransactionGrain(GrainsOptions options, ILogger logger)
         {
             _options = options;
+            _subscriptions = new ObserverManager<ITransactionObserver>(TimeSpan.FromMinutes(5), logger);
         }
 
         public override async Task OnActivateAsync(CancellationToken cancellationToken)
@@ -44,7 +47,7 @@ namespace Orleans.Streaming.Grains.Grains
 
         public async Task CompleteAsync(Guid id, bool success)
         {
-            if (State.Transactions.Remove(id, out var item))
+            if (State.Transactions.Remove(id, out _))
             {
                 if (!success)
                 {
@@ -52,6 +55,8 @@ namespace Orleans.Streaming.Grains.Grains
                 }
 
                 await WriteStateAsync();
+
+                await _subscriptions.Notify(x => x.CompletedAsync(id, success));
             }
         }
 
@@ -79,6 +84,20 @@ namespace Orleans.Streaming.Grains.Grains
         public Task<(Queue<Guid> Queue, Queue<Guid> Poison, Dictionary<Guid, DateTimeOffset> Transactions)> GetStateAsync()
         {
             return Task.FromResult((State.Queue, State.Poison, State.Transactions));
+        }
+
+        public Task SubscribeAsync(ITransactionObserver observer)
+        {
+            _subscriptions.Subscribe(observer, observer);
+
+            return Task.CompletedTask;
+        }
+
+        public Task UnsubscribeAsync(ITransactionObserver observer)
+        {
+            _subscriptions.Unsubscribe(observer);
+
+            return Task.CompletedTask;
         }
 
         private async Task FlushAsync(object arg)

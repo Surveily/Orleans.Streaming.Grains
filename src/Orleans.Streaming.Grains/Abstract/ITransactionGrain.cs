@@ -18,6 +18,10 @@ namespace Orleans.Streaming.Grains.Abstract
 
         Task CompleteAsync(Guid id, bool success);
 
+        Task SubscribeAsync(ITransactionObserver observer);
+
+        Task UnsubscribeAsync(ITransactionObserver observer);
+
         Task<(Queue<Guid> Queue, Queue<Guid> Poison, Dictionary<Guid, DateTimeOffset> Transactions)> GetStateAsync();
     }
 }

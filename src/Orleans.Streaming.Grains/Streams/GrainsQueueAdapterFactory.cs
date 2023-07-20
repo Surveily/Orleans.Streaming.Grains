@@ -31,7 +31,7 @@ namespace Orleans.Streaming.Grains.Streams
         private readonly Serialization.Serializer _serializer;
         private readonly ITransactionService _service;
         private readonly SimpleQueueCacheOptions _cacheOptions;
-
+        private readonly IOptions<GrainsOptions> _grainsOptions;
         private readonly IOptions<ClusterOptions> _clusterOptions;
 
         private readonly HashRingBasedStreamQueueMapper _streamQueueMapper;
@@ -41,6 +41,7 @@ namespace Orleans.Streaming.Grains.Streams
                                          SimpleQueueCacheOptions cacheOptions,
                                          IServiceProvider serviceProvider,
                                          IOptions<ClusterOptions> clusterOptions,
+                                         IOptions<GrainsOptions> grainsOptions,
                                          Serializer serializer,
                                          ITransactionService service,
                                          ILoggerFactory loggerFactory)
@@ -49,6 +50,7 @@ namespace Orleans.Streaming.Grains.Streams
             _service = service;
             _serializer = serializer;
             _cacheOptions = cacheOptions;
+            _grainsOptions = grainsOptions;
             _loggerFactory = loggerFactory;
             _clusterOptions = clusterOptions;
             _serviceProvider = serviceProvider;
@@ -67,7 +69,7 @@ namespace Orleans.Streaming.Grains.Streams
 
         public Task<IQueueAdapter> CreateAdapter()
         {
-            var adapter = new GrainsQueueAdapter(_serializer, _service, _streamQueueMapper, _loggerFactory, _name);
+            var adapter = new GrainsQueueAdapter(_serializer, _service, _grainsOptions, _streamQueueMapper, _loggerFactory, _name);
 
             return Task.FromResult<IQueueAdapter>(adapter);
         }

@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Orleans.Concurrency;
 using Orleans.Runtime;
 using Orleans.Serialization;
@@ -21,21 +22,24 @@ namespace Orleans.Streaming.Grains.Streams
 
         private readonly ILoggerFactory _loggerFactory;
 
-        private readonly Serializer<GrainsBatchContainer> _serializer;
         private readonly ITransactionService _service;
+        private readonly IOptions<GrainsOptions> _options;
+        private readonly Serializer<GrainsBatchContainer> _serializer;
         private readonly IConsistentRingStreamQueueMapper _streamQueueMapper;
 
         public GrainsQueueAdapter(Serializer serializer,
                                   ITransactionService service,
+                                  IOptions<GrainsOptions> options,
                                   IConsistentRingStreamQueueMapper streamQueueMapper,
                                   ILoggerFactory loggerFactory,
                                   string providerName)
         {
+            _options = options;
             _service = service;
+            _providerName = providerName;
             _loggerFactory = loggerFactory;
             _streamQueueMapper = streamQueueMapper;
             _serializer = serializer.GetSerializer<GrainsBatchContainer>();
-            _providerName = providerName;
         }
 
         public bool IsRewindable => false;
@@ -49,8 +53,12 @@ namespace Orleans.Streaming.Grains.Streams
         public async Task QueueMessageBatchAsync<T>(StreamId streamId, IEnumerable<T> events, StreamSequenceToken token, Dictionary<string, object> requestContext)
         {
             var message = GrainsBatchContainer.ToMessage(_serializer, streamId, events, requestContext);
+            var id = await _service.PostAsync(new Immutable<GrainsMessage>(message));
 
-            await _service.PostAsync(new Immutable<GrainsMessage>(message));
+            if (_options?.Value.FireAndForgetDelivery == true)
+            {
+                await _service.WaitAsync<GrainsMessage>(id);
+            }
         }
     }
 }
