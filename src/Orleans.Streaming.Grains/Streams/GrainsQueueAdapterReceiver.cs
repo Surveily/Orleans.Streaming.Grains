@@ -15,26 +15,15 @@ namespace Orleans.Streaming.Grains.Streams
 {
     public class GrainsQueueAdapterReceiver : IQueueAdapterReceiver
     {
-        private readonly string _stream;
-
         private readonly Serializer<GrainsBatchContainer> _serializationManager;
         private readonly ITransactionService _service;
-        private TimeSpan _timeout;
 
         private long _lastReadMessage;
 
-        public GrainsQueueAdapterReceiver(Serializer<GrainsBatchContainer> serializationManager,
-                                          ITransactionService service,
-                                          string stream)
+        public GrainsQueueAdapterReceiver(ITransactionService service,
+                                          Serializer<GrainsBatchContainer> serializationManager)
         {
-            if (stream == null)
-            {
-                throw new ArgumentException(nameof(stream));
-            }
-
-            _stream = stream;
             _service = service;
-            _timeout = TimeSpan.FromSeconds(1);
             _serializationManager = serializationManager;
         }
 
