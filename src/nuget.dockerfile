@@ -5,6 +5,7 @@ ARG TARGETARCH
 ARG BUILDPLATFORM
 
 WORKDIR /home/vscode/src
+ADD README.md README.md
 ADD src/ .
 
 RUN mkdir nuget
