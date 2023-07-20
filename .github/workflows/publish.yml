@@ -45,5 +45,5 @@ jobs:
           build-args: |
             version=${{ steps.date.outputs.date }}.0.${{ github.run_number }}
           tags: |
-            ${{ surveily/orleans.streaming.grains }}:${{ steps.date.outputs.date }}.${{ github.run_number }}
+            surveily/orleans.streaming.grains:${{ steps.date.outputs.date }}.${{ github.run_number }}
           labels: ${{ steps.meta.outputs.labels }}
