@@ -48,7 +48,6 @@ namespace Orleans.Streaming.Grains.Streams
 
         public async Task QueueMessageBatchAsync<T>(StreamId streamId, IEnumerable<T> events, StreamSequenceToken token, Dictionary<string, object> requestContext)
         {
-            var queueId = _streamQueueMapper.GetQueueForStream(streamId);
             var message = GrainsBatchContainer.ToMessage(_serializer, streamId, events, requestContext);
 
             await _service.PostAsync(new Immutable<GrainsMessage>(message));
