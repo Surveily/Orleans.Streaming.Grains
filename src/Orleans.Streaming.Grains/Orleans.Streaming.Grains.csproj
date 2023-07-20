@@ -5,6 +5,14 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
   <PropertyGroup>
+    <PackageId>Orleans.Streaming.Grains</PackageId>
+    <PackageVersion>1.0</PackageVersion>
+    <Authors>Surveily Sp. z o.o.</Authors>
+    <Description>Stream provider that uses Stateful Grains as Queues.</Description>
+    <Copyright>Copyright © Surveily Sp. z o.o.</Copyright>
+    <IsPackable>true</IsPackable>
+  </PropertyGroup>
+  <PropertyGroup>
     <CodeAnalysisRuleSet>..\stylecop.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
