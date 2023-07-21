@@ -20,24 +20,17 @@ namespace Orleans.Streaming.Grains.Streams
     {
         private readonly string _providerName;
 
-        private readonly ILoggerFactory _loggerFactory;
-
         private readonly ITransactionService _service;
-        private readonly IOptions<GrainsOptions> _options;
         private readonly Serializer<GrainsBatchContainer> _serializer;
         private readonly IConsistentRingStreamQueueMapper _streamQueueMapper;
 
         public GrainsQueueAdapter(Serializer serializer,
                                   ITransactionService service,
-                                  IOptions<GrainsOptions> options,
                                   IConsistentRingStreamQueueMapper streamQueueMapper,
-                                  ILoggerFactory loggerFactory,
                                   string providerName)
         {
-            _options = options;
             _service = service;
             _providerName = providerName;
-            _loggerFactory = loggerFactory;
             _streamQueueMapper = streamQueueMapper;
             _serializer = serializer.GetSerializer<GrainsBatchContainer>();
         }

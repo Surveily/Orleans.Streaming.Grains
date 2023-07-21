@@ -41,16 +41,6 @@ namespace Orleans.Streaming.Grains.Streams
         [Id(0)]
         private EventSequenceTokenV2 _sequenceToken;
 
-        [JsonConstructor]
-        private GrainsBatchContainer(StreamId streamId,
-                                   List<object> events,
-                                   Dictionary<string, object> requestContext,
-                                   EventSequenceTokenV2 sequenceToken)
-            : this(streamId, events, requestContext)
-        {
-            _sequenceToken = sequenceToken;
-        }
-
         private GrainsBatchContainer(StreamId streamId,
                                      List<object> events,
                                      Dictionary<string, object> requestContext)
