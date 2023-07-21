@@ -16,7 +16,7 @@ using Orleans.Utilities;
 
 namespace Orleans.Streaming.Grains.Services
 {
-    public class TransactionService : ITransactionService, ITransactionObserver
+    public class TransactionService : ITransactionService
     {
         private readonly IClusterClient _client;
         private readonly ConcurrentDictionary<Guid, TaskCompletionSource<bool>> _subscriptions;
@@ -36,16 +36,6 @@ namespace Orleans.Streaming.Grains.Services
             var item = _client.GetGrain<ITransactionItemGrain<T>>(id);
 
             await item.DeleteAsync();
-        }
-
-        public Task CompletedAsync(Guid id, bool success)
-        {
-            if (_subscriptions.TryRemove(id, out var task))
-            {
-                task.SetResult(success);
-            }
-
-            return Task.CompletedTask;
         }
 
         public async Task<(Guid Id, Immutable<T> Item)?> PopAsync<T>()
@@ -75,17 +65,6 @@ namespace Orleans.Streaming.Grains.Services
             await transaction.PostAsync(id);
 
             return id;
-        }
-
-        public async Task<bool> WaitAsync<T>(Guid id)
-        {
-            var transaction = _client.GetGrain<ITransactionGrain>(typeof(T).Name);
-
-            _subscriptions.AddOrUpdate(id, x => new TaskCompletionSource<bool>(), (i, x) => x);
-
-            await transaction.SubscribeAsync(this);
-
-            return await _subscriptions[id].Task;
         }
     }
 }

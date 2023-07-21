@@ -17,7 +17,5 @@ namespace Orleans.Streaming.Grains.Abstract
         Task<Guid> PostAsync<T>(Immutable<T> message);
 
         Task CompleteAsync<T>(Guid id, bool success);
-
-        Task<bool> WaitAsync<T>(Guid id);
     }
 }
