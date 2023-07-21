@@ -22,16 +22,14 @@ namespace Orleans.Streaming.Grains.Streams
 
         private readonly ITransactionService _service;
         private readonly Serializer<GrainsBatchContainer> _serializer;
-        private readonly IConsistentRingStreamQueueMapper _streamQueueMapper;
+        /*private readonly IConsistentRingStreamQueueMapper _streamQueueMapper;*/
 
         public GrainsQueueAdapter(Serializer serializer,
                                   ITransactionService service,
-                                  IConsistentRingStreamQueueMapper streamQueueMapper,
                                   string providerName)
         {
             _service = service;
             _providerName = providerName;
-            _streamQueueMapper = streamQueueMapper;
             _serializer = serializer.GetSerializer<GrainsBatchContainer>();
         }
 
