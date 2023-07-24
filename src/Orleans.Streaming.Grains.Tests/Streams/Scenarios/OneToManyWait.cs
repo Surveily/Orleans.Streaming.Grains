@@ -1,4 +1,4 @@
-// <copyright file="OneToOne.cs" company="Surveily Sp. z o.o.">
+// <copyright file="OneToManyWait.cs" company="Surveily Sp. z o.o.">
 // Copyright (c) Surveily Sp. z o.o.. All rights reserved.
 // </copyright>
 
@@ -14,9 +14,9 @@ using Orleans.Streaming.Grains.Test;
 using Orleans.Streaming.Grains.Tests.Streams.Grains;
 using Orleans.Streaming.Grains.Tests.Streams.Messages;
 
-namespace Orleans.Streaming.Grains.Test.Scenarios
+namespace Orleans.Streaming.Grains.Tests.Streams.Scenarios
 {
-    public class OneToOne
+    public class OneToManyWait
     {
         public class Config : BaseGrainTestConfig, IDisposable
         {
@@ -25,7 +25,7 @@ namespace Orleans.Streaming.Grains.Test.Scenarios
             private bool _isDisposed;
 
             public Config()
-             : base(false)
+             : base(true)
             {
             }
 
@@ -57,7 +57,7 @@ namespace Orleans.Streaming.Grains.Test.Scenarios
             }
         }
 
-        public abstract class BaseOneToOneTest : BaseGrainTest<Config>
+        public abstract class BaseOneToManyTest : BaseGrainTest<Config>
         {
             protected Mock<IProcessor> Processor { get; set; }
 
@@ -69,68 +69,49 @@ namespace Orleans.Streaming.Grains.Test.Scenarios
             }
         }
 
-        public class When_Sending_Simple_Message_One_To_One : BaseOneToOneTest
+        public class When_Sending_Compound_Message_One_To_One : BaseOneToManyTest
         {
-            protected string result;
-            protected string expected = "text";
+            protected string resultText;
+            protected string expectedText = "text";
+
+            protected byte[] resultData;
+            protected byte[] expectedData = new byte[1024];
 
             public override void Prepare()
             {
                 base.Prepare();
 
                 Processor!.Setup(x => x.Process(It.IsAny<string>()))
-                          .Callback<string>(x => result = x);
+                          .Callback<string>(x => resultText = x);
+
+                Processor!.Setup(x => x.Process(It.IsAny<byte[]>()))
+                          .Callback<byte[]>(x => resultData = x);
+
+                for (var i = 0; i < 1024; i++)
+                {
+                    expectedData[i] = Convert.ToByte(i % 2);
+                }
             }
 
             public override async Task Act()
             {
                 var grain = Subject.GrainFactory.GetGrain<IEmitterGrain>(Guid.NewGuid());
 
-                for (var i = 0; i < 100; i++)
-                {
-                    await grain.SendAsync(expected);
-                }
+                await grain.SendAsync(expectedText, expectedData);
+
+                await WaitFor(() => resultText);
             }
 
             [Test]
             public void It_Should_Deliver_Text()
             {
-                Processor!.Verify(x => x.Process(expected), Times.Exactly(100));
-            }
-        }
-
-        public class When_Sending_Blob_Message_One_To_One : BaseOneToOneTest
-        {
-            protected byte[] result;
-            protected byte[] expected = new byte[1024];
-
-            public override void Prepare()
-            {
-                base.Prepare();
-
-                Processor!.Setup(x => x.Process(It.IsAny<byte[]>()))
-                          .Callback<byte[]>(x => result = x);
-
-                for (var i = 0; i < 1024; i++)
-                {
-                    expected[i] = Convert.ToByte(i % 2);
-                }
-            }
-
-            public override async Task Act()
-            {
-                var grain = Subject.GrainFactory.GetGrain<IEmitterGrain>(Guid.NewGuid());
-
-                for (var i = 0; i < 100; i++)
-                {
-                    await grain.SendAsync(expected);
-                }
+                Processor!.Verify(x => x.Process(expectedText), Times.Once);
             }
 
             [Test]
             public void It_Should_Deliver_Data()
             {
-                Processor!.Verify(x => x.Process(expected), Times.Exactly(100));
+                Processor!.Verify(x => x.Process(expectedData), Times.Once);
             }
         }
     }

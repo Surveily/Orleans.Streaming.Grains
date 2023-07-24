@@ -19,17 +19,24 @@ namespace Orleans.Streaming.Grains.Streams
     public class GrainsQueueAdapter : IQueueAdapter
     {
         private readonly string _providerName;
-
         private readonly ITransactionService _service;
+        private readonly ILoggerFactory _loggerFactory;
+        private readonly IOptions<GrainsOptions> _options;
         private readonly Serializer<GrainsBatchContainer> _serializer;
-        /*private readonly IConsistentRingStreamQueueMapper _streamQueueMapper;*/
+        private readonly IConsistentRingStreamQueueMapper _streamQueueMapper;
 
         public GrainsQueueAdapter(Serializer serializer,
                                   ITransactionService service,
+                                  IOptions<GrainsOptions> options,
+                                  IConsistentRingStreamQueueMapper streamQueueMapper,
+                                  ILoggerFactory loggerFactory,
                                   string providerName)
         {
+            _options = options;
             _service = service;
             _providerName = providerName;
+            _loggerFactory = loggerFactory;
+            _streamQueueMapper = streamQueueMapper;
             _serializer = serializer.GetSerializer<GrainsBatchContainer>();
         }
 
@@ -45,7 +52,7 @@ namespace Orleans.Streaming.Grains.Streams
         {
             var message = GrainsBatchContainer.ToMessage(_serializer, streamId, events, requestContext);
 
-            await _service.PostAsync(new Immutable<GrainsMessage>(message));
+            await _service.PostAsync(new Immutable<GrainsMessage>(message), !_options.Value.FireAndForgetDelivery);
         }
     }
 }

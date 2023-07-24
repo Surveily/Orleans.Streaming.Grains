@@ -57,7 +57,7 @@ namespace Orleans.Streaming.Grains.Tests.Services
             public override async Task SetupAsync()
             {
                 await base.SetupAsync();
-                await Subject.PostAsync(item);
+                await Subject.PostAsync(item, false);
             }
 
             [Test]
@@ -122,7 +122,7 @@ namespace Orleans.Streaming.Grains.Tests.Services
                        .ReturnsAsync(item);
 
                 await base.SetupAsync();
-                await Subject.PostAsync(item);
+                await Subject.PostAsync(item, false);
 
                 result = await Subject.PopAsync<int>();
             }

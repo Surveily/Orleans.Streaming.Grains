@@ -1,4 +1,4 @@
-// <copyright file="OneToOne.cs" company="Surveily Sp. z o.o.">
+// <copyright file="OneToOneWait.cs" company="Surveily Sp. z o.o.">
 // Copyright (c) Surveily Sp. z o.o.. All rights reserved.
 // </copyright>
 
@@ -16,7 +16,7 @@ using Orleans.Streaming.Grains.Tests.Streams.Messages;
 
 namespace Orleans.Streaming.Grains.Test.Scenarios
 {
-    public class OneToOne
+    public class OneToOneWait
     {
         public class Config : BaseGrainTestConfig, IDisposable
         {
@@ -25,7 +25,7 @@ namespace Orleans.Streaming.Grains.Test.Scenarios
             private bool _isDisposed;
 
             public Config()
-             : base(false)
+             : base(true)
             {
             }
 
@@ -86,16 +86,15 @@ namespace Orleans.Streaming.Grains.Test.Scenarios
             {
                 var grain = Subject.GrainFactory.GetGrain<IEmitterGrain>(Guid.NewGuid());
 
-                for (var i = 0; i < 100; i++)
-                {
-                    await grain.SendAsync(expected);
-                }
+                await grain.SendAsync(expected);
+
+                await WaitFor(() => result);
             }
 
             [Test]
             public void It_Should_Deliver_Text()
             {
-                Processor!.Verify(x => x.Process(expected), Times.Exactly(100));
+                Processor!.Verify(x => x.Process(expected), Times.Once);
             }
         }
 
@@ -121,16 +120,15 @@ namespace Orleans.Streaming.Grains.Test.Scenarios
             {
                 var grain = Subject.GrainFactory.GetGrain<IEmitterGrain>(Guid.NewGuid());
 
-                for (var i = 0; i < 100; i++)
-                {
-                    await grain.SendAsync(expected);
-                }
+                await grain.SendAsync(expected);
+
+                await WaitFor(() => result);
             }
 
             [Test]
             public void It_Should_Deliver_Data()
             {
-                Processor!.Verify(x => x.Process(expected), Times.Exactly(100));
+                Processor!.Verify(x => x.Process(expected), Times.Once);
             }
         }
     }

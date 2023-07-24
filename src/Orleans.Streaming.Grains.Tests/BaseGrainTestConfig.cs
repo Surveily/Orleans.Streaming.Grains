@@ -17,6 +17,13 @@ namespace Orleans.Streaming.Grains.Test
 {
     public abstract class BaseGrainTestConfig : ISiloConfigurator, IClientBuilderConfigurator
     {
+        private readonly bool _fireAndForget;
+
+        protected BaseGrainTestConfig(bool fireAndForget = false)
+        {
+            _fireAndForget = fireAndForget;
+        }
+
         public abstract void Configure(IServiceCollection services);
 
         public void Configure(ISiloBuilder siloBuilder)
@@ -24,6 +31,10 @@ namespace Orleans.Streaming.Grains.Test
             siloBuilder.ConfigureServices(Configure)
                        .AddMemoryGrainStorageAsDefault()
                        .AddMemoryGrainStorage("PubSubStore")
+                       .Configure<GrainsOptions>(options =>
+                       {
+                           options.FireAndForgetDelivery = _fireAndForget;
+                       })
                        .AddPersistentStreams("Default", GrainsQueueAdapterFactory.Create, config => config.Configure<GrainsOptions>(options =>
                        {
                        }));
@@ -32,8 +43,13 @@ namespace Orleans.Streaming.Grains.Test
         public void Configure(IConfiguration configuration, IClientBuilder clientBuilder)
         {
             clientBuilder.ConfigureServices(Configure)
+                         .Configure<GrainsOptions>(options =>
+                         {
+                             options.FireAndForgetDelivery = _fireAndForget;
+                         })
                          .AddPersistentStreams("Default", GrainsQueueAdapterFactory.Create, config => config.Configure<GrainsOptions>(options =>
                          {
+                             options.Configure(x => x.FireAndForgetDelivery = _fireAndForget);
                          }));
         }
     }
