@@ -19,10 +19,8 @@ namespace Orleans.Streaming.Grains.Streams
     public class GrainsQueueAdapter : IQueueAdapter
     {
         private readonly string _providerName;
-
-        private readonly ILoggerFactory _loggerFactory;
-
         private readonly ITransactionService _service;
+        private readonly ILoggerFactory _loggerFactory;
         private readonly IOptions<GrainsOptions> _options;
         private readonly Serializer<GrainsBatchContainer> _serializer;
         private readonly IConsistentRingStreamQueueMapper _streamQueueMapper;
