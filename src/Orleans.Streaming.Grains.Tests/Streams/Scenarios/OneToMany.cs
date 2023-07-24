@@ -97,19 +97,22 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Scenarios
             {
                 var grain = Subject.GrainFactory.GetGrain<IEmitterGrain>(Guid.NewGuid());
 
-                await grain.SendAsync(expectedText, expectedData);
+                for (var i = 0; i < 100; i++)
+                {
+                    await grain.SendAsync(expectedText, expectedData);
+                }
             }
 
             [Test]
             public void It_Should_Deliver_Text()
             {
-                Processor!.Verify(x => x.Process(expectedText), Times.Once);
+                Processor!.Verify(x => x.Process(expectedText), Times.Exactly(100));
             }
 
             [Test]
             public void It_Should_Deliver_Data()
             {
-                Processor!.Verify(x => x.Process(expectedData), Times.Once);
+                Processor!.Verify(x => x.Process(expectedData), Times.Exactly(100));
             }
         }
     }
