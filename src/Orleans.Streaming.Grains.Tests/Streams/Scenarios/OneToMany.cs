@@ -24,6 +24,11 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Scenarios
             protected Mock<IProcessor> processor = new Mock<IProcessor>();
             private bool _isDisposed;
 
+            public Config()
+             : base(false)
+            {
+            }
+
             public override void Configure(IServiceCollection services)
             {
                 services.AddSingleton(options);
@@ -93,8 +98,6 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Scenarios
                 var grain = Subject.GrainFactory.GetGrain<IEmitterGrain>(Guid.NewGuid());
 
                 await grain.SendAsync(expectedText, expectedData);
-
-                await WaitFor(() => resultText);
             }
 
             [Test]

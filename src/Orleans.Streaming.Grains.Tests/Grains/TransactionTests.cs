@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework;
 using Orleans;
@@ -100,7 +101,7 @@ namespace Orleans.Streaming.Grains.Tests.Grains
         {
             public override async Task Act()
             {
-                await service.PostAsync(new Immutable<int>(100));
+                await service.PostAsync(new Immutable<int>(100), false);
 
                 result = await service.PopAsync<int>();
 
@@ -132,7 +133,7 @@ namespace Orleans.Streaming.Grains.Tests.Grains
         {
             public override async Task Act()
             {
-                await service.PostAsync(new Immutable<int>(100));
+                await service.PostAsync(new Immutable<int>(100), false);
 
                 result = await service.PopAsync<int>();
 
@@ -168,7 +169,7 @@ namespace Orleans.Streaming.Grains.Tests.Grains
 
             public override async Task Act()
             {
-                await service.PostAsync(new Immutable<int>(100));
+                await service.PostAsync(new Immutable<int>(100), false);
 
                 result = await service.PopAsync<int>();
 
@@ -212,7 +213,7 @@ namespace Orleans.Streaming.Grains.Tests.Grains
 
             public override async Task Act()
             {
-                await service.PostAsync(new Immutable<int>(100));
+                await service.PostAsync(new Immutable<int>(100), false);
 
                 result = await service.PopAsync<int>();
 

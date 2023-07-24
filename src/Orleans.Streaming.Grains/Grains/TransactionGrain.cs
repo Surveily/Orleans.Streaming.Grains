@@ -3,12 +3,14 @@
 // </copyright>
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Orleans;
+using Orleans.Concurrency;
 using Orleans.Streaming.Grains.Abstract;
 using Orleans.Streaming.Grains.State;
 using Orleans.Streaming.Grains.Streams;
@@ -16,15 +18,18 @@ using Orleans.Utilities;
 
 namespace Orleans.Streaming.Grains.Grains
 {
+    [Reentrant]
     public class TransactionGrain : Grain<TransactionGrainState>, ITransactionGrain
     {
         private readonly GrainsOptions _options;
         private readonly ObserverManager<ITransactionObserver> _subscriptions;
+        private readonly ConcurrentDictionary<Guid, TaskCompletionSource<bool>> _subscriptionTasks;
 
-        public TransactionGrain(GrainsOptions options, ILogger logger)
+        public TransactionGrain(GrainsOptions options, ILoggerFactory logger)
         {
             _options = options;
-            _subscriptions = new ObserverManager<ITransactionObserver>(TimeSpan.FromMinutes(5), logger);
+            _subscriptionTasks = new ConcurrentDictionary<Guid, TaskCompletionSource<bool>>();
+            _subscriptions = new ObserverManager<ITransactionObserver>(TimeSpan.FromMinutes(5), logger.CreateLogger<TransactionGrain>());
         }
 
         public override async Task OnActivateAsync(CancellationToken cancellationToken)
@@ -58,6 +63,16 @@ namespace Orleans.Streaming.Grains.Grains
 
                 await _subscriptions.Notify(x => x.CompletedAsync(id, success));
             }
+        }
+
+        public Task CompletedAsync(Guid id, bool success)
+        {
+            if (_subscriptionTasks.TryRemove(id, out var task))
+            {
+                task.SetResult(success);
+            }
+
+            return Task.CompletedTask;
         }
 
         public async Task<Guid?> PopAsync()
@@ -98,6 +113,15 @@ namespace Orleans.Streaming.Grains.Grains
             _subscriptions.Unsubscribe(observer);
 
             return Task.CompletedTask;
+        }
+
+        public async Task<bool> WaitAsync<T>(Guid id)
+        {
+            var task = _subscriptionTasks.GetOrAdd(id, x => new TaskCompletionSource<bool>());
+
+            await SubscribeAsync(this);
+
+            return await task.Task;
         }
 
         private async Task FlushAsync(object arg)

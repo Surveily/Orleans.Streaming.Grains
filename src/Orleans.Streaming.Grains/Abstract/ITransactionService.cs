@@ -14,10 +14,8 @@ namespace Orleans.Streaming.Grains.Abstract
     {
         Task<(Guid Id, Immutable<T> Item)?> PopAsync<T>();
 
-        Task<Guid> PostAsync<T>(Immutable<T> message);
+        Task PostAsync<T>(Immutable<T> message, bool wait);
 
         Task CompleteAsync<T>(Guid id, bool success);
-
-        Task<bool> WaitAsync<T>(Guid id);
     }
 }

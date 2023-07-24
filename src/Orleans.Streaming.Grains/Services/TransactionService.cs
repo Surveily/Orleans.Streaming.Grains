@@ -16,15 +16,13 @@ using Orleans.Utilities;
 
 namespace Orleans.Streaming.Grains.Services
 {
-    public class TransactionService : ITransactionService, ITransactionObserver
+    public class TransactionService : ITransactionService
     {
         private readonly IClusterClient _client;
-        private readonly ConcurrentDictionary<Guid, TaskCompletionSource<bool>> _subscriptions;
 
         public TransactionService(IClusterClient client)
         {
             _client = client;
-            _subscriptions = new ConcurrentDictionary<Guid, TaskCompletionSource<bool>>();
         }
 
         public async Task CompleteAsync<T>(Guid id, bool success)
@@ -36,16 +34,6 @@ namespace Orleans.Streaming.Grains.Services
             var item = _client.GetGrain<ITransactionItemGrain<T>>(id);
 
             await item.DeleteAsync();
-        }
-
-        public Task CompletedAsync(Guid id, bool success)
-        {
-            if (_subscriptions.TryRemove(id, out var task))
-            {
-                task.SetResult(success);
-            }
-
-            return Task.CompletedTask;
         }
 
         public async Task<(Guid Id, Immutable<T> Item)?> PopAsync<T>()
@@ -63,7 +51,7 @@ namespace Orleans.Streaming.Grains.Services
             return null;
         }
 
-        public async Task<Guid> PostAsync<T>(Immutable<T> message)
+        public async Task PostAsync<T>(Immutable<T> message, bool wait)
         {
             var id = Guid.NewGuid();
             var item = _client.GetGrain<ITransactionItemGrain<T>>(id);
@@ -72,20 +60,10 @@ namespace Orleans.Streaming.Grains.Services
 
             var transaction = _client.GetGrain<ITransactionGrain>(typeof(T).Name);
 
+            var task = wait ? transaction.WaitAsync<T>(id) : Task.CompletedTask;
+
             await transaction.PostAsync(id);
-
-            return id;
-        }
-
-        public async Task<bool> WaitAsync<T>(Guid id)
-        {
-            var transaction = _client.GetGrain<ITransactionGrain>(typeof(T).Name);
-
-            _subscriptions.AddOrUpdate(id, x => new TaskCompletionSource<bool>(), (i, x) => x);
-
-            await transaction.SubscribeAsync(this);
-
-            return await _subscriptions[id].Task;
+            await task;
         }
     }
 }
