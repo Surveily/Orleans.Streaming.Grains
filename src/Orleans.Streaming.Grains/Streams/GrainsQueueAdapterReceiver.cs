@@ -3,6 +3,7 @@
 // </copyright>
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -15,41 +16,49 @@ namespace Orleans.Streaming.Grains.Streams
 {
     public class GrainsQueueAdapterReceiver : IQueueAdapterReceiver
     {
-        private readonly Serializer<GrainsBatchContainer> _serializationManager;
         private readonly ITransactionService _service;
+        private readonly IConsistentRingStreamQueueMapper _streamQueueMapper;
+        private readonly Serializer<GrainsBatchContainer> _serializationManager;
 
         private long _lastReadMessage;
 
         public GrainsQueueAdapterReceiver(ITransactionService service,
-                                          Serializer<GrainsBatchContainer> serializationManager)
+                                          Serializer<GrainsBatchContainer> serializationManager,
+                                          IConsistentRingStreamQueueMapper streamQueueMapper)
         {
             _service = service;
+            _streamQueueMapper = streamQueueMapper;
             _serializationManager = serializationManager;
         }
 
         public async Task<IList<IBatchContainer>> GetQueueMessagesAsync(int maxCount)
         {
-            const int MaxNumberOfMessagesToPeek = 256;
+            var resultBag = new ConcurrentBag<IBatchContainer>();
 
-            var fetched = 0;
-            var result = new List<IBatchContainer>();
-            var count = maxCount < 0 || maxCount == QueueAdapterConstants.UNLIMITED_GET_QUEUE_MSG ?
-                   MaxNumberOfMessagesToPeek : Math.Min(maxCount, MaxNumberOfMessagesToPeek);
-
-            (Guid Id, Immutable<GrainsMessage> Item)? message;
-
-            do
+            await Parallel.ForEachAsync(_streamQueueMapper.GetAllQueues(), async (queue, token) =>
             {
-                message = await _service.PopAsync<GrainsMessage>();
+                const int MaxNumberOfMessagesToPeek = 256;
 
-                if (message != null)
+                var fetched = 0;
+                var result = new List<IBatchContainer>();
+                var count = maxCount < 0 || maxCount == QueueAdapterConstants.UNLIMITED_GET_QUEUE_MSG ?
+                       MaxNumberOfMessagesToPeek : Math.Min(maxCount, MaxNumberOfMessagesToPeek);
+
+                (Guid Id, Immutable<GrainsMessage> Item)? message;
+
+                do
                 {
-                    result.Add(GrainsBatchContainer.FromMessage(_serializationManager, message.Value.Id, message.Value.Item.Value, _lastReadMessage++));
-                }
-            }
-            while (message != null && ++fetched < count);
+                    message = await _service.PopAsync<GrainsMessage>(queue.ToString());
 
-            return result;
+                    if (message != null)
+                    {
+                        resultBag.Add(GrainsBatchContainer.FromMessage(_serializationManager, message.Value.Id, message.Value.Item.Value, _lastReadMessage++));
+                    }
+                }
+                while (message != null && ++fetched < count);
+            });
+
+            return resultBag.ToList();
         }
 
         public Task Initialize(TimeSpan timeout)
@@ -61,7 +70,9 @@ namespace Orleans.Streaming.Grains.Streams
         {
             foreach (var message in messages.OfType<GrainsBatchContainer>())
             {
-                await _service.CompleteAsync<GrainsMessage>(message.Id, true);
+                var queue = _streamQueueMapper.GetQueueForStream(message.StreamId);
+
+                await _service.CompleteAsync<GrainsMessage>(message.Id, true, queue.ToString());
             }
         }
 

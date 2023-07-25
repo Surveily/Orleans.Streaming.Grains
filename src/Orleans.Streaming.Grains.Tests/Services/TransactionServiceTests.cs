@@ -39,7 +39,7 @@ namespace Orleans.Streaming.Grains.Tests.Services
                       .Callback<Guid, string>((id, _) => itemId = id)
                       .Returns(message.Object);
 
-                client.Setup(x => x.GetGrain<ITransactionGrain>(nameof(Int32), null))
+                client.Setup(x => x.GetGrain<ITransactionGrain>("1", null))
                       .Returns(transaction.Object);
 
                 message.Setup(x => x.SetAsync(It.IsAny<Immutable<int>>()))
@@ -57,7 +57,7 @@ namespace Orleans.Streaming.Grains.Tests.Services
             public override async Task SetupAsync()
             {
                 await base.SetupAsync();
-                await Subject.PostAsync(item, false);
+                await Subject.PostAsync(item, false, "1");
             }
 
             [Test]
@@ -69,7 +69,7 @@ namespace Orleans.Streaming.Grains.Tests.Services
             [Test]
             public void It_Should_Get_Transaction()
             {
-                client.Verify(x => x.GetGrain<ITransactionGrain>(nameof(Int32), null), Times.Once);
+                client.Verify(x => x.GetGrain<ITransactionGrain>("1", null), Times.Once);
             }
 
             [Test]
@@ -93,7 +93,7 @@ namespace Orleans.Streaming.Grains.Tests.Services
             {
                 await base.SetupAsync();
 
-                result = await Subject.PopAsync<int>();
+                result = await Subject.PopAsync<int>("1");
             }
 
             [Test]
@@ -122,9 +122,9 @@ namespace Orleans.Streaming.Grains.Tests.Services
                        .ReturnsAsync(item);
 
                 await base.SetupAsync();
-                await Subject.PostAsync(item, false);
+                await Subject.PostAsync(item, false, "1");
 
-                result = await Subject.PopAsync<int>();
+                result = await Subject.PopAsync<int>("1");
             }
 
             [Test]
@@ -154,7 +154,7 @@ namespace Orleans.Streaming.Grains.Tests.Services
             [Test]
             public void It_Should_Get_Transaction()
             {
-                client.Verify(x => x.GetGrain<ITransactionGrain>(nameof(Int32), null), Times.Exactly(2));
+                client.Verify(x => x.GetGrain<ITransactionGrain>("1", null), Times.Exactly(2));
             }
 
             [Test]

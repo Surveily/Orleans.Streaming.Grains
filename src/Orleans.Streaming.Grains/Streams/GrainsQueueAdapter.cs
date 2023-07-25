@@ -46,13 +46,14 @@ namespace Orleans.Streaming.Grains.Streams
 
         public StreamProviderDirection Direction => StreamProviderDirection.ReadWrite;
 
-        public IQueueAdapterReceiver CreateReceiver(QueueId queueId) => new GrainsQueueAdapterReceiver(_service, _serializer);
+        public IQueueAdapterReceiver CreateReceiver(QueueId queueId) => new GrainsQueueAdapterReceiver(_service, _serializer, _streamQueueMapper);
 
         public async Task QueueMessageBatchAsync<T>(StreamId streamId, IEnumerable<T> events, StreamSequenceToken token, Dictionary<string, object> requestContext)
         {
+            var queue = _streamQueueMapper.GetQueueForStream(streamId);
             var message = GrainsBatchContainer.ToMessage(_serializer, streamId, events, requestContext);
 
-            await _service.PostAsync(new Immutable<GrainsMessage>(message), !_options.Value.FireAndForgetDelivery);
+            await _service.PostAsync(new Immutable<GrainsMessage>(message), !_options.Value.FireAndForgetDelivery, queue.ToString());
         }
     }
 }

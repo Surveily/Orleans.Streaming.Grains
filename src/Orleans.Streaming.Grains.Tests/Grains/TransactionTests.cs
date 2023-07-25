@@ -55,7 +55,7 @@ namespace Orleans.Streaming.Grains.Tests.Grains
 
             public override async Task Act()
             {
-                result = await service.PopAsync<int>();
+                result = await service.PopAsync<int>("1");
             }
 
             [Test]
@@ -99,11 +99,11 @@ namespace Orleans.Streaming.Grains.Tests.Grains
         {
             public override async Task Act()
             {
-                await service.PostAsync(new Immutable<int>(100), false);
+                await service.PostAsync(new Immutable<int>(100), false, "1");
 
-                result = await service.PopAsync<int>();
+                result = await service.PopAsync<int>("1");
 
-                var transaction = client.GetGrain<ITransactionGrain>(typeof(int).Name);
+                var transaction = client.GetGrain<ITransactionGrain>("1");
 
                 (queue, poison, transactions) = await transaction.GetStateAsync();
             }
@@ -131,13 +131,13 @@ namespace Orleans.Streaming.Grains.Tests.Grains
         {
             public override async Task Act()
             {
-                await service.PostAsync(new Immutable<int>(100), false);
+                await service.PostAsync(new Immutable<int>(100), false, "1");
 
-                result = await service.PopAsync<int>();
+                result = await service.PopAsync<int>("1");
 
                 await Task.Delay(TimeSpan.FromSeconds(3));
 
-                var transaction = client.GetGrain<ITransactionGrain>(typeof(int).Name);
+                var transaction = client.GetGrain<ITransactionGrain>("1");
 
                 (queue, poison, transactions) = await transaction.GetStateAsync();
             }
@@ -167,15 +167,15 @@ namespace Orleans.Streaming.Grains.Tests.Grains
 
             public override async Task Act()
             {
-                await service.PostAsync(new Immutable<int>(100), false);
+                await service.PostAsync(new Immutable<int>(100), false, "1");
 
-                result = await service.PopAsync<int>();
+                result = await service.PopAsync<int>("1");
 
-                await service.CompleteAsync<int>(result.Value.Id, true);
+                await service.CompleteAsync<int>(result.Value.Id, true, "1");
 
-                result2 = await service.PopAsync<int>();
+                result2 = await service.PopAsync<int>("1");
 
-                var transaction = client.GetGrain<ITransactionGrain>(typeof(int).Name);
+                var transaction = client.GetGrain<ITransactionGrain>("1");
 
                 (queue, poison, transactions) = await transaction.GetStateAsync();
             }
@@ -211,15 +211,15 @@ namespace Orleans.Streaming.Grains.Tests.Grains
 
             public override async Task Act()
             {
-                await service.PostAsync(new Immutable<int>(100), false);
+                await service.PostAsync(new Immutable<int>(100), false, "1");
 
-                result = await service.PopAsync<int>();
+                result = await service.PopAsync<int>("1");
 
-                await service.CompleteAsync<int>(result.Value.Id, false);
+                await service.CompleteAsync<int>(result.Value.Id, false, "1");
 
-                result2 = await service.PopAsync<int>();
+                result2 = await service.PopAsync<int>("1");
 
-                var transaction = client.GetGrain<ITransactionGrain>(typeof(int).Name);
+                var transaction = client.GetGrain<ITransactionGrain>("1");
 
                 (queue, poison, transactions) = await transaction.GetStateAsync();
             }
