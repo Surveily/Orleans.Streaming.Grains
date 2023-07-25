@@ -42,15 +42,6 @@ namespace Orleans.Streaming.Grains.Test
 
         public void Configure(IConfiguration configuration, IClientBuilder clientBuilder)
         {
-            clientBuilder.ConfigureServices(Configure)
-                         .Configure<GrainsOptions>(options =>
-                         {
-                             options.FireAndForgetDelivery = _fireAndForget;
-                         })
-                         .AddPersistentStreams("Default", GrainsQueueAdapterFactory.Create, config => config.Configure<GrainsOptions>(options =>
-                         {
-                             options.Configure(x => x.FireAndForgetDelivery = _fireAndForget);
-                         }));
         }
     }
 }
