@@ -16,6 +16,7 @@ on:
 
 jobs:
   build:
+    name: Build and Push
     runs-on: ubuntu-latest
     permissions:
       contents: read
