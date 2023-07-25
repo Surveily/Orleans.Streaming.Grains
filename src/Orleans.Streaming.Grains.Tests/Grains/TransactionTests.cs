@@ -8,6 +8,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Moq;
 using NUnit.Framework;
 using Orleans;
@@ -24,11 +25,8 @@ namespace Orleans.Streaming.Grains.Tests.Grains
     {
         public class Config : BaseGrainTestConfig
         {
-            private GrainsOptions _settings = new GrainsOptions();
-
             public override void Configure(IServiceCollection services)
             {
-                services.AddSingleton(f => _settings);
                 services.AddSingleton<ITransactionService, TransactionService>();
             }
         }
@@ -36,8 +34,8 @@ namespace Orleans.Streaming.Grains.Tests.Grains
         public abstract class BaseTransactionTest : BaseGrainTest<Config>
         {
             protected IClusterClient client;
-            protected GrainsOptions settings;
             protected ITransactionService service;
+            protected IOptions<GrainsOptions> settings;
 
             protected Queue<Guid> queue;
             protected Queue<Guid> poison;
@@ -46,8 +44,8 @@ namespace Orleans.Streaming.Grains.Tests.Grains
             public override void Prepare()
             {
                 client = Container.GetService<IClusterClient>();
-                settings = Container.GetService<GrainsOptions>();
                 service = Container.GetService<ITransactionService>();
+                settings = Container.GetService<IOptions<GrainsOptions>>();
             }
         }
 
@@ -75,7 +73,7 @@ namespace Orleans.Streaming.Grains.Tests.Grains
             {
                 base.Prepare();
 
-                settings.Timeout = TimeSpan.FromSeconds(2);
+                settings.Value.Timeout = TimeSpan.FromSeconds(2);
             }
 
             [Test]
