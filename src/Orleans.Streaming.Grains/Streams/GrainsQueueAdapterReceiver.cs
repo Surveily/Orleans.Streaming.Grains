@@ -37,25 +37,12 @@ namespace Orleans.Streaming.Grains.Streams
 
             await Parallel.ForEachAsync(_streamQueueMapper.GetAllQueues(), async (queue, token) =>
             {
-                const int MaxNumberOfMessagesToPeek = 256;
+                var message = await _service.PopAsync<GrainsMessage>(queue.ToString());
 
-                var fetched = 0;
-                var result = new List<IBatchContainer>();
-                var count = maxCount < 0 || maxCount == QueueAdapterConstants.UNLIMITED_GET_QUEUE_MSG ?
-                       MaxNumberOfMessagesToPeek : Math.Min(maxCount, MaxNumberOfMessagesToPeek);
-
-                (Guid Id, Immutable<GrainsMessage> Item)? message;
-
-                do
+                if (message != null)
                 {
-                    message = await _service.PopAsync<GrainsMessage>(queue.ToString());
-
-                    if (message != null)
-                    {
-                        resultBag.Add(GrainsBatchContainer.FromMessage(_serializationManager, message.Value.Id, message.Value.Item.Value, _lastReadMessage++));
-                    }
+                    resultBag.Add(GrainsBatchContainer.FromMessage(_serializationManager, message.Value.Id, message.Value.Item.Value, _lastReadMessage++));
                 }
-                while (message != null && ++fetched < count);
             });
 
             return resultBag.ToList();
