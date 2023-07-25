@@ -9,6 +9,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Orleans;
 using Orleans.Concurrency;
 using Orleans.Streaming.Grains.Abstract;
@@ -28,9 +29,9 @@ namespace Orleans.Streaming.Grains.Grains
 
         private bool _isDisposed;
 
-        public TransactionGrain(GrainsOptions options, ILoggerFactory logger)
+        public TransactionGrain(IOptions<GrainsOptions> options, ILoggerFactory logger)
         {
-            _options = options;
+            _options = options.Value;
             _lock = new SemaphoreSlim(1, 1);
             _subscriptionTasks = new ConcurrentDictionary<Guid, TaskCompletionSource<bool>>();
             _subscriptions = new ObserverManager<ITransactionObserver>(TimeSpan.FromMinutes(5), logger.CreateLogger<TransactionGrain>());

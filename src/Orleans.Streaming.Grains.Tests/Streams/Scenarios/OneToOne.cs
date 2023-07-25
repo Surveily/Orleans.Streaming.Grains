@@ -20,7 +20,6 @@ namespace Orleans.Streaming.Grains.Test.Scenarios
     {
         public class Config : BaseGrainTestConfig, IDisposable
         {
-            protected GrainsOptions options = new GrainsOptions();
             protected Mock<IProcessor> processor = new Mock<IProcessor>();
             private bool _isDisposed;
 
@@ -31,7 +30,6 @@ namespace Orleans.Streaming.Grains.Test.Scenarios
 
             public override void Configure(IServiceCollection services)
             {
-                services.AddSingleton(options);
                 services.AddSingleton(processor);
                 services.AddSingleton(processor.Object);
                 services.AddSingleton<ITransactionService, TransactionService>();
