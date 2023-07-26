@@ -31,17 +31,17 @@ namespace Orleans.Streaming.Grains.Test
             siloBuilder.ConfigureServices(Configure)
                        .AddMemoryGrainStorageAsDefault()
                        .AddMemoryGrainStorage("PubSubStore")
-                       .Configure<GrainsOptions>(options =>
+                       .AddPersistentStreams("Default", GrainsQueueAdapterFactory.Create, config =>
                        {
-                           options.FireAndForgetDelivery = _fireAndForget;
-                       })
-                       .Configure<HashRingStreamQueueMapperOptions>(options =>
-                       {
-                           options.TotalQueueCount = 8;
-                       })
-                       .AddPersistentStreams("Default", GrainsQueueAdapterFactory.Create, config => config.Configure<GrainsOptions>(options =>
-                       {
-                       }));
+                           config.Configure<GrainsOptions>(options =>
+                           {
+                               options.Configure(x => x.FireAndForgetDelivery = _fireAndForget);
+                           });
+                           config.Configure<HashRingStreamQueueMapperOptions>(options =>
+                           {
+                               options.Configure(x => x.TotalQueueCount = 8);
+                           });
+                       });
         }
 
         public void Configure(IConfiguration configuration, IClientBuilder clientBuilder)
