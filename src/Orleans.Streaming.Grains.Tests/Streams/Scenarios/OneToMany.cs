@@ -67,7 +67,6 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Scenarios
             }
         }
 
-        /* TODO: this test hangs forever
         public class When_Sending_Compound_Message_One_To_One : BaseOneToManyTest
         {
             protected string resultText;
@@ -113,7 +112,7 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Scenarios
             {
                 Processor!.Verify(x => x.Process(expectedData), Times.Exactly(10));
             }
-        }*/
+        }
 
         public class When_Sending_Broadcast_Message_One_To_One : BaseOneToManyTest
         {
