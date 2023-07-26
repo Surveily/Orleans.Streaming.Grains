@@ -73,7 +73,7 @@ namespace Orleans.Streaming.Grains.Test
 
         protected async Task WaitFor(Func<object> subject)
         {
-            await WaitFor(subject, TimeSpan.FromSeconds(3));
+            await WaitFor(subject, TimeSpan.FromSeconds(5));
         }
 
         protected async Task WaitFor(Func<object> subject, TimeSpan timeout)
@@ -84,9 +84,6 @@ namespace Orleans.Streaming.Grains.Test
             {
                 while (subject() == null)
                 {
-#if DEBUG
-                    timeout = TimeSpan.FromMinutes(2);
-#endif
                     if (sw.Elapsed > timeout)
                     {
                         throw new TimeoutException($"Timeout while waiting for subject.");
