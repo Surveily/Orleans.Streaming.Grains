@@ -98,6 +98,7 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Scenarios
 
                 await grain.SendAsync(expectedText, expectedData);
 
+                await WaitFor(() => resultData);
                 await WaitFor(() => resultText);
             }
 
@@ -144,6 +145,7 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Scenarios
 
                 await grain.BroadcastAsync(expectedText, expectedData);
 
+                await WaitFor(() => expectedData);
                 await WaitFor(() => resultText);
             }
 
