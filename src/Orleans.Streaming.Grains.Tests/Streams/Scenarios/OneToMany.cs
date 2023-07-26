@@ -67,7 +67,7 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Scenarios
             }
         }
 
-        public class When_Sending_Compound_Message_One_To_One : BaseOneToManyTest
+        public class When_Sending_Compound_Message_One_To_Many : BaseOneToManyTest
         {
             protected string resultText;
             protected string expectedText = "text";
@@ -114,7 +114,7 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Scenarios
             }
         }
 
-        public class When_Sending_Broadcast_Message_One_To_One : BaseOneToManyTest
+        public class When_Sending_Broadcast_Message_One_To_Many : BaseOneToManyTest
         {
             protected string resultText;
             protected string expectedText = "text";
