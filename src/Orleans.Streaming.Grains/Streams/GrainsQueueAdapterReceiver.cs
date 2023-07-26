@@ -35,7 +35,7 @@ namespace Orleans.Streaming.Grains.Streams
         {
             var result = new List<IBatchContainer>();
             var queues = _streamQueueMapper.GetAllQueues();
-            var messages = await Task.WhenAll(queues.Select(x => _service.PopAsync<GrainsMessage>(x.ToString())));
+            var messages = await Task.WhenAll(queues.Select(x => Task.Run(async () => await _service.PopAsync<GrainsMessage>(x.ToString()))));
 
             result.AddRange(messages.Where(x => x != null)
                                     .Select(x => GrainsBatchContainer.FromMessage(_serializationManager, x.Value.Id, x.Value.Item.Value, _lastReadMessage++)));

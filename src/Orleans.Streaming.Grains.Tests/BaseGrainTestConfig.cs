@@ -37,7 +37,7 @@ namespace Orleans.Streaming.Grains.Test
                        })
                        .Configure<HashRingStreamQueueMapperOptions>(options =>
                        {
-                           options.TotalQueueCount = 1;
+                           options.TotalQueueCount = 8;
                        })
                        .AddPersistentStreams("Default", GrainsQueueAdapterFactory.Create, config => config.Configure<GrainsOptions>(options =>
                        {
