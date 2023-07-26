@@ -16,8 +16,6 @@ namespace Orleans.Streaming.Grains.Grains
     {
         private readonly TaskCompletionSource<bool> _task;
 
-        private bool _isDisposed;
-
         public TransactionProxyGrain()
         {
             _task = new TaskCompletionSource<bool>();

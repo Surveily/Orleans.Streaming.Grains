@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using NUnit.Framework;
+using Orleans.Configuration;
 using Orleans.Hosting;
 using Orleans.Streaming.Grains.Abstract;
 using Orleans.Streaming.Grains.Services;

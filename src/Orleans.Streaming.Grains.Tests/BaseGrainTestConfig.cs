@@ -35,6 +35,10 @@ namespace Orleans.Streaming.Grains.Test
                        {
                            options.FireAndForgetDelivery = _fireAndForget;
                        })
+                       .Configure<HashRingStreamQueueMapperOptions>(options =>
+                       {
+                           options.TotalQueueCount = 1;
+                       })
                        .AddPersistentStreams("Default", GrainsQueueAdapterFactory.Create, config => config.Configure<GrainsOptions>(options =>
                        {
                        }));

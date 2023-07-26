@@ -139,6 +139,7 @@
         <Rule Id="CS1587" Action="Error" />
         <Rule Id="CS1589" Action="Error" />
         <Rule Id="CS1590" Action="Error" />
+        <Rule Id="CS1591" Action="None" />
         <Rule Id="CS1592" Action="Error" />
         <Rule Id="CS1616" Action="Error" />
         <Rule Id="CS1633" Action="Error" />
