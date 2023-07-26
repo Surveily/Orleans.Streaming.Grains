@@ -9,11 +9,13 @@ using Orleans.Streams;
 namespace Orleans.Streaming.Grains.Tests.Streams.Grains
 {
     [ImplicitStreamSubscription(nameof(SimpleMessage))]
+    [ImplicitStreamSubscription(nameof(BroadcastMessage))]
     public class SimpleReceiverGrain : Grain, ISimpleReceiverGrain
     {
         private readonly IProcessor _processor;
 
         private StreamSubscriptionHandle<SimpleMessage> _subscription;
+        private StreamSubscriptionHandle<BroadcastMessage> _broadcast;
 
         public SimpleReceiverGrain(IProcessor processor)
         {
@@ -24,11 +26,20 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Grains
         {
             var streamProvider = this.GetStreamProvider("Default");
             var stream = StreamFactory.Create<SimpleMessage>(streamProvider, this.GetPrimaryKey());
+            var broadcastStream = StreamFactory.Create<BroadcastMessage>(streamProvider, this.GetPrimaryKey());
 
             _subscription = await stream.SubscribeAsync(OnNextAsync);
+            _broadcast = await broadcastStream.SubscribeAsync(OnBroadcastAsync);
         }
 
         private Task OnNextAsync(SimpleMessage message, StreamSequenceToken token)
+        {
+            _processor.Process(message.Text.Value);
+
+            return Task.CompletedTask;
+        }
+
+        private Task OnBroadcastAsync(BroadcastMessage message, StreamSequenceToken token)
         {
             _processor.Process(message.Text.Value);
 

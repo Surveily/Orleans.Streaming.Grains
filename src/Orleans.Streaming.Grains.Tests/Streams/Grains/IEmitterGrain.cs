@@ -11,5 +11,7 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Grains
         Task SendAsync(byte[] data);
 
         Task SendAsync(string text, byte[] data);
+
+        Task BroadcastAsync(string text, byte[] data);
     }
 }
