@@ -33,20 +33,14 @@ namespace Orleans.Streaming.Grains.Streams
 
         public async Task<IList<IBatchContainer>> GetQueueMessagesAsync(int maxCount)
         {
+            var result = new List<IBatchContainer>();
             var queues = _streamQueueMapper.GetAllQueues();
-            var resultBag = new ConcurrentBag<IBatchContainer>();
+            var messages = await Task.WhenAll(queues.Select(x => _service.PopAsync<GrainsMessage>(x.ToString())));
 
-            await Parallel.ForEachAsync(queues, async (queue, token) =>
-            {
-                var message = await _service.PopAsync<GrainsMessage>(queue.ToString());
+            result.AddRange(messages.Where(x => x != null)
+                                    .Select(x => GrainsBatchContainer.FromMessage(_serializationManager, x.Value.Id, x.Value.Item.Value, _lastReadMessage++)));
 
-                if (message != null)
-                {
-                    resultBag.Add(GrainsBatchContainer.FromMessage(_serializationManager, message.Value.Id, message.Value.Item.Value, _lastReadMessage++));
-                }
-            });
-
-            return resultBag.ToList();
+            return result;
         }
 
         public Task Initialize(TimeSpan timeout)
