@@ -54,13 +54,13 @@ namespace Orleans.Streaming.Grains.Services
         public async Task PostAsync<T>(Immutable<T> message, bool wait, string queue)
         {
             var id = Guid.NewGuid();
-            var proxy = _client.GetGrain<ITransactionProxyGrain>(id);
             var item = _client.GetGrain<ITransactionItemGrain<T>>(id);
 
             await item.SetAsync(message);
 
             var transaction = _client.GetGrain<ITransactionGrain>(queue);
-            var completion = wait ? proxy.WaitAsync<T>(queue) : Task.CompletedTask;
+            var completion = wait ? _client.GetGrain<ITransactionProxyGrain>(id).WaitAsync<T>(queue)
+                                  : Task.CompletedTask;
 
             await transaction.PostAsync(id);
             await completion;
