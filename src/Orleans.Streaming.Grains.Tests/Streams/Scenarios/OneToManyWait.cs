@@ -93,7 +93,7 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Scenarios
 
             public override async Task Act()
             {
-                var grain = Subject.GrainFactory.GetGrain<IEmitterGrain>(Guid.NewGuid());
+                var grain = Subject.GetGrain<IEmitterGrain>(Guid.NewGuid());
 
                 await grain.SendAsync(expectedText, expectedData);
 

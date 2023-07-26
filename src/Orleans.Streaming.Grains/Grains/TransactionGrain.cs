@@ -19,21 +19,14 @@ using Orleans.Utilities;
 
 namespace Orleans.Streaming.Grains.Grains
 {
-    [Reentrant]
-    public class TransactionGrain : Grain<TransactionGrainState>, ITransactionGrain, IDisposable
+    public class TransactionGrain : Grain<TransactionGrainState>, ITransactionGrain
     {
-        private readonly SemaphoreSlim _lock;
         private readonly GrainsOptions _options;
         private readonly ObserverManager<ITransactionObserver> _subscriptions;
-        private readonly ConcurrentDictionary<Guid, TaskCompletionSource<bool>> _subscriptionTasks;
-
-        private bool _isDisposed;
 
         public TransactionGrain(IOptions<GrainsOptions> options, ILoggerFactory logger)
         {
             _options = options.Value;
-            _lock = new SemaphoreSlim(1, 1);
-            _subscriptionTasks = new ConcurrentDictionary<Guid, TaskCompletionSource<bool>>();
             _subscriptions = new ObserverManager<ITransactionObserver>(TimeSpan.FromMinutes(5), logger.CreateLogger<TransactionGrain>());
         }
 
@@ -66,18 +59,11 @@ namespace Orleans.Streaming.Grains.Grains
 
                 await PersistAsync();
 
-                await _subscriptions.Notify(x => x.CompletedAsync(id, success));
+                if (_subscriptions.Any())
+                {
+                    await _subscriptions.Notify(x => x.CompletedAsync(id, success));
+                }
             }
-        }
-
-        public Task CompletedAsync(Guid id, bool success)
-        {
-            if (_subscriptionTasks.TryRemove(id, out var task))
-            {
-                task.SetResult(success);
-            }
-
-            return Task.CompletedTask;
         }
 
         public async Task<Guid?> PopAsync()
@@ -120,34 +106,6 @@ namespace Orleans.Streaming.Grains.Grains
             return Task.CompletedTask;
         }
 
-        public async Task<bool> WaitAsync<T>(Guid id)
-        {
-            var task = _subscriptionTasks.GetOrAdd(id, x => new TaskCompletionSource<bool>());
-
-            await SubscribeAsync(this);
-
-            return await task.Task;
-        }
-
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!_isDisposed)
-            {
-                if (disposing)
-                {
-                    _lock.Dispose();
-                }
-
-                _isDisposed = true;
-            }
-        }
-
         private async Task FlushAsync(object arg)
         {
             var expired = State.Transactions.Where(x => (DateTimeOffset.UtcNow - x.Value) > _options.Timeout)
@@ -167,25 +125,7 @@ namespace Orleans.Streaming.Grains.Grains
 
         private async Task PersistAsync()
         {
-            var wait = !_options.FireAndForgetDelivery;
-
-            if (wait)
-            {
-                try
-                {
-                    await _lock.WaitAsync();
-
-                    await WriteStateAsync();
-                }
-                finally
-                {
-                    _lock.Release();
-                }
-            }
-            else
-            {
-                await WriteStateAsync();
-            }
+            await WriteStateAsync();
         }
     }
 }

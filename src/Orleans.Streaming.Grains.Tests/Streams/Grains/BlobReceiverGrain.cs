@@ -9,13 +9,11 @@ using Orleans.Streams;
 namespace Orleans.Streaming.Grains.Tests.Streams.Grains
 {
     [ImplicitStreamSubscription(nameof(BlobMessage))]
-    [ImplicitStreamSubscription(nameof(CompoundMessage))]
     public class BlobReceiverGrain : Grain, IBlobReceiverGrain
     {
         private readonly IProcessor _processor;
 
-        private StreamSubscriptionHandle<BlobMessage> _blobSubscription;
-        private StreamSubscriptionHandle<CompoundMessage> _compoundSubscription;
+        private StreamSubscriptionHandle<BlobMessage> _subscription;
 
         public BlobReceiverGrain(IProcessor processor)
         {
@@ -25,21 +23,12 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Grains
         public override async Task OnActivateAsync(CancellationToken cancellationToken)
         {
             var streamProvider = this.GetStreamProvider("Default");
-            var blobStream = StreamFactory.Create<BlobMessage>(streamProvider, this.GetPrimaryKey());
-            var compoundStream = StreamFactory.Create<CompoundMessage>(streamProvider, this.GetPrimaryKey());
+            var stream = StreamFactory.Create<BlobMessage>(streamProvider, this.GetPrimaryKey());
 
-            _blobSubscription = await blobStream.SubscribeAsync(OnNextBlobAsync);
-            _compoundSubscription = await compoundStream.SubscribeAsync(OnNextCompoundAsync);
+            _subscription = await stream.SubscribeAsync(OnNextAsync);
         }
 
-        private Task OnNextBlobAsync(BlobMessage message, StreamSequenceToken token)
-        {
-            _processor.Process(message.Data.Value);
-
-            return Task.CompletedTask;
-        }
-
-        private Task OnNextCompoundAsync(CompoundMessage message, StreamSequenceToken token)
+        private Task OnNextAsync(BlobMessage message, StreamSequenceToken token)
         {
             _processor.Process(message.Data.Value);
 

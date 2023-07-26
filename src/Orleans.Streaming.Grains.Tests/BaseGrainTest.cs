@@ -17,14 +17,14 @@ namespace Orleans.Streaming.Grains.Test
     {
         public const int QueueNumber = 8;
 
+        private readonly TestCluster _cluster;
         private readonly AsyncRetryPolicy _retryPolicy;
 
         public BaseGrainTest()
         {
-            var builder = new TestClusterBuilder(1);
-            builder.AddSiloBuilderConfigurator<T>();
-            builder.AddClientBuilderConfigurator<T>();
-            Subject = builder.Build();
+            _cluster = new TestClusterBuilder(1).AddSiloBuilderConfigurator<T>()
+                                                .AddClientBuilderConfigurator<T>()
+                                                .Build();
 
             _retryPolicy = Policy.Handle<OrleansMessageRejectionException>()
                                  .WaitAndRetryAsync(10, f => TimeSpan.FromSeconds(5));
@@ -32,13 +32,13 @@ namespace Orleans.Streaming.Grains.Test
 
         public T Config { get; }
 
-        public TestCluster Subject { get; }
+        public IClusterClient Subject => _cluster.Client;
 
         public IServiceProvider Container
         {
             get
             {
-                var siloHandle = Subject.Primary as Orleans.TestingHost.InProcessSiloHandle;
+                var siloHandle = _cluster.Primary as Orleans.TestingHost.InProcessSiloHandle;
 
                 return siloHandle.SiloHost.Services;
             }
@@ -55,8 +55,8 @@ namespace Orleans.Streaming.Grains.Test
         {
             await _retryPolicy.ExecuteAsync(async () =>
             {
-                await Subject.DeployAsync();
-                await Subject.WaitForLivenessToStabilizeAsync();
+                await _cluster.DeployAsync();
+                await _cluster.WaitForLivenessToStabilizeAsync();
             });
 
             Prepare();
@@ -67,8 +67,8 @@ namespace Orleans.Streaming.Grains.Test
         [OneTimeTearDown]
         public async Task TearDown()
         {
-            await Subject.StopAllSilosAsync();
-            await Subject.DisposeAsync();
+            await _cluster.StopAllSilosAsync();
+            await _cluster.DisposeAsync();
         }
 
         protected async Task WaitFor(Func<object> subject)

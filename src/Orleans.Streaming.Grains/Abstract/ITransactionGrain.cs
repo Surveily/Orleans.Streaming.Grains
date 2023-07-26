@@ -10,13 +10,11 @@ using Orleans;
 
 namespace Orleans.Streaming.Grains.Abstract
 {
-    public interface ITransactionGrain : IGrainWithStringKey, ITransactionObserver
+    public interface ITransactionGrain : IGrainWithStringKey
     {
         Task<Guid?> PopAsync();
 
         Task PostAsync(Guid id);
-
-        Task<bool> WaitAsync<T>(Guid id);
 
         Task CompleteAsync(Guid id, bool success);
 

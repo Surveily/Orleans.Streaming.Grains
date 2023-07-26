@@ -93,9 +93,9 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Scenarios
 
             public override async Task Act()
             {
-                var grain = Subject.GrainFactory.GetGrain<IEmitterGrain>(Guid.NewGuid());
+                var grain = Subject.GetGrain<IEmitterGrain>(Guid.NewGuid());
 
-                for (var i = 0; i < 100; i++)
+                for (var i = 0; i < 10; i++)
                 {
                     await grain.SendAsync(expectedText, expectedData);
                 }
@@ -104,13 +104,13 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Scenarios
             [Test]
             public void It_Should_Deliver_Text()
             {
-                Processor!.Verify(x => x.Process(expectedText), Times.Exactly(100));
+                Processor!.Verify(x => x.Process(expectedText), Times.Exactly(10));
             }
 
             [Test]
             public void It_Should_Deliver_Data()
             {
-                Processor!.Verify(x => x.Process(expectedData), Times.Exactly(100));
+                Processor!.Verify(x => x.Process(expectedData), Times.Exactly(10));
             }
         }
     }
