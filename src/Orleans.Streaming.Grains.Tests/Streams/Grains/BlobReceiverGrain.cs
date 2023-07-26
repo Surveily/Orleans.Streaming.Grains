@@ -41,7 +41,7 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Grains
 
         private Task OnBroadcastAsync(BroadcastMessage message, StreamSequenceToken token)
         {
-            _processor.Process(message.Text.Value);
+            _processor.Process(message.Data.Value);
 
             return Task.CompletedTask;
         }
