@@ -11,7 +11,6 @@ using Orleans.Configuration;
 using Orleans.Hosting;
 using Orleans.Streaming.Grains.Streams;
 using Orleans.TestingHost;
-#pragma warning disable CS0618
 
 namespace Orleans.Streaming.Grains.Test
 {
@@ -49,4 +48,3 @@ namespace Orleans.Streaming.Grains.Test
         }
     }
 }
-#pragma warning restore CS0618

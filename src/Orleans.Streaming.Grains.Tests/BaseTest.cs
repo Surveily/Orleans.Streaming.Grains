@@ -10,12 +10,10 @@ namespace Orleans.Streaming.Grains.Test
     public abstract class BaseTest<T>
         where T : class
     {
-#pragma warning disable CS8618
         public BaseTest()
         {
             Services = new ServiceCollection();
         }
-#pragma warning restore CS8618
 
         public T Subject { get; private set; }
 

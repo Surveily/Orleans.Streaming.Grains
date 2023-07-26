@@ -8,7 +8,6 @@ using Orleans.Runtime;
 using Orleans.TestingHost;
 using Polly;
 using Polly.Retry;
-#pragma warning disable CS0618
 
 namespace Orleans.Streaming.Grains.Test
 {
