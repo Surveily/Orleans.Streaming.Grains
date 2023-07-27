@@ -44,7 +44,7 @@ namespace Orleans.Streaming.Grains.Test
                            });
                            config.Configure<HashRingStreamQueueMapperOptions>(options =>
                            {
-                               options.Configure(x => x.TotalQueueCount = 4);
+                               options.Configure(x => x.TotalQueueCount = 100);
                            });
                        });
         }
