@@ -44,7 +44,7 @@ namespace Orleans.Streaming.Grains.Streams
 
         public StreamProviderDirection Direction => StreamProviderDirection.ReadWrite;
 
-        public IQueueAdapterReceiver CreateReceiver(QueueId queueId) => new GrainsQueueAdapterReceiver(_service, _serializer, _streamQueueMapper);
+        public IQueueAdapterReceiver CreateReceiver(QueueId queueId) => new GrainsQueueAdapterReceiver(queueId, _service, _serializer, _streamQueueMapper);
 
         public async Task QueueMessageBatchAsync<T>(StreamId streamId, IEnumerable<T> events, StreamSequenceToken token, Dictionary<string, object> requestContext)
         {

@@ -16,32 +16,42 @@ namespace Orleans.Streaming.Grains.Streams
 {
     public class GrainsQueueAdapterReceiver : IQueueAdapterReceiver
     {
-        private readonly IList<QueueId> _queues;
+        private readonly QueueId _queueId;
         private readonly ITransactionService _service;
         private readonly IConsistentRingStreamQueueMapper _streamQueueMapper;
         private readonly Serializer<GrainsBatchContainer> _serializationManager;
 
         private long _lastReadMessage;
 
-        public GrainsQueueAdapterReceiver(ITransactionService service,
+        public GrainsQueueAdapterReceiver(QueueId queueId,
+                                          ITransactionService service,
                                           Serializer<GrainsBatchContainer> serializationManager,
                                           IConsistentRingStreamQueueMapper streamQueueMapper)
         {
+            _queueId = queueId;
             _service = service;
             _streamQueueMapper = streamQueueMapper;
             _serializationManager = serializationManager;
-            _queues = _streamQueueMapper.GetAllQueues()
-                                        .ToList();
         }
 
         public async Task<IList<IBatchContainer>> GetQueueMessagesAsync(int maxCount)
         {
             var result = new List<IBatchContainer>();
-            var messages = await Task.WhenAll(_queues.Take(maxCount)
-                                                     .Select(x => Task.Run(async () => await _service.PopAsync<GrainsMessage>(x.ToString()))));
 
-            result.AddRange(messages.Where(x => x != null)
-                                    .Select(x => GrainsBatchContainer.FromMessage(_serializationManager, x.Value.Id, x.Value.Item.Value, _lastReadMessage++)));
+            do
+            {
+                var message = await _service.PopAsync<GrainsMessage>(_queueId.ToString());
+
+                if (message != null)
+                {
+                    result.Add(GrainsBatchContainer.FromMessage(_serializationManager, message.Value.Id, message.Value.Item.Value, _lastReadMessage++));
+                }
+                else
+                {
+                    break;
+                }
+            }
+            while (result.Count < maxCount);
 
             return result;
         }

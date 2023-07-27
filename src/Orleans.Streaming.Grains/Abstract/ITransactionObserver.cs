@@ -11,6 +11,6 @@ namespace Orleans.Streaming.Grains.Abstract
 {
     public interface ITransactionObserver : IGrainObserver
     {
-        Task CompletedAsync(Guid id, bool success);
+        Task CompletedAsync(Guid id, bool success, string queue);
     }
 }

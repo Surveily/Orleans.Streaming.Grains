@@ -23,11 +23,15 @@ namespace Orleans.Streaming.Grains.Grains
 
         public Task Task => _task.Task;
 
-        public Task CompletedAsync(Guid id, bool success)
+        public Task CompletedAsync(Guid id, bool success, string queue)
         {
             if (id == this.GetPrimaryKey())
             {
                 _task.SetResult(success);
+
+                var transaction = GrainFactory.GetGrain<ITransactionGrain>(queue);
+
+                transaction.UnsubscribeAsync(this.AsReference<ITransactionObserver>());
             }
 
             return Task.CompletedTask;

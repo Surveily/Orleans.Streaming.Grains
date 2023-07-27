@@ -61,7 +61,7 @@ namespace Orleans.Streaming.Grains.Grains
 
                 if (_subscriptions.Any())
                 {
-                    await _subscriptions.Notify(x => x.CompletedAsync(id, success));
+                    await _subscriptions.Notify(x => x.CompletedAsync(id, success, this.GetPrimaryKeyString()));
                 }
             }
         }
