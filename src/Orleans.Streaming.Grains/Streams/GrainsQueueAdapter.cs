@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Orleans.Concurrency;
+using Orleans.Providers.Streams.Common;
 using Orleans.Runtime;
 using Orleans.Serialization;
 using Orleans.Streaming.Grains.Abstract;
@@ -21,21 +22,18 @@ namespace Orleans.Streaming.Grains.Streams
         private readonly string _providerName;
         private readonly GrainsOptions _options;
         private readonly ITransactionService _service;
-        private readonly ILoggerFactory _loggerFactory;
         private readonly Serializer<GrainsBatchContainer> _serializer;
         private readonly IConsistentRingStreamQueueMapper _streamQueueMapper;
 
-        public GrainsQueueAdapter(Serializer serializer,
+        public GrainsQueueAdapter(string providerName,
+                                  Serializer serializer,
                                   GrainsOptions options,
                                   ITransactionService service,
-                                  IConsistentRingStreamQueueMapper streamQueueMapper,
-                                  ILoggerFactory loggerFactory,
-                                  string providerName)
+                                  IConsistentRingStreamQueueMapper streamQueueMapper)
         {
             _options = options;
             _service = service;
             _providerName = providerName;
-            _loggerFactory = loggerFactory;
             _streamQueueMapper = streamQueueMapper;
             _serializer = serializer.GetSerializer<GrainsBatchContainer>();
         }

@@ -32,7 +32,6 @@ namespace Orleans.Streaming.Grains.Test.Scenarios
             {
                 services.AddSingleton(processor);
                 services.AddSingleton(processor.Object);
-                services.AddSingleton<ITransactionService, TransactionService>();
             }
 
             public void Dispose()

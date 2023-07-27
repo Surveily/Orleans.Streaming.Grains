@@ -2,13 +2,18 @@
 // Copyright (c) Surveily Sp. z o.o.. All rights reserved.
 // </copyright>
 
+using System;
 using System.Net;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
 using Orleans.Configuration;
 using Orleans.Hosting;
+using Orleans.Providers.Streams.Common;
+using Orleans.Streaming.Grains.Abstract;
+using Orleans.Streaming.Grains.Services;
 using Orleans.Streaming.Grains.Streams;
 using Orleans.TestingHost;
 
@@ -28,6 +33,7 @@ namespace Orleans.Streaming.Grains.Test
         public void Configure(ISiloBuilder siloBuilder)
         {
             siloBuilder.ConfigureServices(Configure)
+                       .ConfigureServices(ConfigureRequired)
                        .AddMemoryGrainStorageAsDefault()
                        .AddMemoryGrainStorage("PubSubStore")
                        .AddPersistentStreams("Default", GrainsQueueAdapterFactory.Create, config =>
@@ -45,6 +51,11 @@ namespace Orleans.Streaming.Grains.Test
 
         public void Configure(IConfiguration configuration, IClientBuilder clientBuilder)
         {
+        }
+
+        private void ConfigureRequired(IServiceCollection services)
+        {
+            services.AddSingleton<ITransactionService, TransactionService>();
         }
     }
 }

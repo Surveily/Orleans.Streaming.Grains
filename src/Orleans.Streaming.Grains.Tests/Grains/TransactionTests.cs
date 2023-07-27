@@ -27,7 +27,6 @@ namespace Orleans.Streaming.Grains.Tests.Grains
         {
             public override void Configure(IServiceCollection services)
             {
-                services.AddSingleton<ITransactionService, TransactionService>();
             }
         }
 
