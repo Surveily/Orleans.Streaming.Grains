@@ -16,6 +16,7 @@ namespace Orleans.Streaming.Grains.Streams
 {
     public class GrainsQueueAdapterReceiver : IQueueAdapterReceiver
     {
+        private readonly IList<QueueId> _queues;
         private readonly ITransactionService _service;
         private readonly IConsistentRingStreamQueueMapper _streamQueueMapper;
         private readonly Serializer<GrainsBatchContainer> _serializationManager;
@@ -29,13 +30,15 @@ namespace Orleans.Streaming.Grains.Streams
             _service = service;
             _streamQueueMapper = streamQueueMapper;
             _serializationManager = serializationManager;
+            _queues = _streamQueueMapper.GetAllQueues()
+                                        .ToList();
         }
 
         public async Task<IList<IBatchContainer>> GetQueueMessagesAsync(int maxCount)
         {
             var result = new List<IBatchContainer>();
-            var queues = _streamQueueMapper.GetAllQueues();
-            var messages = await Task.WhenAll(queues.Select(x => Task.Run(async () => await _service.PopAsync<GrainsMessage>(x.ToString()))));
+            var messages = await Task.WhenAll(_queues.Take(maxCount)
+                                                     .Select(x => Task.Run(async () => await _service.PopAsync<GrainsMessage>(x.ToString()))));
 
             result.AddRange(messages.Where(x => x != null)
                                     .Select(x => GrainsBatchContainer.FromMessage(_serializationManager, x.Value.Id, x.Value.Item.Value, _lastReadMessage++)));
