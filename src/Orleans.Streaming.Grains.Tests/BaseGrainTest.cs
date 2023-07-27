@@ -14,8 +14,6 @@ namespace Orleans.Streaming.Grains.Test
     public abstract class BaseGrainTest<T>
         where T : ISiloConfigurator, IClientBuilderConfigurator, new()
     {
-        public const int QueueNumber = 8;
-
         private readonly TestCluster _cluster;
         private readonly AsyncRetryPolicy _retryPolicy;
 
