@@ -13,6 +13,7 @@ using Orleans.Configuration;
 using Orleans.Hosting;
 using Orleans.Providers.Streams.Common;
 using Orleans.Streaming.Grains.Abstract;
+using Orleans.Streaming.Grains.Extensions;
 using Orleans.Streaming.Grains.Services;
 using Orleans.Streaming.Grains.Streams;
 using Orleans.TestingHost;
@@ -33,29 +34,13 @@ namespace Orleans.Streaming.Grains.Test
         public void Configure(ISiloBuilder siloBuilder)
         {
             siloBuilder.ConfigureServices(Configure)
-                       .ConfigureServices(ConfigureRequired)
                        .AddMemoryGrainStorageAsDefault()
                        .AddMemoryGrainStorage("PubSubStore")
-                       .AddPersistentStreams("Default", GrainsQueueAdapterFactory.Create, config =>
-                       {
-                           config.Configure<GrainsOptions>(options =>
-                           {
-                               options.Configure(x => x.FireAndForgetDelivery = _fireAndForget);
-                           });
-                           config.Configure<HashRingStreamQueueMapperOptions>(options =>
-                           {
-                               options.Configure(x => x.TotalQueueCount = 100);
-                           });
-                       });
+                       .AddGrainsStreams("Default", _fireAndForget, 100);
         }
 
         public void Configure(IConfiguration configuration, IClientBuilder clientBuilder)
         {
-        }
-
-        private void ConfigureRequired(IServiceCollection services)
-        {
-            services.AddSingleton<ITransactionService, TransactionService>();
         }
     }
 }
