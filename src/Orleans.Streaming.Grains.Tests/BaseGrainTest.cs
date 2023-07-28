@@ -27,15 +27,13 @@ namespace Orleans.Streaming.Grains.Test
                                  .WaitAndRetryAsync(10, f => TimeSpan.FromSeconds(5));
         }
 
-        public T Config { get; }
-
         public IClusterClient Subject => _cluster.Client;
 
         public IServiceProvider Container
         {
             get
             {
-                var siloHandle = _cluster.Primary as Orleans.TestingHost.InProcessSiloHandle;
+                var siloHandle = _cluster.Primary as InProcessSiloHandle;
 
                 return siloHandle.SiloHost.Services;
             }
