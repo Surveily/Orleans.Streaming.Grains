@@ -10,10 +10,13 @@ using Orleans.Runtime;
 
 namespace Orleans.Streaming.Grains.Streams
 {
+    [GenerateSerializer]
     public class GrainsMessage
     {
+        [Id(0)]
         public StreamId StreamId { get; set; }
 
+        [Id(1)]
         public byte[] Data { get; set; }
     }
 }
