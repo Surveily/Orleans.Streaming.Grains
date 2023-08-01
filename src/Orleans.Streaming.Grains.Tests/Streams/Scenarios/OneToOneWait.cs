@@ -54,7 +54,7 @@ namespace Orleans.Streaming.Grains.Test.Scenarios
             }
         }
 
-        public abstract class BaseOneToOneTest : BaseGrainTest<Config>
+        public abstract class BaseOneToOneWaitTest : BaseGrainTest<Config>
         {
             protected Mock<IProcessor> Processor { get; set; }
 
@@ -66,9 +66,10 @@ namespace Orleans.Streaming.Grains.Test.Scenarios
             }
         }
 
-        public class When_Sending_Simple_Message_One_To_One : BaseOneToOneTest
+        public class When_Sending_Simple_Message_One_To_One : BaseOneToOneWaitTest
         {
             protected string result;
+            protected long resultCounter;
             protected string expected = "text";
 
             public override void Prepare()
@@ -76,14 +77,17 @@ namespace Orleans.Streaming.Grains.Test.Scenarios
                 base.Prepare();
 
                 Processor!.Setup(x => x.Process(It.IsAny<string>()))
-                          .Callback<string>(x => result = x);
+                          .Callback<string>(x => result = ++resultCounter == 10 ? x : null);
             }
 
             public override async Task Act()
             {
                 var grain = Subject.GetGrain<IEmitterGrain>(Guid.NewGuid());
 
-                await grain.SendAsync(expected);
+                for (var i = 0; i < 10; i++)
+                {
+                    await grain.SendAsync(expected);
+                }
 
                 await WaitFor(() => result);
             }
@@ -91,13 +95,14 @@ namespace Orleans.Streaming.Grains.Test.Scenarios
             [Test]
             public void It_Should_Deliver_Text()
             {
-                Processor!.Verify(x => x.Process(expected), Times.Once);
+                Processor!.Verify(x => x.Process(expected), Times.Exactly(10));
             }
         }
 
-        public class When_Sending_Blob_Message_One_To_One : BaseOneToOneTest
+        public class When_Sending_Blob_Message_One_To_One : BaseOneToOneWaitTest
         {
             protected byte[] result;
+            protected long resultCounter;
             protected byte[] expected = new byte[1024];
 
             public override void Prepare()
@@ -105,7 +110,7 @@ namespace Orleans.Streaming.Grains.Test.Scenarios
                 base.Prepare();
 
                 Processor!.Setup(x => x.Process(It.IsAny<byte[]>()))
-                          .Callback<byte[]>(x => result = x);
+                          .Callback<byte[]>(x => result = ++resultCounter == 10 ? x : null);
 
                 for (var i = 0; i < 1024; i++)
                 {
@@ -117,7 +122,10 @@ namespace Orleans.Streaming.Grains.Test.Scenarios
             {
                 var grain = Subject.GetGrain<IEmitterGrain>(Guid.NewGuid());
 
-                await grain.SendAsync(expected);
+                for (var i = 0; i < 10; i++)
+                {
+                    await grain.SendAsync(expected);
+                }
 
                 await WaitFor(() => result);
             }
@@ -125,7 +133,7 @@ namespace Orleans.Streaming.Grains.Test.Scenarios
             [Test]
             public void It_Should_Deliver_Data()
             {
-                Processor!.Verify(x => x.Process(expected), Times.Once);
+                Processor!.Verify(x => x.Process(expected), Times.Exactly(10));
             }
         }
     }

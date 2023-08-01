@@ -55,7 +55,7 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Scenarios
             }
         }
 
-        public abstract class BaseOneToManyTest : BaseGrainTest<Config>
+        public abstract class BaseOneToManyWaitTest : BaseGrainTest<Config>
         {
             protected Mock<IProcessor> Processor { get; set; }
 
@@ -67,12 +67,14 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Scenarios
             }
         }
 
-        public class When_Sending_Compound_Message_One_To_Many : BaseOneToManyTest
+        public class When_Sending_Compound_Message_One_To_Many : BaseOneToManyWaitTest
         {
             protected string resultText;
+            protected long resultTextCounter;
             protected string expectedText = "text";
 
             protected byte[] resultData;
+            protected long resultDataCounter;
             protected byte[] expectedData = new byte[1024];
 
             public override void Prepare()
@@ -80,10 +82,10 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Scenarios
                 base.Prepare();
 
                 Processor!.Setup(x => x.Process(It.IsAny<string>()))
-                          .Callback<string>(x => resultText = x);
+                          .Callback<string>(x => resultText = ++resultTextCounter == 10 ? x : null);
 
                 Processor!.Setup(x => x.Process(It.IsAny<byte[]>()))
-                          .Callback<byte[]>(x => resultData = x);
+                          .Callback<byte[]>(x => resultData = ++resultDataCounter == 10 ? x : null);
 
                 for (var i = 0; i < 1024; i++)
                 {
@@ -95,31 +97,35 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Scenarios
             {
                 var grain = Subject.GetGrain<IEmitterGrain>(Guid.NewGuid());
 
-                await grain.SendAsync(expectedText, expectedData);
+                for (var i = 0; i < 10; i++)
+                {
+                    await grain.SendAsync(expectedText, expectedData);
+                }
 
-                await WaitFor(() => resultData);
-                await WaitFor(() => resultText);
+                await Task.WhenAll(WaitFor(() => resultData), WaitFor(() => resultText));
             }
 
             [Test]
             public void It_Should_Deliver_Text()
             {
-                Processor!.Verify(x => x.Process(expectedText), Times.Once);
+                Processor!.Verify(x => x.Process(expectedText), Times.Exactly(10));
             }
 
             [Test]
             public void It_Should_Deliver_Data()
             {
-                Processor!.Verify(x => x.Process(expectedData), Times.Once);
+                Processor!.Verify(x => x.Process(expectedData), Times.Exactly(10));
             }
         }
 
-        public class When_Sending_Explosive_Message_One_To_Many : BaseOneToManyTest
+        public class When_Sending_Explosive_Message_One_To_Many : BaseOneToManyWaitTest
         {
             protected string resultText;
+            protected long resultTextCounter;
             protected string expectedText = "text";
 
             protected byte[] resultData;
+            protected long resultDataCounter;
             protected byte[] expectedData = new byte[1024];
 
             public override void Prepare()
@@ -127,10 +133,10 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Scenarios
                 base.Prepare();
 
                 Processor!.Setup(x => x.Process(It.IsAny<string>()))
-                          .Callback<string>(x => resultText = x);
+                          .Callback<string>(x => resultText = ++resultTextCounter == 20 ? x : null);
 
                 Processor!.Setup(x => x.Process(It.IsAny<byte[]>()))
-                          .Callback<byte[]>(x => resultData = x);
+                          .Callback<byte[]>(x => resultData = ++resultDataCounter == 20 ? x : null);
 
                 for (var i = 0; i < 1024; i++)
                 {
@@ -144,29 +150,30 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Scenarios
 
                 await grain.ExplosiveAsync(expectedText, expectedData);
 
-                await WaitFor(() => expectedData);
-                await WaitFor(() => resultText);
+                await Task.WhenAll(WaitFor(() => resultData), WaitFor(() => resultText));
             }
 
             [Test]
             public void It_Should_Deliver_Text()
             {
-                Processor!.Verify(x => x.Process(expectedText), Times.AtLeastOnce);
+                Processor!.Verify(x => x.Process(expectedText), Times.Exactly(20));
             }
 
             [Test]
             public void It_Should_Deliver_Data()
             {
-                Processor!.Verify(x => x.Process(expectedData), Times.AtLeastOnce);
+                Processor!.Verify(x => x.Process(expectedData), Times.Exactly(20));
             }
         }
 
-        public class When_Sending_Broadcast_Message_One_To_Many : BaseOneToManyTest
+        public class When_Sending_Broadcast_Message_One_To_Many : BaseOneToManyWaitTest
         {
             protected string resultText;
+            protected long resultTextCounter;
             protected string expectedText = "text";
 
             protected byte[] resultData;
+            protected long resultDataCounter;
             protected byte[] expectedData = new byte[1024];
 
             public override void Prepare()
@@ -174,10 +181,10 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Scenarios
                 base.Prepare();
 
                 Processor!.Setup(x => x.Process(It.IsAny<string>()))
-                          .Callback<string>(x => resultText = x);
+                          .Callback<string>(x => resultText = ++resultTextCounter == 10 ? x : null);
 
                 Processor!.Setup(x => x.Process(It.IsAny<byte[]>()))
-                          .Callback<byte[]>(x => resultData = x);
+                          .Callback<byte[]>(x => resultData = ++resultDataCounter == 10 ? x : null);
 
                 for (var i = 0; i < 1024; i++)
                 {
@@ -189,22 +196,24 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Scenarios
             {
                 var grain = Subject.GetGrain<IEmitterGrain>(Guid.NewGuid());
 
-                await grain.BroadcastAsync(expectedText, expectedData);
+                for (var i = 0; i < 10; i++)
+                {
+                    await grain.BroadcastAsync(expectedText, expectedData);
+                }
 
-                await WaitFor(() => expectedData);
-                await WaitFor(() => resultText);
+                await Task.WhenAll(WaitFor(() => resultData), WaitFor(() => resultText));
             }
 
             [Test]
             public void It_Should_Deliver_Text()
             {
-                Processor!.Verify(x => x.Process(expectedText), Times.Once);
+                Processor!.Verify(x => x.Process(expectedText), Times.Exactly(10));
             }
 
             [Test]
             public void It_Should_Deliver_Data()
             {
-                Processor!.Verify(x => x.Process(expectedData), Times.Once);
+                Processor!.Verify(x => x.Process(expectedData), Times.Exactly(10));
             }
         }
     }
