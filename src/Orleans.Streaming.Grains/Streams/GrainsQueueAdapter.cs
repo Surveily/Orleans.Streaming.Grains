@@ -22,14 +22,14 @@ namespace Orleans.Streaming.Grains.Streams
         private readonly string _providerName;
         private readonly GrainsOptions _options;
         private readonly ITransactionService _service;
+        private readonly IStreamQueueMapper _streamQueueMapper;
         private readonly Serializer<GrainsBatchContainer> _serializer;
-        private readonly IConsistentRingStreamQueueMapper _streamQueueMapper;
 
         public GrainsQueueAdapter(string providerName,
                                   Serializer serializer,
                                   GrainsOptions options,
                                   ITransactionService service,
-                                  IConsistentRingStreamQueueMapper streamQueueMapper)
+                                  IStreamQueueMapper streamQueueMapper)
         {
             _options = options;
             _service = service;
@@ -44,7 +44,7 @@ namespace Orleans.Streaming.Grains.Streams
 
         public StreamProviderDirection Direction => StreamProviderDirection.ReadWrite;
 
-        public IQueueAdapterReceiver CreateReceiver(QueueId queueId) => new GrainsQueueAdapterReceiver(queueId, _service, _serializer, _streamQueueMapper);
+        public IQueueAdapterReceiver CreateReceiver(QueueId queueId) => new GrainsQueueAdapterReceiver(queueId, _service, _streamQueueMapper, _serializer);
 
         public async Task QueueMessageBatchAsync<T>(StreamId streamId, IEnumerable<T> events, StreamSequenceToken token, Dictionary<string, object> requestContext)
         {

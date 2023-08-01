@@ -16,6 +16,7 @@ using Orleans.Streaming.Grains.Abstract;
 using Orleans.Streaming.Grains.Extensions;
 using Orleans.Streaming.Grains.Services;
 using Orleans.Streaming.Grains.Streams;
+using Orleans.Streaming.Grains.Tests.Streams.Messages;
 using Orleans.TestingHost;
 
 namespace Orleans.Streaming.Grains.Test
@@ -33,10 +34,20 @@ namespace Orleans.Streaming.Grains.Test
 
         public void Configure(ISiloBuilder siloBuilder)
         {
-            siloBuilder.ConfigureServices(Configure)
-                       .AddMemoryGrainStorageAsDefault()
-                       .AddMemoryGrainStorage("PubSubStore")
-                       .AddGrainsStreams("Default", _fireAndForget, 100);
+            if (_fireAndForget)
+            {
+                siloBuilder.ConfigureServices(Configure)
+                           .AddMemoryGrainStorageAsDefault()
+                           .AddMemoryGrainStorage("PubSubStore")
+                           .AddGrainsStreams("Default", 1);
+            }
+            else
+            {
+                siloBuilder.ConfigureServices(Configure)
+                           .AddMemoryGrainStorageAsDefault()
+                           .AddMemoryGrainStorage("PubSubStore")
+                           .AddGrainsStreamsForTests("Default", typeof(BlobMessage), typeof(SimpleMessage), typeof(BroadcastMessage), typeof(CompoundMessage));
+            }
         }
 
         public void Configure(IConfiguration configuration, IClientBuilder clientBuilder)

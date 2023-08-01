@@ -12,6 +12,7 @@ using Microsoft.Extensions.Options;
 using Orleans.Configuration;
 using Orleans.Configuration.Overrides;
 using Orleans.Providers.Streams.Common;
+using Orleans.Runtime;
 using Orleans.Serialization;
 using Orleans.Streaming.Grains.Abstract;
 using Orleans.Streams;
@@ -26,32 +27,33 @@ namespace Orleans.Streaming.Grains.Streams
         private readonly GrainsOptions _grainsOptions;
         private readonly ILoggerFactory _loggerFactory;
         private readonly IQueueAdapterCache _adapterCache;
-        private readonly HashRingBasedStreamQueueMapper _streamQueueMapper;
+        private readonly IStreamQueueMapper _streamQueueMapper;
 
         public GrainsQueueAdapterFactory(string name,
                                          Serializer serializer,
                                          ITransactionService service,
                                          GrainsOptions grainsOptions,
                                          ILoggerFactory loggerFactory,
-                                         SimpleQueueCacheOptions cacheOptions,
-                                         HashRingStreamQueueMapperOptions queueMapperOptions)
+                                         IStreamQueueMapper queueMapper,
+                                         SimpleQueueCacheOptions cacheOptions)
         {
             _name = name;
             _service = service;
             _serializer = serializer;
             _grainsOptions = grainsOptions;
             _loggerFactory = loggerFactory;
+            _streamQueueMapper = queueMapper;
             _adapterCache = new SimpleQueueAdapterCache(cacheOptions, _name, _loggerFactory);
-            _streamQueueMapper = new HashRingBasedStreamQueueMapper(queueMapperOptions, _name);
         }
 
         public static GrainsQueueAdapterFactory Create(IServiceProvider services, string name)
         {
             var grainsOptions = services.GetOptionsByName<GrainsOptions>(name);
+            var queueMapper = services.GetServiceByName<IStreamQueueMapper>(name);
             var cacheOptions = services.GetOptionsByName<SimpleQueueCacheOptions>(name);
             var queueOptions = services.GetOptionsByName<HashRingStreamQueueMapperOptions>(name);
 
-            return ActivatorUtilities.CreateInstance<GrainsQueueAdapterFactory>(services, name, cacheOptions, grainsOptions, queueOptions);
+            return ActivatorUtilities.CreateInstance<GrainsQueueAdapterFactory>(services, name, cacheOptions, grainsOptions, queueMapper ?? new HashRingBasedStreamQueueMapper(queueOptions, name));
         }
 
         public Task<IQueueAdapter> CreateAdapter()

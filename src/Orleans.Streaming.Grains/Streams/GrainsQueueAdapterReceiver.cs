@@ -18,15 +18,15 @@ namespace Orleans.Streaming.Grains.Streams
     {
         private readonly QueueId _queueId;
         private readonly ITransactionService _service;
-        private readonly IConsistentRingStreamQueueMapper _streamQueueMapper;
+        private readonly IStreamQueueMapper _streamQueueMapper;
         private readonly Serializer<GrainsBatchContainer> _serializationManager;
 
         private long _lastReadMessage;
 
         public GrainsQueueAdapterReceiver(QueueId queueId,
                                           ITransactionService service,
-                                          Serializer<GrainsBatchContainer> serializationManager,
-                                          IConsistentRingStreamQueueMapper streamQueueMapper)
+                                          IStreamQueueMapper streamQueueMapper,
+                                          Serializer<GrainsBatchContainer> serializationManager)
         {
             _queueId = queueId;
             _service = service;

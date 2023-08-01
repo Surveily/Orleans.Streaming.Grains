@@ -7,20 +7,39 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.VisualBasic;
 using Orleans.Configuration;
+using Orleans.Runtime;
 using Orleans.Streaming.Grains.Abstract;
 using Orleans.Streaming.Grains.Services;
 using Orleans.Streaming.Grains.Streams;
+using Orleans.Streams;
 
 namespace Orleans.Streaming.Grains.Extensions
 {
     public static class ISiloBuilderExtensions
     {
-        public static ISiloBuilder AddGrainsStreams(this ISiloBuilder builder, string name, bool fireAndForgetDelivery, int queueCount)
+        public static ISiloBuilder AddGrainsStreams(this ISiloBuilder builder, string name, int queueCount)
+        {
+            return builder.AddGrainsStreams(name, queueCount, true);
+        }
+
+        public static ISiloBuilder AddGrainsStreamsForTests(this ISiloBuilder builder, string name, params Type[] messagesForTests)
+        {
+            return builder.AddGrainsStreams(name, 0, false, messagesForTests);
+        }
+
+        private static ISiloBuilder AddGrainsStreams(this ISiloBuilder builder, string name, int queueCount, bool fireAndForgetDelivery, params Type[] messagesForTests)
         {
             return builder.ConfigureServices(services =>
                           {
                               services.AddSingleton<ITransactionService, TransactionService>();
+
+                              if (!fireAndForgetDelivery)
+                              {
+                                  services.AddSingletonNamedService<IStreamQueueBalancer>(name, (f, n) => new GrainsQueueBalancer());
+                                  services.AddSingletonNamedService<IStreamQueueMapper>(name, (f, n) => new GrainsQueueMapper(messagesForTests));
+                              }
                           })
                           .AddPersistentStreams(name, GrainsQueueAdapterFactory.Create, config =>
                           {
@@ -28,10 +47,13 @@ namespace Orleans.Streaming.Grains.Extensions
                               {
                                   options.Configure(x => x.FireAndForgetDelivery = fireAndForgetDelivery);
                               });
-                              config.Configure<HashRingStreamQueueMapperOptions>(options =>
+                              if (fireAndForgetDelivery)
                               {
-                                  options.Configure(x => x.TotalQueueCount = queueCount);
-                              });
+                                  config.Configure<HashRingStreamQueueMapperOptions>(options =>
+                                  {
+                                      options.Configure(x => x.TotalQueueCount = queueCount);
+                                  });
+                              }
                           });
         }
     }
