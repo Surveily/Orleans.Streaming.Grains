@@ -114,6 +114,53 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Scenarios
             }
         }
 
+        public class When_Sending_Explosive_Message_One_To_Many : BaseOneToManyTest
+        {
+            protected string resultText;
+            protected string expectedText = "text";
+
+            protected byte[] resultData;
+            protected byte[] expectedData = new byte[1024];
+
+            public override void Prepare()
+            {
+                base.Prepare();
+
+                Processor!.Setup(x => x.Process(It.IsAny<string>()))
+                          .Callback<string>(x => resultText = x);
+
+                Processor!.Setup(x => x.Process(It.IsAny<byte[]>()))
+                          .Callback<byte[]>(x => resultData = x);
+
+                for (var i = 0; i < 1024; i++)
+                {
+                    expectedData[i] = Convert.ToByte(i % 2);
+                }
+            }
+
+            public override async Task Act()
+            {
+                var grain = Subject.GetGrain<IEmitterGrain>(Guid.NewGuid());
+
+                await grain.ExplosiveAsync(expectedText, expectedData);
+
+                await WaitFor(() => expectedData);
+                await WaitFor(() => resultText);
+            }
+
+            [Test]
+            public void It_Should_Deliver_Text()
+            {
+                Processor!.Verify(x => x.Process(expectedText), Times.AtLeastOnce);
+            }
+
+            [Test]
+            public void It_Should_Deliver_Data()
+            {
+                Processor!.Verify(x => x.Process(expectedData), Times.AtLeastOnce);
+            }
+        }
+
         public class When_Sending_Broadcast_Message_One_To_Many : BaseOneToManyTest
         {
             protected string resultText;

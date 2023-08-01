@@ -10,18 +10,16 @@ namespace Orleans.Streaming.Grains.Streams
 {
     public class GrainsQueueMapper : IStreamQueueMapper
     {
-        private readonly IEnumerable<QueueId> _queues;
-        private readonly IEnumerable<Type> _messageTypes;
+        private readonly Dictionary<string, QueueId> _queues;
 
         public GrainsQueueMapper(IEnumerable<Type> messageTypes)
         {
-            _messageTypes = messageTypes;
             _queues = messageTypes.Select(x => QueueId.GetQueueId(x.Name, 0, 0))
-                                  .ToList();
+                                  .ToDictionary(x => x.GetStringNamePrefix(), x => x);
         }
 
-        public IEnumerable<QueueId> GetAllQueues() => _queues;
+        public IEnumerable<QueueId> GetAllQueues() => _queues.Values;
 
-        public QueueId GetQueueForStream(StreamId streamId) => _queues.Single(x => x.GetStringNamePrefix() == Encoding.UTF8.GetString(streamId.Namespace.ToArray()));
+        public QueueId GetQueueForStream(StreamId streamId) => _queues[Encoding.UTF8.GetString(streamId.Namespace.Span)];
     }
 }

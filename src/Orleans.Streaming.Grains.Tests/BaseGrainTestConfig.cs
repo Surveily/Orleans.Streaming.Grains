@@ -4,6 +4,7 @@
 
 using System;
 using System.Net;
+using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -46,7 +47,15 @@ namespace Orleans.Streaming.Grains.Test
                 siloBuilder.ConfigureServices(Configure)
                            .AddMemoryGrainStorageAsDefault()
                            .AddMemoryGrainStorage("PubSubStore")
-                           .AddGrainsStreamsForTests("Default", typeof(BlobMessage), typeof(SimpleMessage), typeof(BroadcastMessage), typeof(CompoundMessage));
+                           .AddGrainsStreamsForTests("Default", new[]
+                           {
+                             typeof(BlobMessage),
+                             typeof(SimpleMessage),
+                             typeof(CompoundMessage),
+                             typeof(ExplosiveMessage),
+                             typeof(BroadcastMessage),
+                             typeof(ExplosiveNextMessage),
+                           });
             }
         }
 

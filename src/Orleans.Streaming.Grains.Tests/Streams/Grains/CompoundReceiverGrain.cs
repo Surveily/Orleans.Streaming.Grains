@@ -13,7 +13,7 @@ using Orleans.Streams;
 namespace Orleans.Streaming.Grains.Tests.Streams.Grains
 {
     [ImplicitStreamSubscription(nameof(CompoundMessage))]
-    public class CompoundReceiverGrain : Grain, IBlobReceiverGrain
+    public class CompoundReceiverGrain : Grain, ICompoundReceiverGrain
     {
         private IAsyncStream<BlobMessage> _blobStream;
         private IAsyncStream<SimpleMessage> _simpleStream;
