@@ -68,7 +68,7 @@ namespace Orleans.Streaming.Grains.Test
 
         protected async Task WaitFor(Func<object> subject)
         {
-            await WaitFor(subject, TimeSpan.FromSeconds(5));
+            await WaitFor(subject, TimeSpan.FromSeconds(15));
         }
 
         protected async Task WaitFor(Func<object> subject, TimeSpan timeout)

@@ -42,25 +42,32 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Grains
     [ImplicitStreamSubscription(nameof(ExplosiveNextMessage))]
     public class ExplosiveNextFirstReceiverGrain : Grain, IExplosiveReceiverGrain
     {
-        private IAsyncStream<CompoundMessage> _compoundStream;
+        private List<IAsyncStream<CompoundMessage>> _compoundStreams;
         private StreamSubscriptionHandle<ExplosiveNextMessage> _subscription;
 
         public override async Task OnActivateAsync(CancellationToken cancellationToken)
         {
             var streamProvider = this.GetStreamProvider("Default");
+
+            _compoundStreams = new List<IAsyncStream<CompoundMessage>>();
+
+            for (var i = 0; i < 10; i++)
+            {
+                _compoundStreams.Add(StreamFactory.Create<CompoundMessage>(streamProvider, Guid.NewGuid()));
+            }
+
             var stream = StreamFactory.Create<ExplosiveNextMessage>(streamProvider, this.GetPrimaryKey());
 
             _subscription = await stream.SubscribeAsync(OnNextAsync);
-            _compoundStream = StreamFactory.Create<CompoundMessage>(streamProvider, this.GetPrimaryKey());
 
             await base.OnActivateAsync(cancellationToken);
         }
 
         private async Task OnNextAsync(ExplosiveNextMessage message, StreamSequenceToken token)
         {
-            for (var i = 0; i < 10; i++)
+            foreach (var compoundStream in _compoundStreams)
             {
-                await _compoundStream.OnNextAsync(new CompoundMessage
+                await compoundStream.OnNextAsync(new CompoundMessage
                 {
                     Data = message.Data,
                     Text = message.Text,
@@ -72,25 +79,32 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Grains
     [ImplicitStreamSubscription(nameof(ExplosiveNextMessage))]
     public class ExplosiveNextSecondReceiverGrain : Grain, IExplosiveReceiverGrain
     {
-        private IAsyncStream<CompoundMessage> _compoundStream;
+        private List<IAsyncStream<CompoundMessage>> _compoundStreams;
         private StreamSubscriptionHandle<ExplosiveNextMessage> _subscription;
 
         public override async Task OnActivateAsync(CancellationToken cancellationToken)
         {
             var streamProvider = this.GetStreamProvider("Default");
+
+            _compoundStreams = new List<IAsyncStream<CompoundMessage>>();
+
+            for (var i = 0; i < 10; i++)
+            {
+                _compoundStreams.Add(StreamFactory.Create<CompoundMessage>(streamProvider, Guid.NewGuid()));
+            }
+
             var stream = StreamFactory.Create<ExplosiveNextMessage>(streamProvider, this.GetPrimaryKey());
 
             _subscription = await stream.SubscribeAsync(OnNextAsync);
-            _compoundStream = StreamFactory.Create<CompoundMessage>(streamProvider, this.GetPrimaryKey());
 
             await base.OnActivateAsync(cancellationToken);
         }
 
         private async Task OnNextAsync(ExplosiveNextMessage message, StreamSequenceToken token)
         {
-            for (var i = 0; i < 10; i++)
+            foreach (var compoundStream in _compoundStreams)
             {
-                await _compoundStream.OnNextAsync(new CompoundMessage
+                await compoundStream.OnNextAsync(new CompoundMessage
                 {
                     Data = message.Data,
                     Text = message.Text,
