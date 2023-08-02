@@ -25,9 +25,9 @@ namespace Orleans.Streaming.Grains.Extensions
         }
 
         [Obsolete("This method is for use with TestCluster only. Use `pragma warning disable CS0618` to use it without warnings.")]
-        public static ISiloBuilder AddGrainsStreamsForTests(this ISiloBuilder builder, string name, params Type[] messagesForTests)
+        public static ISiloBuilder AddGrainsStreamsForTests(this ISiloBuilder builder, string name, int queueCount, params Type[] messagesForTests)
         {
-            return builder.AddGrainsStreams(name, 0, false, messagesForTests);
+            return builder.AddGrainsStreams(name, queueCount, false, messagesForTests);
         }
 
         private static ISiloBuilder AddGrainsStreams(this ISiloBuilder builder, string name, int queueCount, bool fireAndForgetDelivery, params Type[] messagesForTests)
@@ -39,7 +39,7 @@ namespace Orleans.Streaming.Grains.Extensions
                               if (!fireAndForgetDelivery)
                               {
                                   services.AddSingletonNamedService<IStreamQueueBalancer>(name, (f, n) => new GrainsQueueBalancer());
-                                  services.AddSingletonNamedService<IStreamQueueMapper>(name, (f, n) => new GrainsQueueMapper(messagesForTests));
+                                  services.AddSingletonNamedService<IStreamQueueMapper>(name, (f, n) => new GrainsQueueMapper(messagesForTests, queueCount));
                               }
                           })
                           .AddPersistentStreams(name, GrainsQueueAdapterFactory.Create, config =>
