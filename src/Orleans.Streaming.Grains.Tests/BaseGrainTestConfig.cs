@@ -48,7 +48,7 @@ namespace Orleans.Streaming.Grains.Test
                 siloBuilder.ConfigureServices(Configure)
                            .AddMemoryGrainStorageAsDefault()
                            .AddMemoryGrainStorage("PubSubStore")
-                           .AddGrainsStreamsForTests("Default", 3, new[]
+                           .AddGrainsStreamsForTests("Default", 1, new[]
                            {
                              typeof(BlobMessage),
                              typeof(SimpleMessage),
