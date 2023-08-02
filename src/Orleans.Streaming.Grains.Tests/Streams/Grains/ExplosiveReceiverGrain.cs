@@ -72,9 +72,9 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Grains
 
             _compoundStreams = new List<IAsyncStream<CompoundMessage>>();
 
-            for (var i = 0; i < 10; i++)
+            foreach (var id in Catalogue.Ids)
             {
-                _compoundStreams.Add(StreamFactory.Create<CompoundMessage>(streamProvider, Guid.NewGuid()));
+                _compoundStreams.Add(StreamFactory.Create<CompoundMessage>(streamProvider, id));
             }
 
             var stream = StreamFactory.Create<ExplosiveNextMessage>(streamProvider, this.GetPrimaryKey());
@@ -113,9 +113,9 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Grains
 
             _compoundStreams = new List<IAsyncStream<CompoundMessage>>();
 
-            for (var i = 0; i < 10; i++)
+            foreach (var id in Catalogue.Ids)
             {
-                _compoundStreams.Add(StreamFactory.Create<CompoundMessage>(streamProvider, Guid.NewGuid()));
+                _compoundStreams.Add(StreamFactory.Create<CompoundMessage>(streamProvider, id));
             }
 
             var stream = StreamFactory.Create<ExplosiveNextMessage>(streamProvider, this.GetPrimaryKey());
@@ -140,5 +140,22 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Grains
 
             await Task.WhenAll(tasks);
         }
+    }
+
+    public class Catalogue
+    {
+        public static List<Guid> Ids = new List<Guid>
+        {
+            new Guid("28C4E45A-8EFA-44EB-990D-0BAB1801A93A"),
+            new Guid("DFB27D29-A5B7-439E-8B84-B0BE3C4F1EF3"),
+            new Guid("9F1FE184-038C-486F-A9BB-5423AE9F01B1"),
+            new Guid("9D0C97EC-80AD-43FF-B99E-695BAB08C8A8"),
+            new Guid("7800A671-9144-4360-9EC3-D06E26BAFB78"),
+            new Guid("00A53827-9853-4182-AB5F-6C1826DA210D"),
+            new Guid("A5CB9B6A-09FD-4C6F-AE67-616A49E1CCEE"),
+            new Guid("4D29994E-F470-4F97-A7A0-69F80AC30DF1"),
+            new Guid("62026CE9-4841-4207-8DFA-7B1B9EA5E6FC"),
+            new Guid("EB72923F-B866-4781-BE64-33FF4166B720"),
+        };
     }
 }

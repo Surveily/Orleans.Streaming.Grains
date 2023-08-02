@@ -1,8 +1,6 @@
 # Orleans.Streaming.Grains
 
-WIP: Working, not for production use.
-
-Nuget: https://www.nuget.org/packages/Orleans.Streaming.Grains
+[![NuGet](https://img.shields.io/nuget/v/Orleans.Streaming.Grains.svg?style=flat)](https://www.nuget.org/packages/Orleans.Streaming.Grains)
 
 Project contains:
 
