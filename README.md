@@ -2,6 +2,8 @@
 
 WIP: Working, not for production use.
 
+Nuget: https://www.nuget.org/packages/Orleans.Streaming.Grains
+
 Project contains:
 
 * **Orleans.Streaming.Grains** implements the Grain Stream Provider.
