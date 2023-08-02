@@ -12,9 +12,11 @@ namespace Orleans.Streaming.Grains.Streams
     {
         private const int Length = 3;
         private readonly Dictionary<string, Queue<QueueId>> _queues;
+        private readonly Dictionary<StreamId, QueueId> _pinnedQueues;
 
         public GrainsQueueMapper(IEnumerable<Type> messageTypes)
         {
+            _pinnedQueues = new Dictionary<StreamId, QueueId>();
             _queues = messageTypes.SelectMany(x => Enumerable.Range(0, Length)
                                                              .Select(y => QueueId.GetQueueId(x.Name, (uint)y, 0)))
                                   .GroupBy(x => x.GetStringNamePrefix())
@@ -25,10 +27,16 @@ namespace Orleans.Streaming.Grains.Streams
 
         public QueueId GetQueueForStream(StreamId streamId)
         {
+            if (_pinnedQueues.ContainsKey(streamId))
+            {
+                return _pinnedQueues[streamId];
+            }
+
             var queue = _queues[Encoding.UTF8.GetString(streamId.Namespace.Span)];
             var queueId = queue.Dequeue();
 
             queue.Enqueue(queueId);
+            _pinnedQueues[streamId] = queueId;
 
             return queueId;
         }
