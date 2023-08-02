@@ -24,6 +24,7 @@ namespace Orleans.Streaming.Grains.Extensions
             return builder.AddGrainsStreams(name, queueCount, true);
         }
 
+        [Obsolete("This method is for use with TestCluster only. Use `pragma warning disable CS0618` to use it without warnings.")]
         public static ISiloBuilder AddGrainsStreamsForTests(this ISiloBuilder builder, string name, params Type[] messagesForTests)
         {
             return builder.AddGrainsStreams(name, 0, false, messagesForTests);

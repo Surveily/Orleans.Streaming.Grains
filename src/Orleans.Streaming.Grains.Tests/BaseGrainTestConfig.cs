@@ -44,6 +44,7 @@ namespace Orleans.Streaming.Grains.Test
             }
             else
             {
+#pragma warning disable CS0618
                 siloBuilder.ConfigureServices(Configure)
                            .AddMemoryGrainStorageAsDefault()
                            .AddMemoryGrainStorage("PubSubStore")
@@ -56,6 +57,7 @@ namespace Orleans.Streaming.Grains.Test
                              typeof(BroadcastMessage),
                              typeof(ExplosiveNextMessage),
                            });
+#pragma warning restore CS0618
             }
         }
 

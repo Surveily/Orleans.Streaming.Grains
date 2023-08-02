@@ -39,6 +39,27 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Grains
         }
     }
 
+    [ImplicitStreamSubscription(nameof(ExplosiveMessage))]
+    public class ExplosiveSecondReceiverGrain : Grain, IExplosiveReceiverGrain
+    {
+        private StreamSubscriptionHandle<ExplosiveMessage> _subscription;
+
+        public override async Task OnActivateAsync(CancellationToken cancellationToken)
+        {
+            var streamProvider = this.GetStreamProvider("Default");
+            var stream = StreamFactory.Create<ExplosiveMessage>(streamProvider, this.GetPrimaryKey());
+
+            _subscription = await stream.SubscribeAsync(OnNextAsync);
+
+            await base.OnActivateAsync(cancellationToken);
+        }
+
+        private Task OnNextAsync(ExplosiveMessage message, StreamSequenceToken token)
+        {
+            return Task.CompletedTask;
+        }
+    }
+
     [ImplicitStreamSubscription(nameof(ExplosiveNextMessage))]
     public class ExplosiveNextFirstReceiverGrain : Grain, IExplosiveReceiverGrain
     {
@@ -65,14 +86,18 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Grains
 
         private async Task OnNextAsync(ExplosiveNextMessage message, StreamSequenceToken token)
         {
+            var tasks = new List<Task>();
+
             foreach (var compoundStream in _compoundStreams)
             {
-                await compoundStream.OnNextAsync(new CompoundMessage
+                tasks.Add(compoundStream.OnNextAsync(new CompoundMessage
                 {
                     Data = message.Data,
                     Text = message.Text,
-                });
+                }));
             }
+
+            await Task.WhenAll(tasks);
         }
     }
 
@@ -102,14 +127,18 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Grains
 
         private async Task OnNextAsync(ExplosiveNextMessage message, StreamSequenceToken token)
         {
+            var tasks = new List<Task>();
+
             foreach (var compoundStream in _compoundStreams)
             {
-                await compoundStream.OnNextAsync(new CompoundMessage
+                tasks.Add(compoundStream.OnNextAsync(new CompoundMessage
                 {
                     Data = message.Data,
                     Text = message.Text,
-                });
+                }));
             }
+
+            await Task.WhenAll(tasks);
         }
     }
 }

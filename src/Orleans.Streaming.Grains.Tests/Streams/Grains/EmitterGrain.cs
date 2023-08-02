@@ -33,60 +33,45 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Grains
 
         public async Task SendAsync(string text)
         {
-            if (_simpleStream != null)
+            await _simpleStream.OnNextAsync(new SimpleMessage
             {
-                await _simpleStream.OnNextAsync(new SimpleMessage
-                {
-                    Text = new Immutable<string>(text),
-                });
-            }
+                Text = new Immutable<string>(text),
+            });
         }
 
         public async Task SendAsync(byte[] data)
         {
-            if (_blobStream != null)
+            await _blobStream.OnNextAsync(new BlobMessage
             {
-                await _blobStream.OnNextAsync(new BlobMessage
-                {
-                    Data = new Immutable<byte[]>(data),
-                });
-            }
+                Data = new Immutable<byte[]>(data),
+            });
         }
 
         public async Task SendAsync(string text, byte[] data)
         {
-            if (_compoundStream != null)
+            await _compoundStream.OnNextAsync(new CompoundMessage
             {
-                await _compoundStream.OnNextAsync(new CompoundMessage
-                {
-                    Text = new Immutable<string>(text),
-                    Data = new Immutable<byte[]>(data),
-                });
-            }
+                Text = new Immutable<string>(text),
+                Data = new Immutable<byte[]>(data),
+            });
         }
 
         public async Task ExplosiveAsync(string text, byte[] data)
         {
-            if (_explosiveStream != null)
+            await _explosiveStream.OnNextAsync(new ExplosiveMessage
             {
-                await _explosiveStream.OnNextAsync(new ExplosiveMessage
-                {
-                    Text = new Immutable<string>(text),
-                    Data = new Immutable<byte[]>(data),
-                });
-            }
+                Text = new Immutable<string>(text),
+                Data = new Immutable<byte[]>(data),
+            });
         }
 
         public async Task BroadcastAsync(string text, byte[] data)
         {
-            if (_broadcastStream != null)
+            await _broadcastStream.OnNextAsync(new BroadcastMessage
             {
-                await _broadcastStream.OnNextAsync(new BroadcastMessage
-                {
-                    Text = new Immutable<string>(text),
-                    Data = new Immutable<byte[]>(data),
-                });
-            }
+                Text = new Immutable<string>(text),
+                Data = new Immutable<byte[]>(data),
+            });
         }
     }
 }
