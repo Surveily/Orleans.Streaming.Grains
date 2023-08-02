@@ -11,6 +11,9 @@ namespace Orleans.Streaming.Grains.Streams
     public class GrainsQueueMapper : IStreamQueueMapper
     {
         private const int Length = 3;
+
+        private static object @lock = new object();
+
         private readonly Dictionary<string, Queue<QueueId>> _queues;
         private readonly Dictionary<StreamId, QueueId> _pinnedQueues;
 
@@ -27,18 +30,21 @@ namespace Orleans.Streaming.Grains.Streams
 
         public QueueId GetQueueForStream(StreamId streamId)
         {
-            if (_pinnedQueues.ContainsKey(streamId))
+            lock (@lock)
             {
-                return _pinnedQueues[streamId];
+                if (_pinnedQueues.ContainsKey(streamId))
+                {
+                    return _pinnedQueues[streamId];
+                }
+
+                var queue = _queues[Encoding.UTF8.GetString(streamId.Namespace.Span)];
+                var queueId = queue.Dequeue();
+
+                queue.Enqueue(queueId);
+                _pinnedQueues[streamId] = queueId;
+
+                return queueId;
             }
-
-            var queue = _queues[Encoding.UTF8.GetString(streamId.Namespace.Span)];
-            var queueId = queue.Dequeue();
-
-            queue.Enqueue(queueId);
-            _pinnedQueues[streamId] = queueId;
-
-            return queueId;
         }
     }
 }
