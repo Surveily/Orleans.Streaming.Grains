@@ -7,21 +7,24 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Orleans;
+using Orleans.Streaming.Grains.State;
 
 namespace Orleans.Streaming.Grains.Abstract
 {
     public interface ITransactionGrain : IGrainWithStringKey
     {
+        Task FlushAsync();
+
         Task<Guid?> PopAsync();
 
         Task PostAsync(Guid id);
 
         Task CompleteAsync(Guid id, bool success);
 
+        Task<TransactionGrainState> GetStateAsync();
+
         Task SubscribeAsync(ITransactionObserver observer);
 
         Task UnsubscribeAsync(ITransactionObserver observer);
-
-        Task<(Queue<Guid> Queue, Queue<Guid> Poison, Dictionary<Guid, DateTimeOffset> Transactions)> GetStateAsync();
     }
 }

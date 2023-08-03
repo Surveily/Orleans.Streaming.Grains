@@ -21,5 +21,8 @@ namespace Orleans.Streaming.Grains.State
 
         [Id(2)]
         public Dictionary<Guid, DateTimeOffset> Transactions { get; set; }
+
+        [Id(3)]
+        public Dictionary<Guid, int> TransactionCounts { get; set; }
     }
 }

@@ -11,6 +11,7 @@ using NUnit.Framework;
 using Orleans.Hosting;
 using Orleans.Streaming.Grains.Abstract;
 using Orleans.Streaming.Grains.Services;
+using Orleans.Streaming.Grains.State;
 using Orleans.Streaming.Grains.Streams;
 using Orleans.Streaming.Grains.Test;
 using Orleans.Streaming.Grains.Tests.Streams.Grains;
@@ -248,7 +249,93 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Scenarios
 
         public class When_Sending_Broadcast_Message_One_To_Many_Error : BaseOneToManyTest
         {
-            protected TimeSpan wait = TimeSpan.FromSeconds(10);
+            protected TransactionGrainState state;
+
+            protected string resultText;
+            protected string expectedText = "text";
+
+            protected byte[] resultData;
+            protected byte[] expectedData = new byte[1024];
+
+            public override void Prepare()
+            {
+                base.Prepare();
+
+                Processor!.Setup(x => x.Process(It.IsAny<string>()))
+                          .Throws<Exception>();
+
+                Processor!.Setup(x => x.Process(It.IsAny<byte[]>()))
+                          .Throws<Exception>();
+
+                for (var i = 0; i < 1024; i++)
+                {
+                    expectedData[i] = Convert.ToByte(i % 2);
+                }
+            }
+
+            public override async Task Act()
+            {
+                var grain = Subject.GetGrain<IEmitterGrain>(Guid.NewGuid());
+                var transaction = Subject.GetGrain<ITransactionGrain>("broadcastmessage-0");
+
+                await grain.BroadcastAsync(expectedText, expectedData);
+
+                state = await transaction.GetStateAsync();
+            }
+
+            [Test]
+            public void It_Should_Deliver_Text()
+            {
+                Processor!.Verify(x => x.Process(expectedText), Times.Exactly(4));
+            }
+
+            [Test]
+            public void It_Should_Not_Deliver_Expected_Text()
+            {
+                resultText.ShouldBeNull();
+            }
+
+            [Test]
+            public void It_Should_Deliver_Data()
+            {
+                Processor!.Verify(x => x.Process(expectedData), Times.Exactly(4));
+            }
+
+            [Test]
+            public void It_Should_Not_Deliver_Expected_Data()
+            {
+                resultData.ShouldBeNull();
+            }
+
+            [Test]
+            public void State_Should_Have_Poison_Single()
+            {
+                state.Poison.Count.ShouldEqual(1);
+            }
+
+            [Test]
+            public void State_Should_Have_Queue_Empty()
+            {
+                state.Queue.ShouldBeEmpty();
+            }
+
+            [Test]
+            public void State_Should_Have_Transactions_Empty()
+            {
+                state.Transactions.ShouldBeEmpty();
+            }
+
+            [Test]
+            public void State_Should_Have_Transaction_Counts_Empty()
+            {
+                state.TransactionCounts.ShouldBeEmpty();
+            }
+        }
+
+        /* TODO Retry
+        public class When_Sending_Broadcast_Message_One_To_Many_Error : BaseOneToManyTest
+        {
+            protected TimeSpan wait = TimeSpan.FromSeconds(60);
 
             protected string resultText;
             protected Stopwatch timerText;
@@ -265,7 +352,7 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Scenarios
                 Processor!.Setup(x => x.Process(It.IsAny<string>()))
                           .Callback<string>(x =>
                           {
-                              timerText = timerText ?? Stopwatch.StartNew();
+                              timerText ??= Stopwatch.StartNew();
 
                               if (timerText.Elapsed < wait)
                               {
@@ -280,7 +367,7 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Scenarios
                 Processor!.Setup(x => x.Process(It.IsAny<byte[]>()))
                           .Callback<byte[]>(x =>
                           {
-                              timerData = timerData ?? Stopwatch.StartNew();
+                              timerData ??= Stopwatch.StartNew();
 
                               if (timerData.Elapsed < wait)
                               {
@@ -296,15 +383,16 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Scenarios
                 {
                     expectedData[i] = Convert.ToByte(i % 2);
                 }
-
-                settings.Value.Timeout = TimeSpan.FromSeconds(2);
             }
 
             public override async Task Act()
             {
                 var grain = Subject.GetGrain<IEmitterGrain>(Guid.NewGuid());
+                var transaction = Subject.GetGrain<ITransactionGrain>(nameof(BroadcastMessage));
 
                 await grain.BroadcastAsync(expectedText, expectedData);
+
+                var state = await transaction.GetStateAsync();
             }
 
             [Test]
@@ -330,6 +418,6 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Scenarios
             {
                 expectedData.ShouldEqual(resultData);
             }
-        }
+        }*/
     }
 }

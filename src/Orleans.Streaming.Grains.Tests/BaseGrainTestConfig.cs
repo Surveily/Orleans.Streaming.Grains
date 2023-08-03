@@ -40,7 +40,7 @@ namespace Orleans.Streaming.Grains.Test
                 siloBuilder.ConfigureServices(Configure)
                            .AddMemoryGrainStorageAsDefault()
                            .AddMemoryGrainStorage("PubSubStore")
-                           .AddGrainsStreams("Default", 1);
+                           .AddGrainsStreams("Default", 1, 3);
             }
             else
             {
@@ -48,7 +48,7 @@ namespace Orleans.Streaming.Grains.Test
                 siloBuilder.ConfigureServices(Configure)
                            .AddMemoryGrainStorageAsDefault()
                            .AddMemoryGrainStorage("PubSubStore")
-                           .AddGrainsStreamsForTests("Default", 3, new[]
+                           .AddGrainsStreamsForTests("Default", 3, 3, new[]
                            {
                              typeof(BlobMessage),
                              typeof(SimpleMessage),

@@ -15,6 +15,7 @@ using Orleans;
 using Orleans.Concurrency;
 using Orleans.Streaming.Grains.Abstract;
 using Orleans.Streaming.Grains.Services;
+using Orleans.Streaming.Grains.State;
 using Orleans.Streaming.Grains.Streams;
 using Orleans.Streaming.Grains.Test;
 using Should;
@@ -36,9 +37,7 @@ namespace Orleans.Streaming.Grains.Tests.Grains
             protected ITransactionService service;
             protected IOptions<GrainsOptions> settings;
 
-            protected Queue<Guid> queue;
-            protected Queue<Guid> poison;
-            protected Dictionary<Guid, DateTimeOffset> transactions;
+            protected TransactionGrainState state;
 
             public override void Prepare()
             {
@@ -102,25 +101,31 @@ namespace Orleans.Streaming.Grains.Tests.Grains
 
                 var transaction = client.GetGrain<ITransactionGrain>("1");
 
-                (queue, poison, transactions) = await transaction.GetStateAsync();
+                state = await transaction.GetStateAsync();
             }
 
             [Test]
             public void State_Should_Have_Poison_Empty()
             {
-                poison.ShouldBeEmpty();
+                state.Poison.ShouldBeEmpty();
             }
 
             [Test]
             public void State_Should_Have_Queue_Empty()
             {
-                queue.ShouldBeEmpty();
+                state.Queue.ShouldBeEmpty();
             }
 
             [Test]
             public void State_Should_Have_Transactions_Single()
             {
-                transactions.Count.ShouldEqual(1);
+                state.Transactions.Count.ShouldEqual(1);
+            }
+
+            [Test]
+            public void State_Should_Have_Transaction_Counts_Single()
+            {
+                state.TransactionCounts.Count.ShouldEqual(1);
             }
         }
 
@@ -136,25 +141,31 @@ namespace Orleans.Streaming.Grains.Tests.Grains
 
                 var transaction = client.GetGrain<ITransactionGrain>("1");
 
-                (queue, poison, transactions) = await transaction.GetStateAsync();
+                state = await transaction.GetStateAsync();
             }
 
             [Test]
             public void State_Should_Have_Poison_Empty()
             {
-                poison.ShouldBeEmpty();
+                state.Poison.ShouldBeEmpty();
             }
 
             [Test]
             public void State_Should_Have_Queue_Empty()
             {
-                queue.Count.ShouldEqual(1);
+                state.Queue.Count.ShouldEqual(1);
             }
 
             [Test]
-            public void State_Should_Have_Transactions_Single()
+            public void State_Should_Have_Transactions_Empty()
             {
-                transactions.ShouldBeEmpty();
+                state.Transactions.ShouldBeEmpty();
+            }
+
+            [Test]
+            public void State_Should_Have_Transaction_Counts_Empty()
+            {
+                state.TransactionCounts.ShouldBeEmpty();
             }
         }
 
@@ -174,7 +185,7 @@ namespace Orleans.Streaming.Grains.Tests.Grains
 
                 var transaction = client.GetGrain<ITransactionGrain>("1");
 
-                (queue, poison, transactions) = await transaction.GetStateAsync();
+                state = await transaction.GetStateAsync();
             }
 
             [Test]
@@ -186,19 +197,25 @@ namespace Orleans.Streaming.Grains.Tests.Grains
             [Test]
             public void State_Should_Have_Poison_Empty()
             {
-                poison.ShouldBeEmpty();
+                state.Poison.ShouldBeEmpty();
             }
 
             [Test]
             public void State_Should_Have_Queue_Empty()
             {
-                queue.ShouldBeEmpty();
+                state.Queue.ShouldBeEmpty();
             }
 
             [Test]
             public void State_Should_Have_Transactions_Empty()
             {
-                transactions.ShouldBeEmpty();
+                state.Transactions.ShouldBeEmpty();
+            }
+
+            [Test]
+            public void State_Should_Have_Transaction_Counts_Empty()
+            {
+                state.TransactionCounts.ShouldBeEmpty();
             }
         }
 
@@ -218,7 +235,7 @@ namespace Orleans.Streaming.Grains.Tests.Grains
 
                 var transaction = client.GetGrain<ITransactionGrain>("1");
 
-                (queue, poison, transactions) = await transaction.GetStateAsync();
+                state = await transaction.GetStateAsync();
             }
 
             [Test]
@@ -230,19 +247,25 @@ namespace Orleans.Streaming.Grains.Tests.Grains
             [Test]
             public void State_Should_Have_Poison_Single()
             {
-                poison.Count.ShouldEqual(1);
+                state.Poison.Count.ShouldEqual(1);
             }
 
             [Test]
             public void State_Should_Have_Queue_Empty()
             {
-                queue.ShouldBeEmpty();
+                state.Queue.ShouldBeEmpty();
             }
 
             [Test]
             public void State_Should_Have_Transactions_Empty()
             {
-                transactions.ShouldBeEmpty();
+                state.Transactions.ShouldBeEmpty();
+            }
+
+            [Test]
+            public void State_Should_Have_Transaction_Counts_Empty()
+            {
+                state.TransactionCounts.ShouldBeEmpty();
             }
         }
     }

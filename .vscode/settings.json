@@ -1,3 +1,6 @@
 {
-    "dotnet.defaultSolution": "src/Orleans.Streaming.Grains.sln"
+    "dotnet.defaultSolution": "src/Orleans.Streaming.Grains.sln",
+    "cSpell.words": [
+        "Surveily"
+    ]
 }

@@ -36,6 +36,7 @@ namespace Orleans.Streaming.Grains.Grains
             {
                 State.Queue = new Queue<Guid>();
                 State.Poison = new Queue<Guid>();
+                State.TransactionCounts = new Dictionary<Guid, int>();
                 State.Transactions = new Dictionary<Guid, DateTimeOffset>();
 
                 await PersistAsync();
@@ -43,7 +44,7 @@ namespace Orleans.Streaming.Grains.Grains
 
             var timeout = _options.Timeout / 5;
 
-            _ = RegisterTimer(FlushAsync, null, timeout, timeout);
+            _ = RegisterTimer(FlushTimerAsync, null, timeout, timeout);
 
             await base.OnActivateAsync(cancellationToken);
         }
@@ -52,6 +53,8 @@ namespace Orleans.Streaming.Grains.Grains
         {
             if (State.Transactions.Remove(id, out _))
             {
+                State.TransactionCounts.Remove(id, out _);
+
                 if (!success)
                 {
                     State.Poison.Enqueue(id);
@@ -64,10 +67,6 @@ namespace Orleans.Streaming.Grains.Grains
                     await _subscriptions.Notify(x => x.CompletedAsync(id, success, this.GetPrimaryKeyString()));
                 }
             }
-            else
-            {
-                throw new InvalidOperationException($"No transaction with id {id} pending.");
-            }
         }
 
         public async Task<Guid?> PopAsync()
@@ -75,6 +74,13 @@ namespace Orleans.Streaming.Grains.Grains
             if (State.Queue.TryDequeue(out var id))
             {
                 State.Transactions.Add(id, DateTimeOffset.UtcNow);
+
+                if (!State.TransactionCounts.ContainsKey(id))
+                {
+                    State.TransactionCounts[id] = 0;
+                }
+
+                State.TransactionCounts[id]++;
 
                 await PersistAsync();
 
@@ -91,9 +97,9 @@ namespace Orleans.Streaming.Grains.Grains
             await PersistAsync();
         }
 
-        public Task<(Queue<Guid> Queue, Queue<Guid> Poison, Dictionary<Guid, DateTimeOffset> Transactions)> GetStateAsync()
+        public Task<TransactionGrainState> GetStateAsync()
         {
-            return Task.FromResult((State.Queue, State.Poison, State.Transactions));
+            return Task.FromResult(State);
         }
 
         public Task SubscribeAsync(ITransactionObserver observer)
@@ -110,7 +116,7 @@ namespace Orleans.Streaming.Grains.Grains
             return Task.CompletedTask;
         }
 
-        private async Task FlushAsync(object arg)
+        public async Task FlushAsync()
         {
             var expired = State.Transactions.Where(x => (DateTimeOffset.UtcNow - x.Value) > _options.Timeout)
                                             .ToList();
@@ -119,12 +125,24 @@ namespace Orleans.Streaming.Grains.Grains
             {
                 foreach (var item in expired)
                 {
-                    State.Queue.Enqueue(item.Key);
-                    State.Transactions.Remove(item.Key);
+                    if (State.TransactionCounts[item.Key] > _options.Retry)
+                    {
+                        await CompleteAsync(item.Key, false);
+                    }
+                    else
+                    {
+                        State.Queue.Enqueue(item.Key);
+                        State.Transactions.Remove(item.Key);
+                    }
                 }
 
                 await PersistAsync();
             }
+        }
+
+        private async Task FlushTimerAsync(object arg)
+        {
+            await Task.Run(async () => await this.AsReference<ITransactionGrain>().FlushAsync());
         }
 
         private async Task PersistAsync()
