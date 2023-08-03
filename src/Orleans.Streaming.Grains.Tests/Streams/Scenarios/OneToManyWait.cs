@@ -14,6 +14,7 @@ using Orleans.Streaming.Grains.Streams;
 using Orleans.Streaming.Grains.Test;
 using Orleans.Streaming.Grains.Tests.Streams.Grains;
 using Orleans.Streaming.Grains.Tests.Streams.Messages;
+using Should;
 
 namespace Orleans.Streaming.Grains.Tests.Streams.Scenarios
 {
@@ -112,9 +113,21 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Scenarios
             }
 
             [Test]
+            public void It_Should_Deliver_Expected_Text()
+            {
+                expectedText.ShouldEqual(resultText);
+            }
+
+            [Test]
             public void It_Should_Deliver_Data()
             {
                 Processor!.Verify(x => x.Process(expectedData), Times.Exactly(10));
+            }
+
+            [Test]
+            public void It_Should_Deliver_Expected_Data()
+            {
+                expectedData.ShouldEqual(resultData);
             }
         }
 
@@ -160,9 +173,21 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Scenarios
             }
 
             [Test]
+            public void It_Should_Deliver_Expected_Text()
+            {
+                expectedText.ShouldEqual(resultText);
+            }
+
+            [Test]
             public void It_Should_Deliver_Data()
             {
                 Processor!.Verify(x => x.Process(expectedData), Times.Exactly(20));
+            }
+
+            [Test]
+            public void It_Should_Deliver_Expected_Data()
+            {
+                expectedData.ShouldEqual(resultData);
             }
         }
 
@@ -211,9 +236,21 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Scenarios
             }
 
             [Test]
+            public void It_Should_Deliver_Expected_Text()
+            {
+                expectedText.ShouldEqual(resultText);
+            }
+
+            [Test]
             public void It_Should_Deliver_Data()
             {
                 Processor!.Verify(x => x.Process(expectedData), Times.Exactly(10));
+            }
+
+            [Test]
+            public void It_Should_Deliver_Expected_Data()
+            {
+                expectedData.ShouldEqual(resultData);
             }
         }
     }

@@ -2,8 +2,10 @@
 // Copyright (c) Surveily Sp. z o.o.. All rights reserved.
 // </copyright>
 
+using System.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using Moq;
 using NUnit.Framework;
 using Orleans.Hosting;
@@ -13,6 +15,7 @@ using Orleans.Streaming.Grains.Streams;
 using Orleans.Streaming.Grains.Test;
 using Orleans.Streaming.Grains.Tests.Streams.Grains;
 using Orleans.Streaming.Grains.Tests.Streams.Messages;
+using Should;
 
 namespace Orleans.Streaming.Grains.Tests.Streams.Scenarios
 {
@@ -56,11 +59,14 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Scenarios
 
         public abstract class BaseOneToManyTest : BaseGrainTest<Config>
         {
+            protected IOptions<GrainsOptions> settings;
+
             protected Mock<IProcessor> Processor { get; set; }
 
             public override void Prepare()
             {
                 Processor = Container.GetService<Mock<IProcessor>>();
+                settings = Container.GetService<IOptions<GrainsOptions>>();
 
                 base.Prepare();
             }
@@ -107,9 +113,21 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Scenarios
             }
 
             [Test]
+            public void It_Should_Deliver_Expected_Text()
+            {
+                expectedText.ShouldEqual(resultText);
+            }
+
+            [Test]
             public void It_Should_Deliver_Data()
             {
                 Processor!.Verify(x => x.Process(expectedData), Times.Exactly(10));
+            }
+
+            [Test]
+            public void It_Should_Deliver_Expected_Data()
+            {
+                expectedData.ShouldEqual(resultData);
             }
         }
 
@@ -151,9 +169,21 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Scenarios
             }
 
             [Test]
+            public void It_Should_Deliver_Expected_Text()
+            {
+                expectedText.ShouldEqual(resultText);
+            }
+
+            [Test]
             public void It_Should_Deliver_Data()
             {
                 Processor!.Verify(x => x.Process(expectedData), Times.Exactly(20));
+            }
+
+            [Test]
+            public void It_Should_Deliver_Expected_Data()
+            {
+                expectedData.ShouldEqual(resultData);
             }
         }
 
@@ -198,15 +228,28 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Scenarios
             }
 
             [Test]
+            public void It_Should_Deliver_Expected_Text()
+            {
+                expectedText.ShouldEqual(resultText);
+            }
+
+            [Test]
             public void It_Should_Deliver_Data()
             {
                 Processor!.Verify(x => x.Process(expectedData), Times.Exactly(10));
             }
+
+            [Test]
+            public void It_Should_Deliver_Expected_Data()
+            {
+                expectedData.ShouldEqual(resultData);
+            }
         }
 
-        /* TODO: Test for errors
         public class When_Sending_Broadcast_Message_One_To_Many_Error : BaseOneToManyTest
         {
+            protected Stopwatch timer;
+
             protected string resultText;
             protected string expectedText = "text";
 
@@ -218,38 +261,71 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Scenarios
                 base.Prepare();
 
                 Processor!.Setup(x => x.Process(It.IsAny<string>()))
-                          .Throws(new Exception());
+                          .Callback<string>(x =>
+                          {
+                              if (timer.Elapsed < TimeSpan.FromSeconds(4))
+                              {
+                                  throw new Exception();
+                              }
+                              else
+                              {
+                                  resultText = x;
+                              }
+                          });
 
                 Processor!.Setup(x => x.Process(It.IsAny<byte[]>()))
-                          .Throws(new Exception());
+                          .Callback<byte[]>(x =>
+                          {
+                              if (timer.Elapsed < TimeSpan.FromSeconds(4))
+                              {
+                                  throw new Exception();
+                              }
+                              else
+                              {
+                                  resultData = x;
+                              }
+                          });
 
                 for (var i = 0; i < 1024; i++)
                 {
                     expectedData[i] = Convert.ToByte(i % 2);
                 }
+
+                settings.Value.Timeout = TimeSpan.FromSeconds(2);
             }
 
             public override async Task Act()
             {
                 var grain = Subject.GetGrain<IEmitterGrain>(Guid.NewGuid());
 
-                for (var i = 0; i < 10; i++)
-                {
-                    await grain.BroadcastAsync(expectedText, expectedData);
-                }
+                timer = Stopwatch.StartNew();
+
+                await grain.BroadcastAsync(expectedText, expectedData);
             }
 
             [Test]
-            public void It_Should_Not_Deliver_Text()
+            public void It_Should_Deliver_Text()
             {
-                Processor!.Verify(x => x.Process(expectedText), Times.Never);
+                Processor!.Verify(x => x.Process(expectedText), Times.AtLeast(2));
             }
 
             [Test]
-            public void It_Should_Not_Deliver_Data()
+            public void It_Should_Deliver_Expected_Text()
             {
-                Processor!.Verify(x => x.Process(expectedData), Times.Never);
+                expectedText.ShouldEqual(resultText);
             }
-        }*/
+
+            [Test]
+            public void It_Should_Deliver_Data()
+            {
+                Processor!.Verify(x => x.Process(expectedData), Times.AtLeast(2));
+            }
+
+            [Test]
+            public void It_Should_Deliver_Expected_Data()
+            {
+                expectedData.ShouldEqual(resultData);
+            }
+        }
     }
 }

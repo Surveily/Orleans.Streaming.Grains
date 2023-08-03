@@ -71,8 +71,6 @@ namespace Orleans.Streaming.Grains.Tests.Grains
             public override void Prepare()
             {
                 base.Prepare();
-
-                settings.Value.Timeout = TimeSpan.FromSeconds(2);
             }
 
             [Test]

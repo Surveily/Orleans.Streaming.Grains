@@ -21,16 +21,16 @@ namespace Orleans.Streaming.Grains.Extensions
     {
         public static ISiloBuilder AddGrainsStreams(this ISiloBuilder builder, string name, int queueCount)
         {
-            return builder.AddGrainsStreams(name, queueCount, true);
+            return builder.AddGrainsStreams(name, queueCount, true, TimeSpan.FromMinutes(5));
         }
 
         [Obsolete("This method is for use with TestCluster only. Use `pragma warning disable CS0618` to use it without warnings.")]
         public static ISiloBuilder AddGrainsStreamsForTests(this ISiloBuilder builder, string name, int queueCount, params Type[] messagesForTests)
         {
-            return builder.AddGrainsStreams(name, queueCount, false, messagesForTests);
+            return builder.AddGrainsStreams(name, queueCount, false, TimeSpan.FromSeconds(2), messagesForTests);
         }
 
-        private static ISiloBuilder AddGrainsStreams(this ISiloBuilder builder, string name, int queueCount, bool fireAndForgetDelivery, params Type[] messagesForTests)
+        private static ISiloBuilder AddGrainsStreams(this ISiloBuilder builder, string name, int queueCount, bool fireAndForgetDelivery, TimeSpan timeout, params Type[] messagesForTests)
         {
             return builder.ConfigureServices(services =>
                           {
@@ -46,6 +46,7 @@ namespace Orleans.Streaming.Grains.Extensions
                           {
                               config.Configure<GrainsOptions>(options =>
                               {
+                                  options.Configure(x => x.Timeout = timeout);
                                   options.Configure(x => x.FireAndForgetDelivery = fireAndForgetDelivery);
                               });
                               if (fireAndForgetDelivery)

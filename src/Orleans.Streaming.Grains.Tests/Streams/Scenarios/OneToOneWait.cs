@@ -13,6 +13,7 @@ using Orleans.Streaming.Grains.Streams;
 using Orleans.Streaming.Grains.Test;
 using Orleans.Streaming.Grains.Tests.Streams.Grains;
 using Orleans.Streaming.Grains.Tests.Streams.Messages;
+using Should;
 
 namespace Orleans.Streaming.Grains.Test.Scenarios
 {
@@ -93,9 +94,15 @@ namespace Orleans.Streaming.Grains.Test.Scenarios
             }
 
             [Test]
-            public void It_Should_Deliver_Text()
+            public void It_Should_Deliver()
             {
                 Processor!.Verify(x => x.Process(expected), Times.Exactly(10));
+            }
+
+            [Test]
+            public void It_Should_Deliver_Expected()
+            {
+                expected.ShouldEqual(result);
             }
         }
 
@@ -131,9 +138,15 @@ namespace Orleans.Streaming.Grains.Test.Scenarios
             }
 
             [Test]
-            public void It_Should_Deliver_Data()
+            public void It_Should_Deliver()
             {
                 Processor!.Verify(x => x.Process(expected), Times.Exactly(10));
+            }
+
+            [Test]
+            public void It_Should_Deliver_Expected()
+            {
+                expected.ShouldEqual(result);
             }
         }
     }
