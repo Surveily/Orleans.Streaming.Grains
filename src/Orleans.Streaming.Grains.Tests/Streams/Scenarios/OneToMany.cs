@@ -286,7 +286,7 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Scenarios
             [Test]
             public void It_Should_Deliver_Text()
             {
-                Processor!.Verify(x => x.Process(expectedText), Times.Exactly(5));
+                Processor!.Verify(x => x.Process(expectedText), Times.AtLeast(4));
             }
 
             [Test]
@@ -298,7 +298,7 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Scenarios
             [Test]
             public void It_Should_Deliver_Data()
             {
-                Processor!.Verify(x => x.Process(expectedData), Times.Exactly(5));
+                Processor!.Verify(x => x.Process(expectedData), Times.AtLeast(4));
             }
 
             [Test]

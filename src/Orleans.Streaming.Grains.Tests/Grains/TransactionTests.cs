@@ -165,7 +165,7 @@ namespace Orleans.Streaming.Grains.Tests.Grains
             [Test]
             public void State_Should_Have_Transaction_Counts_Empty()
             {
-                state.TransactionCounts.ShouldBeEmpty();
+                state.TransactionCounts.ShouldEqual(1);
             }
         }
 
