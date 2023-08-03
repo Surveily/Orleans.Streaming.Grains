@@ -39,16 +39,16 @@ namespace Orleans.Streaming.Grains.Test
             {
                 siloBuilder.ConfigureServices(Configure)
                            .AddMemoryGrainStorageAsDefault()
-                           .AddMemoryGrainStorage("PubSubStore")
-                           .AddGrainsStreams("Default", 1, 3);
+                           .AddMemoryGrainStorage(name: "PubSubStore")
+                           .AddGrainsStreams(name: "Default", queueCount: 1, retry: 3);
             }
             else
             {
 #pragma warning disable CS0618
                 siloBuilder.ConfigureServices(Configure)
                            .AddMemoryGrainStorageAsDefault()
-                           .AddMemoryGrainStorage("PubSubStore")
-                           .AddGrainsStreamsForTests("Default", 3, 3, new[]
+                           .AddMemoryGrainStorage(name: "PubSubStore")
+                           .AddGrainsStreamsForTests(name: "Default", queueCount: 3, retry: 3, new[]
                            {
                              typeof(BlobMessage),
                              typeof(SimpleMessage),

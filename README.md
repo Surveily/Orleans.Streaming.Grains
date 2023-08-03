@@ -10,8 +10,8 @@ In production you should register the provider using the extension method for `I
 
 ```
 siloBuilder.AddMemoryGrainStorageAsDefault()
-           .AddMemoryGrainStorage("PubSubStore")
-           .AddGrainsStreams("Default", 1);
+           .AddMemoryGrainStorage(name: "PubSubStore")
+           .AddGrainsStreams(name: "Default", queueCount: 1, retry: 3);
 ```
 
 In test you should register the provider using the extension method for `ISiloBuilder`. It is also required to add Grains storage providers for actual state and for subscriptions. The example below uses `MemoryGrainStorage` which should not be used if you require the stream queues to be persistent. Additionally you need to provide types for all stream messages and how many queues we want to have per each message. In this situation, every `OnNextAsync` invocation can be awaited and the code will wait until that message is accepted by all subscribers.
@@ -19,8 +19,8 @@ In test you should register the provider using the extension method for `ISiloBu
 ```
 siloBuilder.ConfigureServices(Configure)
            .AddMemoryGrainStorageAsDefault()
-           .AddMemoryGrainStorage("PubSubStore")
-           .AddGrainsStreamsForTests("Default", 1, new[]
+           .AddMemoryGrainStorage(name: "PubSubStore")
+           .AddGrainsStreamsForTests(name: "Default", queueCount: 3, retry: 3, new[]
            {
              typeof(BlobMessage),
              typeof(SimpleMessage),
