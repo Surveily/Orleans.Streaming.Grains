@@ -64,6 +64,10 @@ namespace Orleans.Streaming.Grains.Grains
                     await _subscriptions.Notify(x => x.CompletedAsync(id, success, this.GetPrimaryKeyString()));
                 }
             }
+            else
+            {
+                throw new InvalidOperationException($"No transaction with id {id} pending.");
+            }
         }
 
         public async Task<Guid?> PopAsync()

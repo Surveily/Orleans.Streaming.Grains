@@ -248,12 +248,14 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Scenarios
 
         public class When_Sending_Broadcast_Message_One_To_Many_Error : BaseOneToManyTest
         {
-            protected Stopwatch timer;
+            protected TimeSpan wait = TimeSpan.FromSeconds(10);
 
             protected string resultText;
+            protected Stopwatch timerText;
             protected string expectedText = "text";
 
             protected byte[] resultData;
+            protected Stopwatch timerData;
             protected byte[] expectedData = new byte[1024];
 
             public override void Prepare()
@@ -263,7 +265,9 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Scenarios
                 Processor!.Setup(x => x.Process(It.IsAny<string>()))
                           .Callback<string>(x =>
                           {
-                              if (timer.Elapsed < TimeSpan.FromSeconds(4))
+                              timerText = timerText ?? Stopwatch.StartNew();
+
+                              if (timerText.Elapsed < wait)
                               {
                                   throw new Exception();
                               }
@@ -276,7 +280,9 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Scenarios
                 Processor!.Setup(x => x.Process(It.IsAny<byte[]>()))
                           .Callback<byte[]>(x =>
                           {
-                              if (timer.Elapsed < TimeSpan.FromSeconds(4))
+                              timerData = timerData ?? Stopwatch.StartNew();
+
+                              if (timerData.Elapsed < wait)
                               {
                                   throw new Exception();
                               }
@@ -297,8 +303,6 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Scenarios
             public override async Task Act()
             {
                 var grain = Subject.GetGrain<IEmitterGrain>(Guid.NewGuid());
-
-                timer = Stopwatch.StartNew();
 
                 await grain.BroadcastAsync(expectedText, expectedData);
             }
