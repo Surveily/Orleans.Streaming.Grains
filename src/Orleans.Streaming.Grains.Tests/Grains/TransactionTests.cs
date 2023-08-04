@@ -121,12 +121,6 @@ namespace Orleans.Streaming.Grains.Tests.Grains
             {
                 state.Transactions.Count.ShouldEqual(1);
             }
-
-            [Test]
-            public void State_Should_Have_Transaction_Counts_Single()
-            {
-                state.TransactionCounts.Count.ShouldEqual(1);
-            }
         }
 
         public class WhenPoppingSingleTimeout : BaseWhenPoppingSingle
@@ -160,12 +154,6 @@ namespace Orleans.Streaming.Grains.Tests.Grains
             public void State_Should_Have_Transactions_Empty()
             {
                 state.Transactions.ShouldBeEmpty();
-            }
-
-            [Test]
-            public void State_Should_Have_Transaction_Counts_Empty()
-            {
-                state.TransactionCounts.Count.ShouldEqual(1);
             }
         }
 
@@ -211,12 +199,6 @@ namespace Orleans.Streaming.Grains.Tests.Grains
             {
                 state.Transactions.ShouldBeEmpty();
             }
-
-            [Test]
-            public void State_Should_Have_Transaction_Counts_Empty()
-            {
-                state.TransactionCounts.ShouldBeEmpty();
-            }
         }
 
         public class WhenPoppingSingleAfterCompletePoison : BaseWhenPoppingSingle
@@ -260,12 +242,6 @@ namespace Orleans.Streaming.Grains.Tests.Grains
             public void State_Should_Have_Transactions_Empty()
             {
                 state.Transactions.ShouldBeEmpty();
-            }
-
-            [Test]
-            public void State_Should_Have_Transaction_Counts_Empty()
-            {
-                state.TransactionCounts.ShouldBeEmpty();
             }
         }
     }

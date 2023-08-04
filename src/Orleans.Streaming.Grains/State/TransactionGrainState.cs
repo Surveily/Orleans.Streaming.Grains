@@ -20,9 +20,16 @@ namespace Orleans.Streaming.Grains.State
         public Queue<Guid> Poison { get; set; }
 
         [Id(2)]
-        public Dictionary<Guid, DateTimeOffset> Transactions { get; set; }
+        public Dictionary<Guid, TransactionGrainStatePeriod> Transactions { get; set; }
+    }
 
-        [Id(3)]
-        public Dictionary<Guid, int> TransactionCounts { get; set; }
+    [GenerateSerializer]
+    public class TransactionGrainStatePeriod
+    {
+        [Id(0)]
+        public DateTimeOffset Started { get; set; }
+
+        [Id(1)]
+        public DateTimeOffset Retried { get; set; }
     }
 }

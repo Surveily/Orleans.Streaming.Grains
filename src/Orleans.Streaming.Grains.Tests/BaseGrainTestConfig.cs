@@ -40,7 +40,10 @@ namespace Orleans.Streaming.Grains.Test
                 siloBuilder.ConfigureServices(Configure)
                            .AddMemoryGrainStorageAsDefault()
                            .AddMemoryGrainStorage(name: "PubSubStore")
-                           .AddGrainsStreams(name: "Default", queueCount: 1, retry: 3);
+                           .AddGrainsStreams(name: "Default",
+                                             queueCount: 1,
+                                             retry: TimeSpan.FromMinutes(1),
+                                             poison: TimeSpan.FromMinutes(3));
             }
             else
             {
@@ -48,15 +51,19 @@ namespace Orleans.Streaming.Grains.Test
                 siloBuilder.ConfigureServices(Configure)
                            .AddMemoryGrainStorageAsDefault()
                            .AddMemoryGrainStorage(name: "PubSubStore")
-                           .AddGrainsStreamsForTests(name: "Default", queueCount: 3, retry: 3, new[]
-                           {
-                             typeof(BlobMessage),
-                             typeof(SimpleMessage),
-                             typeof(CompoundMessage),
-                             typeof(ExplosiveMessage),
-                             typeof(BroadcastMessage),
-                             typeof(ExplosiveNextMessage),
-                           });
+                           .AddGrainsStreamsForTests(name: "Default",
+                                                     queueCount: 3,
+                                                     retry: TimeSpan.FromSeconds(1),
+                                                     poison: TimeSpan.FromSeconds(3),
+                                                     messagesForTests: new[]
+                                                     {
+                                                         typeof(BlobMessage),
+                                                         typeof(SimpleMessage),
+                                                         typeof(CompoundMessage),
+                                                         typeof(ExplosiveMessage),
+                                                         typeof(BroadcastMessage),
+                                                         typeof(ExplosiveNextMessage),
+                                                     });
 #pragma warning restore CS0618
             }
         }

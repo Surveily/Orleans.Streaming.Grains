@@ -36,13 +36,12 @@ namespace Orleans.Streaming.Grains.Grains
             {
                 State.Queue = new Queue<Guid>();
                 State.Poison = new Queue<Guid>();
-                State.TransactionCounts = new Dictionary<Guid, int>();
-                State.Transactions = new Dictionary<Guid, DateTimeOffset>();
+                State.Transactions = new Dictionary<Guid, TransactionGrainStatePeriod>();
 
                 await PersistAsync();
             }
 
-            var timeout = _options.Timeout / 5;
+            var timeout = _options.RetryTimeout / 5;
 
             _ = RegisterTimer(FlushTimerAsync, null, timeout, timeout);
 
@@ -53,8 +52,6 @@ namespace Orleans.Streaming.Grains.Grains
         {
             if (State.Transactions.Remove(id, out _))
             {
-                State.TransactionCounts.Remove(id, out _);
-
                 if (!success)
                 {
                     State.Poison.Enqueue(id);
@@ -73,14 +70,14 @@ namespace Orleans.Streaming.Grains.Grains
         {
             if (State.Queue.TryDequeue(out var id))
             {
-                State.Transactions.Add(id, DateTimeOffset.UtcNow);
-
-                if (!State.TransactionCounts.ContainsKey(id))
+                if (!State.Transactions.ContainsKey(id))
                 {
-                    State.TransactionCounts[id] = 0;
+                    State.Transactions.Add(id, new TransactionGrainStatePeriod
+                    {
+                        Retried = DateTimeOffset.UtcNow,
+                        Started = DateTimeOffset.UtcNow,
+                    });
                 }
-
-                State.TransactionCounts[id]++;
 
                 await PersistAsync();
 
@@ -118,21 +115,21 @@ namespace Orleans.Streaming.Grains.Grains
 
         public async Task FlushAsync()
         {
-            var expired = State.Transactions.Where(x => (DateTimeOffset.UtcNow - x.Value) > _options.Timeout)
+            var expired = State.Transactions.Where(x => (DateTimeOffset.UtcNow - x.Value.Retried) > _options.RetryTimeout)
                                             .ToList();
 
             if (expired.Any())
             {
                 foreach (var item in expired)
                 {
-                    if (State.TransactionCounts[item.Key] > _options.Retry)
+                    if (DateTimeOffset.UtcNow - State.Transactions[item.Key].Started > _options.PoisonTimeout)
                     {
                         await CompleteAsync(item.Key, false);
                     }
                     else
                     {
+                        State.Transactions[item.Key].Retried = DateTimeOffset.UtcNow;
                         State.Queue.Enqueue(item.Key);
-                        State.Transactions.Remove(item.Key);
                     }
                 }
 

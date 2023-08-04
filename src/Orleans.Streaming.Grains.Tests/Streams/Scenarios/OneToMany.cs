@@ -286,7 +286,7 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Scenarios
             [Test]
             public void It_Should_Deliver_Text()
             {
-                Processor!.Verify(x => x.Process(expectedText), Times.AtLeast(4));
+                Processor!.Verify(x => x.Process(expectedText), Times.AtLeast(2));
             }
 
             [Test]
@@ -298,7 +298,7 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Scenarios
             [Test]
             public void It_Should_Deliver_Data()
             {
-                Processor!.Verify(x => x.Process(expectedData), Times.AtLeast(4));
+                Processor!.Verify(x => x.Process(expectedData), Times.AtLeast(2));
             }
 
             [Test]
@@ -323,12 +323,6 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Scenarios
             public void State_Should_Have_Transactions_Empty()
             {
                 state.Transactions.ShouldBeEmpty();
-            }
-
-            [Test]
-            public void State_Should_Have_Transaction_Counts_Empty()
-            {
-                state.TransactionCounts.ShouldBeEmpty();
             }
         }
 
