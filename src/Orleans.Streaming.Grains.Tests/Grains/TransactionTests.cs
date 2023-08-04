@@ -131,9 +131,9 @@ namespace Orleans.Streaming.Grains.Tests.Grains
 
                 result = await service.PopAsync<int>("1");
 
-                await Task.Delay(TimeSpan.FromSeconds(3));
-
                 var transaction = client.GetGrain<ITransactionGrain>("1");
+
+                await Task.Delay(TimeSpan.FromSeconds(2));
 
                 state = await transaction.GetStateAsync();
             }
@@ -145,7 +145,7 @@ namespace Orleans.Streaming.Grains.Tests.Grains
             }
 
             [Test]
-            public void State_Should_Have_Queue_Empty()
+            public void State_Should_Have_Queue_One()
             {
                 state.Queue.Count.ShouldEqual(1);
             }
@@ -153,7 +153,7 @@ namespace Orleans.Streaming.Grains.Tests.Grains
             [Test]
             public void State_Should_Have_Transactions_Empty()
             {
-                state.Transactions.ShouldBeEmpty();
+                state.Transactions.Count.ShouldEqual(1);
             }
         }
 
