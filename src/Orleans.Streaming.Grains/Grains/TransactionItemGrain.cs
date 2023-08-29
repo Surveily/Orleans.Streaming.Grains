@@ -29,7 +29,7 @@ namespace Orleans.Streaming.Grains.Grains
         {
             State.Item = item;
 
-            _ = RegisterTimer(PersistTimerAsync, null, TimeSpan.Zero, TimeSpan.MaxValue);
+            _ = RegisterTimer(PersistTimerAsync, null, TimeSpan.Zero, TimeSpan.FromDays(1));
 
             return Task.CompletedTask;
         }
