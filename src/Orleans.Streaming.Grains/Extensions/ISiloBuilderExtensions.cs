@@ -76,6 +76,7 @@ namespace Orleans.Streaming.Grains.Extensions
                                   options.Configure(x => x.PoisonTimeout = poison);
                                   options.Configure(x => x.FireAndForgetDelivery = fireAndForgetDelivery);
                               });
+
                               if (fireAndForgetDelivery)
                               {
                                   config.Configure<HashRingStreamQueueMapperOptions>(options =>

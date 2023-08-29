@@ -25,11 +25,23 @@ namespace Orleans.Streaming.Grains.Grains
             return Task.FromResult(State.Item);
         }
 
-        public async Task SetAsync(Immutable<T> item)
+        public Task SetAsync(Immutable<T> item)
         {
             State.Item = item;
 
+            _ = RegisterTimer(PersistTimerAsync, null, TimeSpan.Zero, TimeSpan.MaxValue);
+
+            return Task.CompletedTask;
+        }
+
+        public async Task PersistAsync()
+        {
             await WriteStateAsync();
+        }
+
+        private async Task PersistTimerAsync(object arg)
+        {
+            await Task.Run(async () => await this.AsReference<ITransactionItemGrain<T>>().PersistAsync());
         }
     }
 }
