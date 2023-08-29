@@ -54,16 +54,7 @@ namespace Orleans.Streaming.Grains.Test
                            .AddGrainsStreamsForTests(name: "Default",
                                                      queueCount: 3,
                                                      retry: TimeSpan.FromSeconds(1),
-                                                     poison: TimeSpan.FromSeconds(3),
-                                                     messagesForTests: new[]
-                                                     {
-                                                         typeof(BlobMessage),
-                                                         typeof(SimpleMessage),
-                                                         typeof(CompoundMessage),
-                                                         typeof(ExplosiveMessage),
-                                                         typeof(BroadcastMessage),
-                                                         typeof(ExplosiveNextMessage),
-                                                     });
+                                                     poison: TimeSpan.FromSeconds(3));
 #pragma warning restore CS0618
             }
         }

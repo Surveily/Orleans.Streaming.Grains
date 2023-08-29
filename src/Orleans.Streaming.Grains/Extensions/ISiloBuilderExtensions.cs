@@ -42,15 +42,14 @@ namespace Orleans.Streaming.Grains.Extensions
         /// <param name="queueCount">How many queues should be load balanced with.</param>
         /// <param name="retry">How long should we wait until the messages is not Completed so it can be put back on the Main queue.</param>
         /// <param name="poison">How long should we wait until the messages is not Completed so it can be put back on the Poison queue.</param>
-        /// <param name="messagesForTests">All contracts that are sent in streams.</param>
         /// <returns>SiloBuilder registered.</returns>
         [Obsolete("This method is for use with TestCluster only. Use `pragma warning disable CS0618` to use it without warnings.")]
-        public static ISiloBuilder AddGrainsStreamsForTests(this ISiloBuilder builder, string name, int queueCount, TimeSpan retry, TimeSpan poison, params Type[] messagesForTests)
+        public static ISiloBuilder AddGrainsStreamsForTests(this ISiloBuilder builder, string name, int queueCount, TimeSpan retry, TimeSpan poison)
         {
-            return builder.AddGrainsStreams(name, queueCount, false, retry, poison, messagesForTests);
+            return builder.AddGrainsStreams(name, queueCount, false, retry, poison);
         }
 
-        private static ISiloBuilder AddGrainsStreams(this ISiloBuilder builder, string name, int queueCount, bool fireAndForgetDelivery, TimeSpan retry, TimeSpan poison, params Type[] messagesForTests)
+        private static ISiloBuilder AddGrainsStreams(this ISiloBuilder builder, string name, int queueCount, bool fireAndForgetDelivery, TimeSpan retry, TimeSpan poison)
         {
             return builder.ConfigureServices(services =>
                           {
@@ -59,7 +58,7 @@ namespace Orleans.Streaming.Grains.Extensions
                               if (!fireAndForgetDelivery)
                               {
                                   services.AddSingletonNamedService<IStreamQueueBalancer>(name, (f, n) => new GrainsQueueBalancer());
-                                  services.AddSingletonNamedService<IStreamQueueMapper>(name, (f, n) => new GrainsQueueMapper(messagesForTests, queueCount));
+                                  services.AddSingletonNamedService<IStreamQueueMapper>(name, (f, n) => new GrainsQueueMapper(queueCount));
                               }
                           })
                           .Configure<GrainsOptions>(options =>
