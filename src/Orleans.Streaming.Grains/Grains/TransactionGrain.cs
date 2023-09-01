@@ -64,8 +64,6 @@ namespace Orleans.Streaming.Grains.Grains
                     State.Poison.Enqueue(id);
                 }
 
-                await PersistAsync();
-
                 if (_subscriptions.Any())
                 {
                     await _subscriptions.Notify(x => x.CompletedAsync(id, success, this.GetPrimaryKeyString()));
@@ -73,7 +71,7 @@ namespace Orleans.Streaming.Grains.Grains
             }
         }
 
-        public async Task<Guid?> PopAsync()
+        public Task<Guid?> PopAsync()
         {
             if (State.Queue.TryDequeue(out var id))
             {
@@ -86,19 +84,17 @@ namespace Orleans.Streaming.Grains.Grains
                     });
                 }
 
-                await PersistAsync();
-
-                return id;
+                return Task.FromResult(new Guid?(id));
             }
 
-            return null;
+            return Task.FromResult(default(Guid?));
         }
 
-        public async Task PostAsync(Guid id)
+        public Task PostAsync(Guid id)
         {
             State.Queue.Enqueue(id);
 
-            await PersistAsync();
+            return Task.CompletedTask;
         }
 
         public Task<TransactionGrainState> GetStateAsync()
@@ -139,9 +135,9 @@ namespace Orleans.Streaming.Grains.Grains
                         State.Queue.Enqueue(item.Key);
                     }
                 }
-
-                await PersistAsync();
             }
+
+            await PersistAsync();
         }
 
         private async Task FlushTimerAsync(object arg)
