@@ -19,7 +19,8 @@ namespace Orleans.Streaming.Grains.Streams
         {
             var messageTypes = AppDomain.CurrentDomain.GetAssemblies()
                                                       .SelectMany(x => x.GetTypes())
-                                                      .Where(x => x.GetCustomAttributes(typeof(ImplicitStreamSubscriptionAttribute), true)?.Count() > 0);
+                                                      .Where(x => x.GetCustomAttributes(typeof(ImplicitStreamSubscriptionAttribute), true)?.Count() > 0)
+                                                      .ToList();
 
             _pinnedQueues = new Dictionary<StreamId, QueueId>();
             _queues = messageTypes.SelectMany(x => Enumerable.Range(0, countEach)
