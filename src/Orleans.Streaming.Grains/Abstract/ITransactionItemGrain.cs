@@ -18,5 +18,7 @@ namespace Orleans.Streaming.Grains.Abstract
         Task SetAsync(Immutable<T> item);
 
         Task DeleteAsync();
+
+        Task PersistAsync();
     }
 }

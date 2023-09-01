@@ -15,8 +15,12 @@ namespace Orleans.Streaming.Grains.Streams
         private readonly Dictionary<string, Queue<QueueId>> _queues;
         private readonly Dictionary<StreamId, QueueId> _pinnedQueues;
 
-        public GrainsQueueMapper(IEnumerable<Type> messageTypes, int countEach = 3)
+        public GrainsQueueMapper(int countEach = 3)
         {
+            var messageTypes = AppDomain.CurrentDomain.GetAssemblies()
+                                                      .SelectMany(x => x.GetTypes())
+                                                      .Where(x => x.GetCustomAttributes(typeof(ImplicitStreamSubscriptionAttribute), true)?.Count() > 0);
+
             _pinnedQueues = new Dictionary<StreamId, QueueId>();
             _queues = messageTypes.SelectMany(x => Enumerable.Range(0, countEach)
                                                              .Select(y => QueueId.GetQueueId(x.Name, (uint)y, 0)))

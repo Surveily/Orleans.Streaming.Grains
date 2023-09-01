@@ -17,7 +17,7 @@ siloBuilder.AddMemoryGrainStorageAsDefault()
                              poison: TimeSpan.FromMinutes(3));
 ```
 
-In test you should register the provider using the extension method for `ISiloBuilder`. It is also required to add Grains storage providers for actual state and for subscriptions. The example below uses `MemoryGrainStorage` which should not be used if you require the stream queues to be persistent. Additionally you need to provide types for all stream messages and how many queues we want to have per each message. In this situation, every `OnNextAsync` invocation can be awaited and the code will wait until that message is accepted by all subscribers.
+In test you should register the provider using the extension method for `ISiloBuilder`. It is also required to add Grains storage providers for actual state and for subscriptions. The example below uses `MemoryGrainStorage` which should not be used if you require the stream queues to be persistent. In this situation, every `OnNextAsync` invocation can be awaited and the code will wait until that message is accepted by all subscribers.
 
 ```
 siloBuilder.ConfigureServices(Configure)
@@ -26,16 +26,7 @@ siloBuilder.ConfigureServices(Configure)
            .AddGrainsStreamsForTests(name: "Default",
                                      queueCount: 3,
                                      retry: TimeSpan.FromSeconds(1),
-                                     poison: TimeSpan.FromSeconds(3),
-                                     messagesForTests: new[]
-                                     {
-                                         typeof(BlobMessage),
-                                         typeof(SimpleMessage),
-                                         typeof(CompoundMessage),
-                                         typeof(ExplosiveMessage),
-                                         typeof(BroadcastMessage),
-                                         typeof(ExplosiveNextMessage),
-                                     });
+                                     poison: TimeSpan.FromSeconds(3));
 ```
 
 ## Project Contents:

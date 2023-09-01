@@ -27,7 +27,7 @@ namespace Orleans.Streaming.Grains.Grains
         public TransactionGrain(IOptions<GrainsOptions> options, ILoggerFactory logger)
         {
             _options = options.Value;
-            _subscriptions = new ObserverManager<ITransactionObserver>(TimeSpan.FromMinutes(5), logger.CreateLogger<TransactionGrain>());
+            _subscriptions = new ObserverManager<ITransactionObserver>(TimeSpan.FromSeconds(30), logger.CreateLogger<TransactionGrain>());
         }
 
         public override async Task OnActivateAsync(CancellationToken cancellationToken)
@@ -46,6 +46,13 @@ namespace Orleans.Streaming.Grains.Grains
             _ = RegisterTimer(FlushTimerAsync, null, timeout, timeout);
 
             await base.OnActivateAsync(cancellationToken);
+        }
+
+        public override async Task OnDeactivateAsync(DeactivationReason reason, CancellationToken cancellationToken)
+        {
+            await PersistAsync();
+
+            await base.OnDeactivateAsync(reason, cancellationToken);
         }
 
         public async Task CompleteAsync(Guid id, bool success)
