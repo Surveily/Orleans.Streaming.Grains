@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualBasic;
 using Orleans.Configuration;
@@ -48,6 +49,27 @@ namespace Orleans.Streaming.Grains.Extensions
         public static ISiloBuilder AddGrainsStreamsForTests(this ISiloBuilder builder, string name, int queueCount, TimeSpan retry, TimeSpan poison, params Type[] messagesForTests)
         {
             return builder.AddGrainsStreams(name, queueCount, false, retry, poison, messagesForTests);
+        }
+
+        /// <summary>
+        /// Register Grains Stream Provider with the SiloBuilder.
+        /// </summary>
+        /// <param name="builder">SiloBuilder to register with.</param>
+        /// <param name="name">Name of the provider.</param>
+        /// <returns>SiloBuilder registered.</returns>
+        public static ISiloBuilder AddGrainsStreams(this ISiloBuilder builder, string name)
+        {
+            return builder.ConfigureServices(services =>
+                          {
+                              services.AddSingleton(f => f.GetRequiredService<IConfiguration>()
+                                                          .GetSection(nameof(GrainsOptions))
+                                                          .Get<GrainsOptions>());
+
+                              services.AddSingleton<ITransactionService, TransactionService>();
+                          })
+                          .AddPersistentStreams(name, GrainsQueueAdapterFactory.Create, config =>
+                          {
+                          });
         }
 
         private static ISiloBuilder AddGrainsStreams(this ISiloBuilder builder, string name, int queueCount, bool fireAndForgetDelivery, TimeSpan retry, TimeSpan poison, params Type[] messagesForTests)
