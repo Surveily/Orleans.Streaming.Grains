@@ -17,14 +17,18 @@ namespace Orleans.Streaming.Grains.Streams
 
         public GrainsQueueMapper(int countEach = 3)
         {
-            var messageTypes = AppDomain.CurrentDomain.GetAssemblies()
-                                                      .SelectMany(x => x.GetTypes())
-                                                      .Where(x => x.GetCustomAttributes(typeof(ImplicitStreamSubscriptionAttribute), true)?.Count() > 0)
-                                                      .ToList();
+            var implicitSubscribers = AppDomain.CurrentDomain.GetAssemblies()
+                                                             .SelectMany(x => x.GetTypes())
+                                                             .Where(x => x.GetCustomAttributes(typeof(ImplicitStreamSubscriptionAttribute), true)?.Count() > 0)
+                                                             .ToList();
+
+            var messageTypes = implicitSubscribers.SelectMany(x => Attribute.GetCustomAttributes(x, typeof(ImplicitStreamSubscriptionAttribute)))
+                                                  .Select(x => (x as ImplicitStreamSubscriptionAttribute).Predicate.PredicatePattern.Split(':')[1])
+                                                  .ToList();
 
             _pinnedQueues = new Dictionary<StreamId, QueueId>();
             _queues = messageTypes.SelectMany(x => Enumerable.Range(0, countEach)
-                                                             .Select(y => QueueId.GetQueueId(x.Name, (uint)y, 0)))
+                                                             .Select(y => QueueId.GetQueueId(x, (uint)y, 0)))
                                   .GroupBy(x => x.GetStringNamePrefix())
                                   .ToDictionary(x => x.Key, x => new Queue<QueueId>(x));
         }
