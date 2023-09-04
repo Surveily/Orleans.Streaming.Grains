@@ -15,9 +15,13 @@ namespace Orleans.Streaming.Grains.Grains
 {
     public class TransactionItemGrain<T> : Grain<TransactionItemGrainState<T>>, ITransactionItemGrain<T>
     {
+        private bool _deleted;
+
         public async Task DeleteAsync()
         {
             await ClearStateAsync();
+
+            _deleted = true;
         }
 
         public Task<Immutable<T>> GetAsync()
@@ -36,7 +40,10 @@ namespace Orleans.Streaming.Grains.Grains
 
         public async Task PersistAsync()
         {
-            await WriteStateAsync();
+            if (!_deleted)
+            {
+                await WriteStateAsync();
+            }
         }
 
         private async Task PersistTimerAsync(object arg)
