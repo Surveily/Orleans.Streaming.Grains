@@ -41,7 +41,7 @@ namespace Orleans.Streaming.Grains.Services
             var transaction = _client.GetGrain<ITransactionGrain>(queue);
             var id = await transaction.PopAsync();
 
-            if (id != null)
+            if (id.HasValue)
             {
                 var item = _client.GetGrain<ITransactionItemGrain<T>>(id.Value);
 
