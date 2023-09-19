@@ -29,6 +29,19 @@ siloBuilder.ConfigureServices(Configure)
                                      poison: TimeSpan.FromSeconds(3));
 ```
 
+## Compromise
+
+In high throughput and high volume environments you will want to collect the `TransactionItemGrain` objects early so they don't overload the memory of your silo. Use the below configuration and adjust it to your requirements:
+
+```
+siloBuilder.Configure<GrainCollectionOptions>(options =>
+{
+    options.CollectionAge = TimeSpan.FromMinutes(1);
+    options.CollectionQuantum = TimeSpan.FromSeconds(5);
+    options.ClassSpecificCollectionAge[typeof(TransactionItemGrain<>).FullName] = options.CollectionQuantum * 2;
+});
+```
+
 ## Project Contents:
 
 * **Orleans.Streaming.Grains** implements the Grain Stream Provider.
