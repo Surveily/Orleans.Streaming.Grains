@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -26,11 +27,21 @@ namespace Orleans.Streaming.Grains.Grains
 
         public Task<Immutable<T>> GetAsync()
         {
-            return Task.FromResult(State.Item);
+            if (!_deleted)
+            {
+                return Task.FromResult(State.Item);
+            }
+
+            return null;
         }
 
         public Task SetAsync(Immutable<T> item)
         {
+            if (_deleted)
+            {
+                throw new DataException("Cannot set state of a deleted TransactionItem.");
+            }
+
             State.Item = item;
 
             _ = RegisterTimer(PersistTimerAsync, null, TimeSpan.FromSeconds(1), TimeSpan.FromDays(1));

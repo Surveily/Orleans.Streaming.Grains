@@ -42,7 +42,7 @@ namespace Orleans.Streaming.Grains.Streams
             {
                 var message = await _service.PopAsync<GrainsMessage>(_queueId.ToString());
 
-                if (message != null)
+                if (message != null && message.HasValue && message.Value.Item.Value != null)
                 {
                     result.Add(GrainsBatchContainer.FromMessage(_serializationManager, message.Value.Id, message.Value.Item.Value, _lastReadMessage++));
                 }
