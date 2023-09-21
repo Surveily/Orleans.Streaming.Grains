@@ -57,7 +57,7 @@ namespace Orleans.Streaming.Grains.Grains
 
         public async Task CompleteAsync(Guid id, bool success)
         {
-            if (State.Transactions.Remove(id, out _))
+            if (State.Transactions.Remove(id, out _) || State.Poison.Contains(id))
             {
                 if (!success)
                 {
