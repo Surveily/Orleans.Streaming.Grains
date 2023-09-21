@@ -8,7 +8,7 @@ This is a Streaming Provider that uses Orleans' built-in `StatefulGrain` system 
 
 In production you should register the provider using the extension method for `ISiloBuilder`. It is also required to add Grains storage providers for actual state and for subscriptions. The example below uses `MemoryGrainStorage` which should not be used if you require the stream queues to be persistent.
 
-```
+```c#
 siloBuilder.AddMemoryGrainStorageAsDefault()
            .AddMemoryGrainStorage(name: "PubSubStore")
            .AddGrainsStreams(name: "Default",
@@ -19,7 +19,7 @@ siloBuilder.AddMemoryGrainStorageAsDefault()
 
 In test you should register the provider using the extension method for `ISiloBuilder`. It is also required to add Grains storage providers for actual state and for subscriptions. The example below uses `MemoryGrainStorage` which should not be used if you require the stream queues to be persistent. In this situation, every `OnNextAsync` invocation can be awaited and the code will wait until that message is accepted by all subscribers.
 
-```
+```c#
 siloBuilder.ConfigureServices(Configure)
            .AddMemoryGrainStorageAsDefault()
            .AddMemoryGrainStorage(name: "PubSubStore")
@@ -33,7 +33,7 @@ siloBuilder.ConfigureServices(Configure)
 
 In high throughput and high volume environments you will want to collect the `TransactionItemGrain` objects early so they don't overload the memory of your silo. Use the below configuration and adjust it to your requirements:
 
-```
+```c#
 siloBuilder.Configure<GrainCollectionOptions>(options =>
 {
     options.CollectionAge = TimeSpan.FromMinutes(1);
