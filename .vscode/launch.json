@@ -1,4 +1,21 @@
 {
     "version": "0.2.0",
-    "configurations": []
+    "configurations": [
+        {
+            "name": "Performance Test",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "release",
+            "program": "${workspaceFolder}/src/Orleans.Streaming.Grains.Performance/bin/Release/net7.0/Orleans.Streaming.Grains.Performance.dll",
+            "args": [
+                "--filter",
+                "*Benchmarks*",
+                "-m",
+                "-t"
+            ],
+            "cwd": "${workspaceFolder}/src/Orleans.Streaming.Grains.Performance",
+            "console": "internalConsole",
+            "stopAtEntry": false
+        }
+    ]
 }
