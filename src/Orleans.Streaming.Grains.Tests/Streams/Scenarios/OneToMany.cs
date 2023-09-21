@@ -105,8 +105,6 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Scenarios
 
                     await grain.SendAsync(expectedText, expectedData);
                 }
-
-                await Task.Delay(TimeSpan.FromSeconds(5));
             }
 
             [Test]
