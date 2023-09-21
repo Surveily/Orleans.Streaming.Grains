@@ -109,6 +109,7 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Scenarios
                 }
 
                 await Task.WhenAll(WaitFor(() => resultData), WaitFor(() => resultText));
+                await Task.Delay(TimeSpan.FromSeconds(5));
             }
 
             [Test]
@@ -205,6 +206,7 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Scenarios
                 await grain.ExplosiveAsync(expectedText, expectedData);
 
                 await Task.WhenAll(WaitFor(() => resultData), WaitFor(() => resultText));
+                await Task.Delay(TimeSpan.FromSeconds(5));
             }
 
             [Test]
@@ -304,6 +306,7 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Scenarios
                 }
 
                 await Task.WhenAll(WaitFor(() => resultData), WaitFor(() => resultText));
+                await Task.Delay(TimeSpan.FromSeconds(5));
             }
 
             [Test]
