@@ -4,6 +4,7 @@
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using Moq;
 using NUnit.Framework;
 using Orleans.Configuration;
@@ -58,11 +59,14 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Scenarios
 
         public abstract class BaseOneToManyWaitTest : BaseGrainTest<Config>
         {
+            protected IOptions<GrainsOptions> Settings;
+
             protected Mock<IProcessor> Processor { get; set; }
 
             public override void Prepare()
             {
                 Processor = Container.GetService<Mock<IProcessor>>();
+                Settings = Container.GetService<IOptions<GrainsOptions>>();
 
                 base.Prepare();
             }
@@ -96,10 +100,10 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Scenarios
 
             public override async Task Act()
             {
-                var grain = Subject.GetGrain<IEmitterGrain>(Guid.NewGuid());
-
                 for (var i = 0; i < 10; i++)
                 {
+                    var grain = Subject.GetGrain<IEmitterGrain>(Guid.NewGuid());
+
                     await grain.SendAsync(expectedText, expectedData);
                 }
 
@@ -128,6 +132,42 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Scenarios
             public void It_Should_Deliver_Expected_Data()
             {
                 expectedData.ShouldEqual(resultData);
+            }
+
+            [Test]
+            public async Task It_Should_Empty_Queue()
+            {
+                for (var i = 0; i < Settings.Value.QueueCount; i++)
+                {
+                    var grain = Subject.GetGrain<ITransactionGrain>($"{nameof(CompoundMessage).ToLower()}-{i}");
+                    var state = await grain.GetStateAsync();
+
+                    state.Queue.ShouldBeEmpty();
+                }
+            }
+
+            [Test]
+            public async Task It_Should_Empty_Poison()
+            {
+                for (var i = 0; i < Settings.Value.QueueCount; i++)
+                {
+                    var grain = Subject.GetGrain<ITransactionGrain>($"{nameof(CompoundMessage).ToLower()}-{i}");
+                    var state = await grain.GetStateAsync();
+
+                    state.Poison.ShouldBeEmpty();
+                }
+            }
+
+            [Test]
+            public async Task It_Should_Empty_Transactions()
+            {
+                for (var i = 0; i < Settings.Value.QueueCount; i++)
+                {
+                    var grain = Subject.GetGrain<ITransactionGrain>($"{nameof(CompoundMessage).ToLower()}-{i}");
+                    var state = await grain.GetStateAsync();
+
+                    state.Transactions.ShouldBeEmpty();
+                }
             }
         }
 
@@ -189,6 +229,42 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Scenarios
             {
                 expectedData.ShouldEqual(resultData);
             }
+
+            [Test]
+            public async Task It_Should_Empty_Queue()
+            {
+                for (var i = 0; i < Settings.Value.QueueCount; i++)
+                {
+                    var grain = Subject.GetGrain<ITransactionGrain>($"{nameof(ExplosiveMessage).ToLower()}-{i}");
+                    var state = await grain.GetStateAsync();
+
+                    state.Queue.ShouldBeEmpty();
+                }
+            }
+
+            [Test]
+            public async Task It_Should_Empty_Poison()
+            {
+                for (var i = 0; i < Settings.Value.QueueCount; i++)
+                {
+                    var grain = Subject.GetGrain<ITransactionGrain>($"{nameof(ExplosiveMessage).ToLower()}-{i}");
+                    var state = await grain.GetStateAsync();
+
+                    state.Poison.ShouldBeEmpty();
+                }
+            }
+
+            [Test]
+            public async Task It_Should_Empty_Transactions()
+            {
+                for (var i = 0; i < Settings.Value.QueueCount; i++)
+                {
+                    var grain = Subject.GetGrain<ITransactionGrain>($"{nameof(ExplosiveMessage).ToLower()}-{i}");
+                    var state = await grain.GetStateAsync();
+
+                    state.Transactions.ShouldBeEmpty();
+                }
+            }
         }
 
         public class When_Sending_Broadcast_Message_One_To_Many : BaseOneToManyWaitTest
@@ -219,10 +295,10 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Scenarios
 
             public override async Task Act()
             {
-                var grain = Subject.GetGrain<IEmitterGrain>(Guid.NewGuid());
-
                 for (var i = 0; i < 10; i++)
                 {
+                    var grain = Subject.GetGrain<IEmitterGrain>(Guid.NewGuid());
+
                     await grain.BroadcastAsync(expectedText, expectedData);
                 }
 
@@ -251,6 +327,42 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Scenarios
             public void It_Should_Deliver_Expected_Data()
             {
                 expectedData.ShouldEqual(resultData);
+            }
+
+            [Test]
+            public async Task It_Should_Empty_Queue()
+            {
+                for (var i = 0; i < Settings.Value.QueueCount; i++)
+                {
+                    var grain = Subject.GetGrain<ITransactionGrain>($"{nameof(BroadcastMessage).ToLower()}-{i}");
+                    var state = await grain.GetStateAsync();
+
+                    state.Queue.ShouldBeEmpty();
+                }
+            }
+
+            [Test]
+            public async Task It_Should_Empty_Poison()
+            {
+                for (var i = 0; i < Settings.Value.QueueCount; i++)
+                {
+                    var grain = Subject.GetGrain<ITransactionGrain>($"{nameof(BroadcastMessage).ToLower()}-{i}");
+                    var state = await grain.GetStateAsync();
+
+                    state.Poison.ShouldBeEmpty();
+                }
+            }
+
+            [Test]
+            public async Task It_Should_Empty_Transactions()
+            {
+                for (var i = 0; i < Settings.Value.QueueCount; i++)
+                {
+                    var grain = Subject.GetGrain<ITransactionGrain>($"{nameof(BroadcastMessage).ToLower()}-{i}");
+                    var state = await grain.GetStateAsync();
+
+                    state.Transactions.ShouldBeEmpty();
+                }
             }
         }
     }

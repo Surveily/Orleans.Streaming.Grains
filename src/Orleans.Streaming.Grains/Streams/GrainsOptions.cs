@@ -11,6 +11,8 @@ namespace Orleans.Streaming.Grains.Streams
 {
     public class GrainsOptions
     {
+        public int QueueCount { get; set; } = 1;
+
         public bool FireAndForgetDelivery { get; set; } = true;
 
         public TimeSpan RetryTimeout { get; set; } = TimeSpan.FromMinutes(1);

@@ -32,7 +32,7 @@ namespace Orleans.Streaming.Grains.Grains
                 return Task.FromResult(State.Item);
             }
 
-            return null;
+            return Task.FromResult(new Immutable<T>(default));
         }
 
         public Task SetAsync(Immutable<T> item)

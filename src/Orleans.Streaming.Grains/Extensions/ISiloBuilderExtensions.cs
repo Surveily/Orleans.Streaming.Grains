@@ -85,6 +85,7 @@ namespace Orleans.Streaming.Grains.Extensions
                           })
                           .Configure<GrainsOptions>(options =>
                           {
+                              options.QueueCount = queueCount;
                               options.RetryTimeout = retry;
                               options.PoisonTimeout = poison;
                               options.FireAndForgetDelivery = fireAndForgetDelivery;
@@ -93,6 +94,7 @@ namespace Orleans.Streaming.Grains.Extensions
                           {
                               config.Configure<GrainsOptions>(options =>
                               {
+                                  options.Configure(x => x.QueueCount = queueCount);
                                   options.Configure(x => x.RetryTimeout = retry);
                                   options.Configure(x => x.PoisonTimeout = poison);
                                   options.Configure(x => x.FireAndForgetDelivery = fireAndForgetDelivery);
