@@ -42,8 +42,8 @@ namespace Orleans.Streaming.Grains.Test
                            .AddMemoryGrainStorage(name: "PubSubStore")
                            .AddGrainsStreams(name: "Default",
                                              queueCount: 1,
-                                             retry: TimeSpan.FromMinutes(1),
-                                             poison: TimeSpan.FromMinutes(3));
+                                             retry: TimeSpan.FromSeconds(1),
+                                             poison: TimeSpan.FromSeconds(3));
             }
             else
             {
