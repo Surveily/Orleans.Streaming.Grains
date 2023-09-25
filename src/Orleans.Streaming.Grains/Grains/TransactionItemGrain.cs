@@ -32,7 +32,7 @@ namespace Orleans.Streaming.Grains.Grains
                 return Task.FromResult(State.Item);
             }
 
-            return null;
+            return Task.FromResult(new Immutable<T>(default));
         }
 
         public Task SetAsync(Immutable<T> item)
@@ -44,7 +44,7 @@ namespace Orleans.Streaming.Grains.Grains
 
             State.Item = item;
 
-            _ = RegisterTimer(PersistTimerAsync, null, TimeSpan.Zero, TimeSpan.FromDays(1));
+            _ = RegisterTimer(PersistTimerAsync, null, TimeSpan.FromSeconds(1), TimeSpan.FromDays(1));
 
             return Task.CompletedTask;
         }

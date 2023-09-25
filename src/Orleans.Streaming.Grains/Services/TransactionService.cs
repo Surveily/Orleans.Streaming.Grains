@@ -44,8 +44,9 @@ namespace Orleans.Streaming.Grains.Services
             if (id != null && id.HasValue)
             {
                 var item = _client.GetGrain<ITransactionItemGrain<T>>(id.Value);
+                var result = await item.GetAsync();
 
-                return (id.Value, await item.GetAsync());
+                return (id.Value, result);
             }
 
             return null;
