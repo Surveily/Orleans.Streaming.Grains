@@ -10,7 +10,7 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Grains
 
         Task SendAsync(byte[] data);
 
-        Task SendAsync(string text, byte[] data);
+        Task CompoundAsync(string text, byte[] data);
 
         Task ExplosiveAsync(string text, byte[] data);
 

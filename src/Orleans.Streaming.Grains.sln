@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Orleans.Streaming.Grains", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Orleans.Streaming.Grains.Tests", "Orleans.Streaming.Grains.Tests\Orleans.Streaming.Grains.Tests.csproj", "{879111A9-A73A-4BE1-B493-902D9627C84D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Orleans.Streaming.Grains.Performance", "Orleans.Streaming.Grains.Performance\Orleans.Streaming.Grains.Performance.csproj", "{01304CC0-730B-41DA-A3EC-60100E6AEF19}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,5 +26,9 @@ Global
 		{879111A9-A73A-4BE1-B493-902D9627C84D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{879111A9-A73A-4BE1-B493-902D9627C84D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{879111A9-A73A-4BE1-B493-902D9627C84D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{01304CC0-730B-41DA-A3EC-60100E6AEF19}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{01304CC0-730B-41DA-A3EC-60100E6AEF19}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{01304CC0-730B-41DA-A3EC-60100E6AEF19}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{01304CC0-730B-41DA-A3EC-60100E6AEF19}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

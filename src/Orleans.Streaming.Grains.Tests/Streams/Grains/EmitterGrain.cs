@@ -47,7 +47,7 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Grains
             });
         }
 
-        public async Task SendAsync(string text, byte[] data)
+        public async Task CompoundAsync(string text, byte[] data)
         {
             await _compoundStream.OnNextAsync(new CompoundMessage
             {

@@ -1,4 +1,4 @@
-FROM surveily/developer.dotnet:7.0-sdk
+FROM mcr.microsoft.com/vscode/devcontainers/dotnet:dev-7.0
 ARG version
 ARG password
 ARG TARGETARCH

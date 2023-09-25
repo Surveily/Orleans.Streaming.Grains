@@ -1,0 +1,51 @@
+name: Benchmark
+
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events but only for the master branch
+  push:
+    branches: [main]
+    paths:
+      - "src/**"
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  benchmark:
+    name: Benchmark
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      # This is used to complete the identity challenge
+      # with sigstore/fulcio when running outside of PRs.
+      id-token: write
+    steps:
+      - name: Get current date
+        id: date
+        run: echo "::set-output name=date::$(date +'%Y%m%d')"
+
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      # Build and push Docker image with Buildx (don't push on PR)
+      # https://github.com/docker/build-push-action
+      - name: Build and Push
+        id: build-and-push
+        uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
+        with:
+          context: .
+          file: src/benchmark.dockerfile
+          push: false
+          build-args: |
+            password=${{ secrets.NUGET }}
+            version=7.2.${{ github.run_number }}
+          tags: |
+            surveily/orleans.streaming.grains:${{ steps.date.outputs.date }}.${{ github.run_number }}
+          labels: ${{ steps.meta.outputs.labels }}
