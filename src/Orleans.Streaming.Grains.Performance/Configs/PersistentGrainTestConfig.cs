@@ -23,7 +23,7 @@ namespace Orleans.Streaming.Grains.Performance.Configs
                        .AddMemoryGrainStorageAsDefault()
                        .AddMemoryGrainStorage(name: "PubSubStore")
                        .AddGrainsStreamsForTests(name: "Default",
-                                                 queueCount: 3,
+                                                 queueCount: 8,
                                                  retry: TimeSpan.FromSeconds(1),
                                                  poison: TimeSpan.FromSeconds(3));
 #pragma warning restore CS0618
