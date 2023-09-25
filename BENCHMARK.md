@@ -25,3 +25,11 @@ Concurrent=True  Server=False
 | BroadcastAsync |   154.8 ms |   6.05 ms |    17.83 ms |   156.4 ms |          - |             307.7500 |                - |          - |    530.46 KB |
 | CompoundAsync  |   431.0 ms |  19.59 ms |    57.77 ms |   446.4 ms |          - |            1008.0000 |           1.0000 |          - |   1685.62 KB |
 | ExplosiveAsync | 2,686.8 ms | 341.64 ms | 1,007.34 ms | 3,218.6 ms | 77000.0000 |          833967.0000 |          81.0000 | 12000.0000 | 663634.86 KB |
+
+Concurrent=True  Server=True  
+
+| Method         | Mean       | Error     | StdDev      | Median     | Completed Work Items | Lock Contentions | Allocated   |
+|--------------- |-----------:|----------:|------------:|-----------:|---------------------:|-----------------:|------------:|
+| BroadcastAsync |   149.7 ms |   5.67 ms |    16.71 ms |   149.9 ms |             301.2500 |                - |   522.99 KB |
+| CompoundAsync  |   403.4 ms |  23.31 ms |    68.73 ms |   405.2 ms |             943.0000 |                - |  1476.31 KB |
+| ExplosiveAsync | 2,243.9 ms | 381.31 ms | 1,124.31 ms | 3,065.3 ms |           14948.0000 |          44.0000 | 67099.35 KB |
