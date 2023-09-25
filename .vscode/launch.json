@@ -9,7 +9,7 @@
             "program": "${workspaceFolder}/src/Orleans.Streaming.Grains.Performance/bin/Release/net7.0/Orleans.Streaming.Grains.Performance.dll",
             "args": [
                 "--filter",
-                "*Benchmarks*",
+                "*Persist*",
                 "-m",
                 "-t"
             ],

@@ -1,22 +1,23 @@
-// <copyright file="BaseBenchmark.cs" company="Surveily Sp. z o.o.">
+// <copyright file="BenchmarkBaseSilo.cs" company="Surveily Sp. z o.o.">
 // Copyright (c) Surveily Sp. z o.o.. All rights reserved.
 // </copyright>
 
 using System.Diagnostics;
+using BenchmarkDotNet.Attributes;
 using Orleans.Runtime;
 using Orleans.TestingHost;
 using Polly;
 using Polly.Retry;
 
-namespace Orleans.Streaming.Grains.Performance.Configs
+namespace Orleans.Streaming.Grains.Performance
 {
-    public abstract class BaseBenchmark<T>
+    public abstract class BenchmarkBaseSilo<T>
         where T : ISiloConfigurator, IClientBuilderConfigurator, new()
     {
         private readonly TestCluster _cluster;
         private readonly AsyncRetryPolicy _retryPolicy;
 
-        public BaseBenchmark()
+        public BenchmarkBaseSilo()
         {
             _cluster = new TestClusterBuilder(1).AddSiloBuilderConfigurator<T>()
                                                 .AddClientBuilderConfigurator<T>()
@@ -26,7 +27,7 @@ namespace Orleans.Streaming.Grains.Performance.Configs
                                  .WaitAndRetryAsync(10, f => TimeSpan.FromSeconds(5));
         }
 
-        protected IClusterClient Subject => _cluster.Client;
+        protected IClusterClient Client => _cluster.Client;
 
         protected IServiceProvider Container
         {
@@ -38,13 +39,8 @@ namespace Orleans.Streaming.Grains.Performance.Configs
             }
         }
 
-        public abstract Task Act();
-
-        protected virtual void Prepare()
-        {
-        }
-
-        protected async Task SetupAsync()
+        [GlobalSetup]
+        public async Task SetupAsync()
         {
             await _retryPolicy.ExecuteAsync(async () =>
             {
@@ -53,14 +49,17 @@ namespace Orleans.Streaming.Grains.Performance.Configs
             });
 
             Prepare();
-
-            await Act();
         }
 
-        protected async Task TearDown()
+        [GlobalCleanup]
+        public async Task TearDown()
         {
             await _cluster.StopAllSilosAsync();
             await _cluster.DisposeAsync();
+        }
+
+        protected virtual void Prepare()
+        {
         }
 
         protected async Task WaitFor(Func<object> subject)

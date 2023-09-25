@@ -103,7 +103,7 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Scenarios
                 {
                     var grain = Subject.GetGrain<IEmitterGrain>(Guid.NewGuid());
 
-                    await grain.SendAsync(expectedText, expectedData);
+                    await grain.CompoundAsync(expectedText, expectedData);
                 }
             }
 

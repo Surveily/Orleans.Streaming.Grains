@@ -2,11 +2,11 @@
 // Copyright (c) Surveily Sp. z o.o.. All rights reserved.
 // </copyright>
 
-using System;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using Orleans.Hosting;
+using Orleans.Streaming.Grains.Extensions;
 using Orleans.Streaming.Grains.Tests.Streams.Messages;
 using Orleans.TestingHost;
 
@@ -18,10 +18,15 @@ namespace Orleans.Streaming.Grains.Performance.Configs
 
         public void Configure(ISiloBuilder siloBuilder)
         {
+#pragma warning disable CS0618
             siloBuilder.ConfigureServices(Configure)
                        .AddMemoryGrainStorageAsDefault()
                        .AddMemoryGrainStorage(name: "PubSubStore")
-                       .AddMemoryStreams("Default");
+                       .AddGrainsStreamsForTests(name: "Default",
+                                                 queueCount: 3,
+                                                 retry: TimeSpan.FromSeconds(1),
+                                                 poison: TimeSpan.FromSeconds(3));
+#pragma warning restore CS0618
         }
 
         public void Configure(IConfiguration configuration, IClientBuilder clientBuilder)

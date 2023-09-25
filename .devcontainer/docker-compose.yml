@@ -3,7 +3,7 @@ version: "3.5"
 services:
   vscode:
     container_name: orleans.streaming.grains
-    image: surveily/developer.dotnet:7.0-sdk
+    image: mcr.microsoft.com/vscode/devcontainers/dotnet:dev-7.0
     volumes:
       - ../:/workspace:delegated
       - ~/.ssh:/home/vscode/.ssh-localhost:ro
