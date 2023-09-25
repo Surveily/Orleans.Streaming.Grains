@@ -10,5 +10,5 @@ ADD README.md README.md
 ADD src/ .
 
 # Build and test
-RUN dotnet build src -c Release
-RUN dotnet src/Orleans.Streaming.Grains.Performance/bin/Release/net7.0/Orleans.Streaming.Grains.Performance.dll -m -t --filter *Test*
+RUN dotnet build . -c Release
+RUN dotnet Orleans.Streaming.Grains.Performance/bin/Release/net7.0/Orleans.Streaming.Grains.Performance.dll -m -t --filter *Test*
