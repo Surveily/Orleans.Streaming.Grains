@@ -10,5 +10,4 @@ ADD README.md README.md
 ADD src/ .
 
 # Build and test
-WORKDIR /home/vscode/src/Orleans.Streaming.Grains.Performance
-RUN dotnet run -c Release
+RUN dotnet run --project src/Orleans.Streaming.Grains.Performance -c Release -- -m -t --filter *Test*
