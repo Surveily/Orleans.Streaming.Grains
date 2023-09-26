@@ -18,5 +18,11 @@ namespace Orleans.Streaming.Grains.Streams
 
         [Id(1)]
         public byte[] Data { get; set; }
+
+        [Id(2)]
+        public DateTime DequeueTimeUtc { get; set; }
+
+        [Id(3)]
+        public DateTime EnqueueTimeUtc { get; set; }
     }
 }
