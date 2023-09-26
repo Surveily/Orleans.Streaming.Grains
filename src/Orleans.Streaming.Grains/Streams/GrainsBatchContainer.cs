@@ -80,7 +80,7 @@ namespace Orleans.Streaming.Grains.Streams
         internal static GrainsMessage ToMessage<T>(Serializer<GrainsBatchContainer> serializer, StreamId streamId, IEnumerable<T> events, Dictionary<string, object> requestContext)
         {
             var batchMessage = new GrainsBatchContainer(streamId, events.Cast<object>().ToList(), requestContext);
-            var rawBytes = serializer.SerializeToArray(batchMessage);
+            var rawBytes = new byte[0]; /* serializer.SerializeToArray(batchMessage); */
 
             return new GrainsMessage
             {
@@ -93,7 +93,7 @@ namespace Orleans.Streaming.Grains.Streams
         {
             if (msg != null)
             {
-                var batch = serializer.Deserialize(msg.Data);
+                var batch = new GrainsBatchContainer(msg.StreamId, new List<object>(), null); /* serializer.Deserialize(msg.Data); */
 
                 batch.Id = id;
                 batch._sequenceToken = new EventSequenceTokenV2(sequenceId);
