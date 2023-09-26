@@ -43,7 +43,7 @@ namespace Orleans.Streaming.Grains.Grains
 
             var timeout = _options.RetryTimeout / 5;
 
-            /* _ = RegisterTimer(FlushTimerAsync, null, timeout, timeout); */
+            _ = RegisterTimer(FlushTimerAsync, null, timeout, timeout);
 
             await base.OnActivateAsync(cancellationToken);
         }

@@ -44,7 +44,7 @@ namespace Orleans.Streaming.Grains.Grains
 
             State.Item = item;
 
-            /*_ = RegisterTimer(PersistTimerAsync, null, TimeSpan.FromSeconds(1), TimeSpan.FromDays(1));*/
+            _ = RegisterTimer(PersistTimerAsync, null, TimeSpan.FromSeconds(1), TimeSpan.FromDays(1));
 
             return Task.CompletedTask;
         }
