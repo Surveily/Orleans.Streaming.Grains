@@ -19,19 +19,19 @@ namespace Orleans.Streaming.Grains.Streams
         private readonly QueueId _queueId;
         private readonly ITransactionService _service;
         private readonly IStreamQueueMapper _streamQueueMapper;
-        private readonly Serializer<GrainsBatchContainer> _serializationManager;
+        private readonly Serializer<GrainsBatchContainer> _serializer;
 
         private long _lastReadMessage;
 
         public GrainsQueueAdapterReceiver(QueueId queueId,
                                           ITransactionService service,
                                           IStreamQueueMapper streamQueueMapper,
-                                          Serializer<GrainsBatchContainer> serializationManager)
+                                          Serializer<GrainsBatchContainer> serializer)
         {
             _queueId = queueId;
             _service = service;
+            _serializer = serializer;
             _streamQueueMapper = streamQueueMapper;
-            _serializationManager = serializationManager;
         }
 
         public async Task<IList<IBatchContainer>> GetQueueMessagesAsync(int maxCount)
@@ -44,7 +44,7 @@ namespace Orleans.Streaming.Grains.Streams
 
                 if (message != null && message.HasValue && message.Value.Item.Value != null)
                 {
-                    result.Add(GrainsBatchContainer.FromMessage(_serializationManager, message.Value.Id, message.Value.Item.Value, _lastReadMessage++));
+                    result.Add(GrainsBatchContainer.FromMessage(_serializer, message.Value.Id, message.Value.Item.Value, _lastReadMessage++));
                 }
                 else
                 {
