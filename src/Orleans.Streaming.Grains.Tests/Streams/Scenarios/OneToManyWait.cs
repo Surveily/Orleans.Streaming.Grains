@@ -310,7 +310,7 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Scenarios
             }
 
             [Test]
-            public void It_Should_Deliver_Text()
+            public void It_Should_Deliver_Text() 
             {
                 Processor!.Verify(x => x.Process(expectedText), Times.Exactly(10));
             }
