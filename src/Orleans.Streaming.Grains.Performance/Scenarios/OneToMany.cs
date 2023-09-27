@@ -28,14 +28,13 @@ namespace Orleans.Streaming.Grains.Performance.Scenarios
             protected byte[] expectedData = new byte[1024];
 
             protected Mock<IProcessor> processor;
-            protected IOptions<GrainsOptions> settings;
 
             [Benchmark]
             [GcConcurrent]
             [GcServer(true)]
             public async Task BroadcastAsync()
             {
-                await RunAndWait(10, async () =>
+                await RunAndWait(1, async () =>
                 {
                     var grain = Client.GetGrain<IEmitterGrain>(Guid.NewGuid());
 
@@ -48,7 +47,7 @@ namespace Orleans.Streaming.Grains.Performance.Scenarios
             [GcServer(true)]
             public async Task CompoundAsync()
             {
-                await RunAndWait(10, async () =>
+                await RunAndWait(1, async () =>
                 {
                     var grain = Client.GetGrain<IEmitterGrain>(Guid.NewGuid());
 
@@ -61,7 +60,7 @@ namespace Orleans.Streaming.Grains.Performance.Scenarios
             [GcServer(true)]
             public async Task ExplosiveAsync()
             {
-                await RunAndWait(20, async () =>
+                await RunAndWait(2, async () =>
                 {
                     var grain = Client.GetGrain<IEmitterGrain>(Guid.NewGuid());
 
@@ -72,7 +71,6 @@ namespace Orleans.Streaming.Grains.Performance.Scenarios
             protected override void Prepare()
             {
                 processor = Container.GetService<Mock<IProcessor>>();
-                settings = Container.GetService<IOptions<GrainsOptions>>();
             }
 
             private async Task RunAndWait(int counter, Func<Task> operation)
