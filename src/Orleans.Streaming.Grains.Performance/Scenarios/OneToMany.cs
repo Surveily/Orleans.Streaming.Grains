@@ -60,7 +60,7 @@ namespace Orleans.Streaming.Grains.Performance.Scenarios
             [GcServer(true)]
             public async Task ExplosiveAsync()
             {
-                await RunAndWait(2, async () =>
+                await RunAndWait(20, async () =>
                 {
                     var grain = Client.GetGrain<IEmitterGrain>(Guid.NewGuid());
 
@@ -81,10 +81,20 @@ namespace Orleans.Streaming.Grains.Performance.Scenarios
                 long resultDataCounter = 0;
 
                 processor!.Setup(x => x.Process(It.IsAny<string>()))
-                          .Callback<string>(x => resultText = ++resultTextCounter == counter ? x : null);
+                          .Callback<string>(x =>
+                          {
+                              Interlocked.Increment(ref resultTextCounter);
+
+                              resultText = resultTextCounter == counter ? x : null;
+                          });
 
                 processor!.Setup(x => x.Process(It.IsAny<byte[]>()))
-                          .Callback<byte[]>(x => resultData = ++resultDataCounter == counter ? x : null);
+                          .Callback<byte[]>(x =>
+                          {
+                              Interlocked.Increment(ref resultDataCounter);
+
+                              resultData = resultDataCounter == counter ? x : null;
+                          });
 
                 await operation();
 
