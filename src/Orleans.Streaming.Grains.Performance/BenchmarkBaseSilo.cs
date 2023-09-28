@@ -80,7 +80,7 @@ namespace Orleans.Streaming.Grains.Performance
                         throw new TimeoutException($"Timeout while waiting for subject.");
                     }
 
-                    await Task.Delay(100);
+                    await Task.Delay(5);
                 }
             }
             finally
