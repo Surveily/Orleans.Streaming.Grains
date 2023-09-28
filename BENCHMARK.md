@@ -10,11 +10,11 @@ Intel Xeon CPU E5-2673 v3 2.40GHz, 1 CPU, 2 logical and 2 physical cores
 
 Concurrent=True  Server=True  
 
-| Method         | Mean     | Error    | StdDev   | Median   | Completed Work Items | Lock Contentions | Allocated  |
-|--------------- |---------:|---------:|---------:|---------:|---------------------:|-----------------:|-----------:|
-| BroadcastAsync | 100.8 ms |  0.91 ms |  0.71 ms | 100.9 ms |              77.4000 |           0.8000 |  186.75 KB |
-| CompoundAsync  | 192.9 ms |  5.97 ms | 16.13 ms | 200.3 ms |             176.0000 |           0.6667 |   306.7 KB |
-| ExplosiveAsync | 358.2 ms | 18.27 ms | 53.87 ms | 397.9 ms |             420.0000 |           1.0000 | 1034.32 KB |
+| Method         | Mean      | Error     | StdDev   | Completed Work Items | Lock Contentions | Allocated  |
+|--------------- |----------:|----------:|---------:|---------------------:|-----------------:|-----------:|
+| BroadcastAsync |  74.79 ms |  4.108 ms | 12.11 ms |              87.3333 |           2.0000 |  158.92 KB |
+| CompoundAsync  | 164.04 ms |  6.374 ms | 18.80 ms |             199.7500 |           3.7500 |  307.64 KB |
+| ExplosiveAsync | 272.35 ms | 13.966 ms | 38.47 ms |             550.0000 |           9.0000 | 1100.84 KB |
 
 ## GrainStreams
 
@@ -22,6 +22,6 @@ Concurrent=True  Server=True
 
 | Method         | Mean       | Error    | StdDev   | Completed Work Items | Lock Contentions | Allocated |
 |--------------- |-----------:|---------:|---------:|---------------------:|-----------------:|----------:|
-| BroadcastAsync |   166.0 ms |  5.70 ms | 16.81 ms |             912.0000 |           2.2500 |   1.45 MB |
-| CompoundAsync  |   466.2 ms | 23.31 ms | 68.74 ms |            1988.0000 |           1.0000 |    3.1 MB |
-| ExplosiveAsync | 1,102.5 ms | 30.21 ms | 87.65 ms |            9045.0000 |          15.0000 |  13.89 MB |
+| BroadcastAsync |   164.6 ms |  4.94 ms | 14.57 ms |             718.3333 |           2.0000 |    1.1 MB |
+| CompoundAsync  |   397.9 ms | 20.62 ms | 60.79 ms |            2278.0000 |           5.0000 |   3.41 MB |
+| ExplosiveAsync | 1,086.1 ms | 28.81 ms | 83.12 ms |           22663.0000 |          46.0000 |  37.27 MB |
