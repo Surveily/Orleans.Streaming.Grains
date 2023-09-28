@@ -58,7 +58,7 @@ namespace Orleans.Streaming.Grains.Streams
 
         public Task<IQueueAdapter> CreateAdapter()
         {
-            var adapter = new GrainsQueueAdapter(_name, _serializer, _grainsOptions, _service, _streamQueueMapper);
+            var adapter = new GrainsQueueAdapter(_name, _serializer, _grainsOptions, _service, _loggerFactory, _streamQueueMapper);
 
             return Task.FromResult<IQueueAdapter>(adapter);
         }

@@ -104,7 +104,7 @@ namespace Orleans.Streaming.Grains.Streams
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Exception thrown in {nameof(GrainsQueueAdapterReceiver)}.{nameof(GetQueueMessagesAsync)}.");
+                _logger?.LogError(ex, $"Exception thrown in {nameof(GrainsQueueAdapterReceiver)}.{nameof(GetQueueMessagesAsync)}.");
 
                 watch.Stop();
 
