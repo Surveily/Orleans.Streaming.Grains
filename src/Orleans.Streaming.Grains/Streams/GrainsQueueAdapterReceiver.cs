@@ -72,6 +72,8 @@ namespace Orleans.Streaming.Grains.Streams
 
                         if (message != null && message.HasValue && message.Value.Item.Value != null)
                         {
+                            message.Value.Item.Value.DequeueTimeUtc = DateTime.UtcNow;
+
                             messages.Add(message);
                         }
                         else

@@ -84,8 +84,9 @@ namespace Orleans.Streaming.Grains.Streams
 
             return new GrainsMessage
             {
+                Data = rawBytes,
                 StreamId = streamId,
-                Data = rawBytes
+                EnqueueTimeUtc = DateTime.UtcNow,
             };
         }
 
