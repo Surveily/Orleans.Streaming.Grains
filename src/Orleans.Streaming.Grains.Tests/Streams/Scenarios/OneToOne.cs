@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using NUnit.Framework;
 using Orleans.Hosting;
+using Orleans.Providers;
 using Orleans.Streaming.Grains.Abstract;
 using Orleans.Streaming.Grains.Services;
 using Orleans.Streaming.Grains.Streams;
@@ -33,6 +34,7 @@ namespace Orleans.Streaming.Grains.Test.Scenarios
             {
                 services.AddSingleton(processor);
                 services.AddSingleton(processor.Object);
+                services.AddSingleton<IMemoryMessageBodySerializer, DefaultMemoryMessageBodySerializer>();
             }
 
             public void Dispose()

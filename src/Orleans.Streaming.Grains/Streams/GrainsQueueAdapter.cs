@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Orleans.Concurrency;
+using Orleans.Providers;
 using Orleans.Providers.Streams.Common;
 using Orleans.Runtime;
 using Orleans.Serialization;
@@ -24,10 +25,10 @@ namespace Orleans.Streaming.Grains.Streams
         private readonly GrainsOptions _options;
         private readonly ITransactionService _service;
         private readonly IStreamQueueMapper _streamQueueMapper;
-        private readonly Serializer<GrainsBatchContainer> _serializer;
+        private readonly IMemoryMessageBodySerializer _serializer;
 
         public GrainsQueueAdapter(string providerName,
-                                  Serializer serializer,
+                                  IMemoryMessageBodySerializer serializer,
                                   GrainsOptions options,
                                   ITransactionService service,
                                   ILoggerFactory loggerFactory,
@@ -35,10 +36,10 @@ namespace Orleans.Streaming.Grains.Streams
         {
             _options = options;
             _service = service;
+            _serializer = serializer;
             _providerName = providerName;
             _loggerFactory = loggerFactory;
             _streamQueueMapper = streamQueueMapper;
-            _serializer = serializer.GetSerializer<GrainsBatchContainer>();
         }
 
         public bool IsRewindable => false;
@@ -58,10 +59,16 @@ namespace Orleans.Streaming.Grains.Streams
 
         public async Task QueueMessageBatchAsync<T>(StreamId streamId, IEnumerable<T> events, StreamSequenceToken token, Dictionary<string, object> requestContext)
         {
-            var queue = _streamQueueMapper.GetQueueForStream(streamId);
-            var message = GrainsBatchContainer.ToMessage(_serializer, streamId, events, requestContext);
+            var queueId = _streamQueueMapper.GetQueueForStream(streamId);
+            var bodyBytes = _serializer.Serialize(new MemoryMessageBody(events.Cast<object>(), requestContext));
+            var message = new MemoryMessageData
+            {
+                StreamId = streamId,
+                Payload = bodyBytes,
+                EnqueueTimeUtc = DateTime.UtcNow,
+            };
 
-            await _service.PostAsync(new Immutable<GrainsMessage>(message), !_options.FireAndForgetDelivery, queue.ToString());
+            await _service.PostAsync(new Immutable<MemoryMessageData>(message), !_options.FireAndForgetDelivery, queueId.ToString());
         }
     }
 }

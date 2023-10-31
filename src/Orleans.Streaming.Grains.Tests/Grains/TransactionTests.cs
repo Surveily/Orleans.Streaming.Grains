@@ -13,6 +13,7 @@ using Moq;
 using NUnit.Framework;
 using Orleans;
 using Orleans.Concurrency;
+using Orleans.Providers;
 using Orleans.Streaming.Grains.Abstract;
 using Orleans.Streaming.Grains.Services;
 using Orleans.Streaming.Grains.State;
@@ -28,6 +29,7 @@ namespace Orleans.Streaming.Grains.Tests.Grains
         {
             public override void Configure(IServiceCollection services)
             {
+                services.AddSingleton<IMemoryMessageBodySerializer, DefaultMemoryMessageBodySerializer>();
             }
         }
 

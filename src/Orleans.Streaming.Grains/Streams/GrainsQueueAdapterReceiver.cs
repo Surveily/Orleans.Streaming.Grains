@@ -10,6 +10,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Orleans.Concurrency;
+using Orleans.Providers;
 using Orleans.Providers.Streams.Common;
 using Orleans.Serialization;
 using Orleans.Streaming.Grains.Abstract;
@@ -24,16 +25,14 @@ namespace Orleans.Streaming.Grains.Streams
         private readonly List<Task> _awaitingTasks;
         private readonly ITransactionService _service;
         private readonly IStreamQueueMapper _streamQueueMapper;
-        private readonly Serializer<GrainsBatchContainer> _serializer;
+        private readonly IMemoryMessageBodySerializer _serializer;
         private readonly IQueueAdapterReceiverMonitor _receiverMonitor;
-
-        private long _lastReadMessage;
 
         public GrainsQueueAdapterReceiver(ILogger logger,
                                           QueueId queueId,
                                           ITransactionService service,
                                           IStreamQueueMapper streamQueueMapper,
-                                          Serializer<GrainsBatchContainer> serializer,
+                                          IMemoryMessageBodySerializer serializer,
                                           IQueueAdapterReceiverMonitor receiverMonitor)
         {
             _logger = logger;
@@ -58,22 +57,22 @@ namespace Orleans.Streaming.Grains.Streams
             var watch = Stopwatch.StartNew();
 
             List<IBatchContainer> batches;
-            Task<List<(Guid Id, Immutable<GrainsMessage> Item)?>> task = null;
+            Task<List<(Guid Id, Immutable<MemoryMessageData> Item)?>> task = null;
 
             try
             {
                 task = Task.Run(async () =>
                 {
-                    var messages = new List<(Guid Id, Immutable<GrainsMessage> Item)?>();
+                    var messages = new List<(Guid Id, Immutable<MemoryMessageData> Item)?>();
 
                     do
                     {
-                        var message = await _service.PopAsync<GrainsMessage>(_queueId.ToString());
+                        var message = await _service.PopAsync<MemoryMessageData>(_queueId.ToString());
 
-                        if (message != null && message.HasValue && message.Value.Item.Value != null)
+                        // TODO: Null check for Immutable.Value
+                        if (message != null && message.HasValue)
                         {
-                            message.Value.Item.Value.DequeueTimeUtc = DateTime.UtcNow;
-
+                            // TODO: Restore message Dequeue Time assginment
                             messages.Add(message);
                         }
                         else
@@ -90,7 +89,10 @@ namespace Orleans.Streaming.Grains.Streams
 
                 var eventData = await task;
 
-                batches = eventData.Select(data => GrainsBatchContainer.FromMessage(_serializer, data.Value.Id, data.Value.Item.Value, _lastReadMessage++)).ToList<IBatchContainer>();
+                batches = eventData.Select(data => new GrainsBatchContainer(data.Value.Item.Value, _serializer)
+                {
+                    Id = data.Value.Id
+                }).ToList<IBatchContainer>();
 
                 watch.Stop();
 
@@ -128,7 +130,7 @@ namespace Orleans.Streaming.Grains.Streams
             {
                 var queue = _streamQueueMapper.GetQueueForStream(message.StreamId);
 
-                await _service.CompleteAsync<GrainsMessage>(message.Id, true, queue.ToString());
+                await _service.CompleteAsync<MemoryMessageData>(message.Id, true, queue.ToString());
             }
         }
 

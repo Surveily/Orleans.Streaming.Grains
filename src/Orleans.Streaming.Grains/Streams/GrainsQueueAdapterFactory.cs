@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Orleans.Configuration;
 using Orleans.Configuration.Overrides;
+using Orleans.Providers;
 using Orleans.Providers.Streams.Common;
 using Orleans.Runtime;
 using Orleans.Serialization;
@@ -19,41 +20,51 @@ using Orleans.Streams;
 
 namespace Orleans.Streaming.Grains.Streams
 {
-    public class GrainsQueueAdapterFactory : IQueueAdapterFactory
+    public class GrainsQueueAdapterFactory : IQueueAdapterFactory, IQueueAdapterCache
     {
         private readonly string _name;
-        private readonly Serializer _serializer;
+        private readonly IMemoryMessageBodySerializer _serializer;
         private readonly ITransactionService _service;
         private readonly GrainsOptions _grainsOptions;
         private readonly ILoggerFactory _loggerFactory;
-        private readonly IQueueAdapterCache _adapterCache;
         private readonly IStreamQueueMapper _streamQueueMapper;
+        private readonly StreamCacheEvictionOptions _cacheOptions;
+        private readonly StreamStatisticOptions _statisticOptions;
+
+        private IObjectPool<FixedSizeBuffer> _bufferPool;
+        private BlockPoolMonitorDimensions _blockPoolMonitorDimensions;
+        private TimePurgePredicate _purgePredicate;
 
         public GrainsQueueAdapterFactory(string name,
-                                         Serializer serializer,
+                                         IMemoryMessageBodySerializer serializer,
                                          ITransactionService service,
                                          GrainsOptions grainsOptions,
                                          ILoggerFactory loggerFactory,
                                          IStreamQueueMapper queueMapper,
-                                         SimpleQueueCacheOptions cacheOptions)
+                                         StreamCacheEvictionOptions cacheOptions,
+                                         StreamStatisticOptions statisticOptions)
         {
             _name = name;
             _service = service;
             _serializer = serializer;
+            _cacheOptions = cacheOptions;
             _grainsOptions = grainsOptions;
             _loggerFactory = loggerFactory;
             _streamQueueMapper = queueMapper;
-            _adapterCache = new SimpleQueueAdapterCache(cacheOptions, _name, _loggerFactory);
+            _statisticOptions = statisticOptions;
+
+            _purgePredicate = new TimePurgePredicate(cacheOptions.DataMinTimeInCache, cacheOptions.DataMaxAgeInCache);
         }
 
         public static GrainsQueueAdapterFactory Create(IServiceProvider services, string name)
         {
             var grainsOptions = services.GetOptionsByName<GrainsOptions>(name);
             var queueMapper = services.GetServiceByName<IStreamQueueMapper>(name);
-            var cacheOptions = services.GetOptionsByName<SimpleQueueCacheOptions>(name);
+            var statsOptions = services.GetOptionsByName<StreamStatisticOptions>(name);
+            var cacheOptions = services.GetOptionsByName<StreamCacheEvictionOptions>(name);
             var queueOptions = services.GetOptionsByName<HashRingStreamQueueMapperOptions>(name);
 
-            return ActivatorUtilities.CreateInstance<GrainsQueueAdapterFactory>(services, name, cacheOptions, grainsOptions, queueMapper ?? new HashRingBasedStreamQueueMapper(queueOptions, name));
+            return ActivatorUtilities.CreateInstance<GrainsQueueAdapterFactory>(services, name, statsOptions, cacheOptions, grainsOptions, queueMapper ?? new HashRingBasedStreamQueueMapper(queueOptions, name));
         }
 
         public Task<IQueueAdapter> CreateAdapter()
@@ -63,6 +74,14 @@ namespace Orleans.Streaming.Grains.Streams
             return Task.FromResult<IQueueAdapter>(adapter);
         }
 
+        public IQueueCache CreateQueueCache(QueueId queueId)
+        {
+            CreateBufferPoolIfNotCreatedYet();
+            var logger = _loggerFactory.CreateLogger($"{typeof(GrainsPooledCache).FullName}.{_name}.{queueId}");
+            var monitor = new DefaultCacheMonitor(new CacheMonitorDimensions(queueId.ToString(), _blockPoolMonitorDimensions.BlockPoolId));
+            return new GrainsPooledCache(_bufferPool, _purgePredicate, logger, _serializer, monitor, _statisticOptions.StatisticMonitorWriteInterval, _cacheOptions.MetadataMinTimeInCache);
+        }
+
         public Task<IStreamFailureHandler> GetDeliveryFailureHandler(QueueId queueId)
         {
             return Task.FromResult<IStreamFailureHandler>(new NoOpStreamDeliveryFailureHandler());
@@ -70,12 +89,26 @@ namespace Orleans.Streaming.Grains.Streams
 
         public IQueueAdapterCache GetQueueAdapterCache()
         {
-            return _adapterCache;
+            return this;
         }
 
         public IStreamQueueMapper GetStreamQueueMapper()
         {
             return _streamQueueMapper;
+        }
+
+        private void CreateBufferPoolIfNotCreatedYet()
+        {
+            if (_bufferPool == null)
+            {
+                // 1 meg block size pool
+                _blockPoolMonitorDimensions = new BlockPoolMonitorDimensions($"BlockPool-{Guid.NewGuid()}");
+
+                var oneMb = 1 << 20;
+                var objectPoolMonitor = new ObjectPoolMonitorBridge(new DefaultBlockPoolMonitor(_blockPoolMonitorDimensions), oneMb);
+
+                _bufferPool = new ObjectPool<FixedSizeBuffer>(() => new FixedSizeBuffer(oneMb), objectPoolMonitor, _statisticOptions.StatisticMonitorWriteInterval);
+            }
         }
     }
 }
