@@ -56,6 +56,7 @@ namespace Orleans.Streaming.Grains.Services
         {
             var id = Guid.NewGuid();
             var item = _client.GetGrain<ITransactionItemGrain<T>>(id);
+
             await item.SetAsync(message);
 
             var transaction = _client.GetGrain<ITransactionGrain>(queue);
