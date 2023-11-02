@@ -24,6 +24,7 @@ namespace Orleans.Streaming.Grains.Streams
 
             var messageTypes = implicitSubscribers.SelectMany(x => Attribute.GetCustomAttributes(x, typeof(ImplicitStreamSubscriptionAttribute)))
                                                   .Select(x => (x as ImplicitStreamSubscriptionAttribute).Predicate.PredicatePattern.Split(':')[1])
+                                                  .Distinct()
                                                   .ToList();
 
             _pinnedQueues = new Dictionary<StreamId, QueueId>();
