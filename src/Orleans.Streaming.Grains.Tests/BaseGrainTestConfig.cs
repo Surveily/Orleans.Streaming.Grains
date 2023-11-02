@@ -70,12 +70,14 @@ namespace Orleans.Streaming.Grains.Test
 
         private void ConfigureInner(IServiceCollection services)
         {
+#if DEBUG
             var logger = new LoggerConfiguration()
                 .WriteTo.Debug()
                 .WriteTo.Console()
                 .CreateLogger();
 
             services.AddLogging(l => l.AddSerilog(logger, dispose: true));
+#endif
         }
     }
 }
