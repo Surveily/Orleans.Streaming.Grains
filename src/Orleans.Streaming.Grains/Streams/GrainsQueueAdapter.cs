@@ -23,14 +23,14 @@ namespace Orleans.Streaming.Grains.Streams
         private readonly string _providerName;
         private readonly ILoggerFactory _loggerFactory;
         private readonly GrainsOptions _options;
-        private readonly ITransactionService _service;
+        private readonly ITransactionService<MemoryMessageData> _service;
         private readonly IStreamQueueMapper _streamQueueMapper;
         private readonly IMemoryMessageBodySerializer _serializer;
 
         public GrainsQueueAdapter(string providerName,
                                   IMemoryMessageBodySerializer serializer,
                                   GrainsOptions options,
-                                  ITransactionService service,
+                                  ITransactionService<MemoryMessageData> service,
                                   ILoggerFactory loggerFactory,
                                   IStreamQueueMapper streamQueueMapper)
         {
@@ -68,7 +68,7 @@ namespace Orleans.Streaming.Grains.Streams
                 EnqueueTimeUtc = DateTime.UtcNow,
             };
 
-            await _service.PostAsync(new Immutable<MemoryMessageData>(message), !_options.FireAndForgetDelivery, queueId.ToString());
+            await _service.PostAsync(message, !_options.FireAndForgetDelivery, queueId.ToString());
         }
     }
 }

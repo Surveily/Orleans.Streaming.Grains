@@ -11,6 +11,7 @@ using Moq;
 using NUnit.Framework;
 using Orleans;
 using Orleans.Concurrency;
+using Orleans.Providers;
 using Orleans.Streaming.Grains.Abstract;
 using Orleans.Streaming.Grains.Services;
 using Orleans.Streaming.Grains.Test;
@@ -20,32 +21,34 @@ namespace Orleans.Streaming.Grains.Tests.Services
 {
     public class TransactionServiceTests
     {
-        public abstract class BaseTransactionServiceTest : BaseTest<TransactionService>
+        public abstract class BaseTransactionServiceTest : BaseTest<TransactionService<int>>
         {
             protected Guid itemId;
-            protected Immutable<int> item;
+            protected int item;
+            protected Immutable<int> immutableItem;
             protected Mock<IClusterClient> client;
-            protected Mock<ITransactionGrain> transaction;
+            protected Mock<ITransactionGrain<int>> transaction;
             protected Mock<ITransactionItemGrain<int>> message;
 
             public BaseTransactionServiceTest()
             {
-                item = new Immutable<int>(100);
+                item = 100;
                 client = new Mock<IClusterClient>();
-                transaction = new Mock<ITransactionGrain>();
+                transaction = new Mock<ITransactionGrain<int>>();
                 message = new Mock<ITransactionItemGrain<int>>();
 
                 client.Setup(x => x.GetGrain<ITransactionItemGrain<int>>(It.IsAny<Guid>(), null))
                       .Callback<Guid, string>((id, _) => itemId = id)
                       .Returns(message.Object);
 
-                client.Setup(x => x.GetGrain<ITransactionGrain>("1", null))
+                client.Setup(x => x.GetGrain<ITransactionGrain<int>>("1", null))
                       .Returns(transaction.Object);
 
                 message.Setup(x => x.SetAsync(It.IsAny<Immutable<int>>()))
+                       .Callback<Immutable<int>>(x => immutableItem = x)
                        .Returns(Task.CompletedTask);
 
-                transaction.Setup(x => x.PostAsync(itemId))
+                transaction.Setup(x => x.PostAsync(itemId, It.IsAny<int>()))
                            .Returns(Task.CompletedTask);
 
                 Services.AddSingleton(client.Object);
@@ -69,19 +72,19 @@ namespace Orleans.Streaming.Grains.Tests.Services
             [Test]
             public void It_Should_Get_Transaction()
             {
-                client.Verify(x => x.GetGrain<ITransactionGrain>("1", null), Times.Once);
+                client.Verify(x => x.GetGrain<ITransactionGrain<int>>("1", null), Times.Once);
             }
 
             [Test]
             public void It_Should_Set_Item()
             {
-                message.Verify(x => x.SetAsync(item), Times.Once);
+                message.Verify(x => x.SetAsync(immutableItem), Times.Once);
             }
 
             [Test]
             public void It_Should_Post_Id()
             {
-                transaction.Verify(x => x.PostAsync(itemId), Times.Once);
+                transaction.Verify(x => x.PostAsync(itemId, item), Times.Once);
             }
         }
 
@@ -93,7 +96,7 @@ namespace Orleans.Streaming.Grains.Tests.Services
             {
                 await base.SetupAsync();
 
-                result = await Subject.PopAsync<int>("1");
+                result = await Subject.PopAsync("1");
             }
 
             [Test]
@@ -119,12 +122,12 @@ namespace Orleans.Streaming.Grains.Tests.Services
                            .ReturnsAsync(() => itemId);
 
                 message.Setup(x => x.GetAsync())
-                       .ReturnsAsync(item);
+                       .ReturnsAsync(immutableItem);
 
                 await base.SetupAsync();
                 await Subject.PostAsync(item, false, "1");
 
-                result = await Subject.PopAsync<int>("1");
+                result = await Subject.PopAsync("1");
             }
 
             [Test]
@@ -142,7 +145,7 @@ namespace Orleans.Streaming.Grains.Tests.Services
             [Test]
             public void It_Should_Return_Item()
             {
-                result.Value.Item.ShouldEqual(item);
+                result.Value.Item.ShouldEqual(immutableItem);
             }
 
             [Test]
@@ -154,19 +157,19 @@ namespace Orleans.Streaming.Grains.Tests.Services
             [Test]
             public void It_Should_Get_Transaction()
             {
-                client.Verify(x => x.GetGrain<ITransactionGrain>("1", null), Times.Exactly(2));
+                client.Verify(x => x.GetGrain<ITransactionGrain<int>>("1", null), Times.Exactly(2));
             }
 
             [Test]
             public void It_Should_Set_Item()
             {
-                message.Verify(x => x.SetAsync(item), Times.Once);
+                message.Verify(x => x.SetAsync(immutableItem), Times.Once);
             }
 
             [Test]
             public void It_Should_Post_Id()
             {
-                transaction.Verify(x => x.PostAsync(itemId), Times.Once);
+                transaction.Verify(x => x.PostAsync(itemId, item), Times.Once);
             }
 
             [Test]

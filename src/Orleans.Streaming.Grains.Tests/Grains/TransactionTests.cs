@@ -36,7 +36,7 @@ namespace Orleans.Streaming.Grains.Tests.Grains
         public abstract class BaseTransactionTest : BaseGrainTest<Config>
         {
             protected IClusterClient client;
-            protected ITransactionService service;
+            protected ITransactionService<int> service;
             protected IOptions<GrainsOptions> settings;
 
             protected TransactionGrainState state;
@@ -44,7 +44,7 @@ namespace Orleans.Streaming.Grains.Tests.Grains
             public override void Prepare()
             {
                 client = Container.GetService<IClusterClient>();
-                service = Container.GetService<ITransactionService>();
+                service = Container.GetService<ITransactionService<int>>();
                 settings = Container.GetService<IOptions<GrainsOptions>>();
             }
         }
@@ -55,7 +55,7 @@ namespace Orleans.Streaming.Grains.Tests.Grains
 
             public override async Task Act()
             {
-                result = await service.PopAsync<int>("1");
+                result = await service.PopAsync("1");
             }
 
             [Test]
@@ -97,11 +97,11 @@ namespace Orleans.Streaming.Grains.Tests.Grains
         {
             public override async Task Act()
             {
-                await service.PostAsync(new Immutable<int>(100), false, "1");
+                await service.PostAsync(100, false, "1");
 
-                result = await service.PopAsync<int>("1");
+                result = await service.PopAsync("1");
 
-                var transaction = client.GetGrain<ITransactionGrain>("1");
+                var transaction = client.GetGrain<ITransactionGrain<int>>("1");
 
                 state = await transaction.GetStateAsync();
             }
@@ -129,11 +129,11 @@ namespace Orleans.Streaming.Grains.Tests.Grains
         {
             public override async Task Act()
             {
-                await service.PostAsync(new Immutable<int>(100), false, "1");
+                await service.PostAsync(100, false, "1");
 
-                result = await service.PopAsync<int>("1");
+                result = await service.PopAsync("1");
 
-                var transaction = client.GetGrain<ITransactionGrain>("1");
+                var transaction = client.GetGrain<ITransactionGrain<int>>("1");
 
                 await Task.Delay(TimeSpan.FromSeconds(2));
 
@@ -165,15 +165,15 @@ namespace Orleans.Streaming.Grains.Tests.Grains
 
             public override async Task Act()
             {
-                await service.PostAsync(new Immutable<int>(100), false, "1");
+                await service.PostAsync(100, false, "1");
 
-                result = await service.PopAsync<int>("1");
+                result = await service.PopAsync("1");
 
-                await service.CompleteAsync<int>(result.Value.Id, true, "1");
+                await service.CompleteAsync(result.Value.Id, true, "1");
 
-                result2 = await service.PopAsync<int>("1");
+                result2 = await service.PopAsync("1");
 
-                var transaction = client.GetGrain<ITransactionGrain>("1");
+                var transaction = client.GetGrain<ITransactionGrain<int>>("1");
 
                 state = await transaction.GetStateAsync();
             }
@@ -209,15 +209,15 @@ namespace Orleans.Streaming.Grains.Tests.Grains
 
             public override async Task Act()
             {
-                await service.PostAsync(new Immutable<int>(100), false, "1");
+                await service.PostAsync(100, false, "1");
 
-                result = await service.PopAsync<int>("1");
+                result = await service.PopAsync("1");
 
-                await service.CompleteAsync<int>(result.Value.Id, false, "1");
+                await service.CompleteAsync(result.Value.Id, false, "1");
 
-                result2 = await service.PopAsync<int>("1");
+                result2 = await service.PopAsync("1");
 
-                var transaction = client.GetGrain<ITransactionGrain>("1");
+                var transaction = client.GetGrain<ITransactionGrain<int>>("1");
 
                 state = await transaction.GetStateAsync();
             }

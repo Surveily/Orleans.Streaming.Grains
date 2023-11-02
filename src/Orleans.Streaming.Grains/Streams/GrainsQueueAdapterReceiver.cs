@@ -23,14 +23,14 @@ namespace Orleans.Streaming.Grains.Streams
         private readonly ILogger _logger;
         private readonly QueueId _queueId;
         private readonly List<Task> _awaitingTasks;
-        private readonly ITransactionService _service;
+        private readonly ITransactionService<MemoryMessageData> _service;
         private readonly IStreamQueueMapper _streamQueueMapper;
         private readonly IMemoryMessageBodySerializer _serializer;
         private readonly IQueueAdapterReceiverMonitor _receiverMonitor;
 
         public GrainsQueueAdapterReceiver(ILogger logger,
                                           QueueId queueId,
-                                          ITransactionService service,
+                                          ITransactionService<MemoryMessageData> service,
                                           IStreamQueueMapper streamQueueMapper,
                                           IMemoryMessageBodySerializer serializer,
                                           IQueueAdapterReceiverMonitor receiverMonitor)
@@ -66,7 +66,7 @@ namespace Orleans.Streaming.Grains.Streams
 
                 do
                 {
-                    message = await _service.PopAsync<MemoryMessageData>(_queueId.ToString());
+                    message = await _service.PopAsync(_queueId.ToString());
 
                     // TODO: Null check for Immutable.Value
                     if (message != null && message.HasValue)
@@ -127,11 +127,11 @@ namespace Orleans.Streaming.Grains.Streams
 
         public async Task MessagesDeliveredAsync(IList<IBatchContainer> messages)
         {
-            foreach (var message in messages.OfType<GrainsBatchContainer>())
+            foreach (var message in messages.Cast<GrainsBatchContainer>())
             {
                 var queue = _streamQueueMapper.GetQueueForStream(message.StreamId);
 
-                await _service.CompleteAsync<MemoryMessageData>(message.Id, true, queue.ToString());
+                await _service.CompleteAsync(message.Id, true, queue.ToString());
             }
         }
 

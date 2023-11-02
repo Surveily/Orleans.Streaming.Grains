@@ -44,6 +44,8 @@ namespace Orleans.Streaming.Grains.Streams
         {
             _serializer = serializer;
             _sequenceToken = new EventSequenceToken(messageData.SequenceNumber);
+
+            MessageData = messageData;
         }
 
         [Id(1)]

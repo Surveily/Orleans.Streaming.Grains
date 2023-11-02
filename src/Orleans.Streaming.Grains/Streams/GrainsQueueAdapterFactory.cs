@@ -23,11 +23,11 @@ namespace Orleans.Streaming.Grains.Streams
     public class GrainsQueueAdapterFactory : IQueueAdapterFactory, IQueueAdapterCache
     {
         private readonly string _name;
-        private readonly IMemoryMessageBodySerializer _serializer;
-        private readonly ITransactionService _service;
+        private readonly ITransactionService<MemoryMessageData> _service;
         private readonly GrainsOptions _grainsOptions;
         private readonly ILoggerFactory _loggerFactory;
         private readonly IStreamQueueMapper _streamQueueMapper;
+        private readonly IMemoryMessageBodySerializer _serializer;
         private readonly StreamCacheEvictionOptions _cacheOptions;
         private readonly StreamStatisticOptions _statisticOptions;
 
@@ -37,7 +37,7 @@ namespace Orleans.Streaming.Grains.Streams
 
         public GrainsQueueAdapterFactory(string name,
                                          IMemoryMessageBodySerializer serializer,
-                                         ITransactionService service,
+                                         ITransactionService<MemoryMessageData> service,
                                          GrainsOptions grainsOptions,
                                          ILoggerFactory loggerFactory,
                                          IStreamQueueMapper queueMapper,

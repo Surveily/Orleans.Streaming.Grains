@@ -10,12 +10,12 @@ using Orleans.Concurrency;
 
 namespace Orleans.Streaming.Grains.Abstract
 {
-    public interface ITransactionService
+    public interface ITransactionService<T>
     {
-        Task<(Guid Id, Immutable<T> Item)?> PopAsync<T>(string queue);
+        Task<(Guid Id, Immutable<T> Item)?> PopAsync(string queue);
 
-        Task PostAsync<T>(Immutable<T> message, bool wait, string queue);
+        Task PostAsync(T message, bool wait, string queue);
 
-        Task CompleteAsync<T>(Guid id, bool success, string queue);
+        Task CompleteAsync(Guid id, bool success, string queue);
     }
 }

@@ -11,6 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualBasic;
 using Orleans.Configuration;
 using Orleans.Hosting;
+using Orleans.Providers;
 using Orleans.Runtime;
 using Orleans.Streaming.Grains.Abstract;
 using Orleans.Streaming.Grains.Services;
@@ -64,7 +65,7 @@ namespace Orleans.Streaming.Grains.Extensions
                                                           .GetSection(nameof(GrainsOptions))
                                                           .Get<GrainsOptions>());
 
-                              services.AddSingleton<ITransactionService, TransactionService>();
+                              services.AddSingleton<ITransactionService<MemoryMessageData>, TransactionService<MemoryMessageData>>();
                           })
                           .AddPersistentStreams(name, GrainsQueueAdapterFactory.Create, config =>
                           {
@@ -75,7 +76,7 @@ namespace Orleans.Streaming.Grains.Extensions
         {
             return builder.ConfigureServices(services =>
                           {
-                              services.AddSingleton<ITransactionService, TransactionService>();
+                              services.AddSingleton<ITransactionService<MemoryMessageData>, TransactionService<MemoryMessageData>>();
 
                               if (!fireAndForgetDelivery)
                               {

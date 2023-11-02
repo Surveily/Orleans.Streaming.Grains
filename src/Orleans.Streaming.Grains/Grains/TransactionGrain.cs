@@ -19,15 +19,17 @@ using Orleans.Utilities;
 
 namespace Orleans.Streaming.Grains.Grains
 {
-    public class TransactionGrain : Grain<TransactionGrainState>, ITransactionGrain
+    public class TransactionGrain<T> : Grain<TransactionGrainState>, ITransactionGrain<T>
     {
         private readonly GrainsOptions _options;
         private readonly ObserverManager<ITransactionObserver> _subscriptions;
 
+        private long _sequenceNumber = DateTime.UtcNow.Ticks;
+
         public TransactionGrain(IOptions<GrainsOptions> options, ILoggerFactory logger)
         {
             _options = options.Value;
-            _subscriptions = new ObserverManager<ITransactionObserver>(TimeSpan.FromSeconds(30), logger.CreateLogger<TransactionGrain>());
+            _subscriptions = new ObserverManager<ITransactionObserver>(TimeSpan.FromSeconds(30), logger.CreateLogger<TransactionGrain<T>>());
         }
 
         public override async Task OnActivateAsync(CancellationToken cancellationToken)
@@ -90,11 +92,17 @@ namespace Orleans.Streaming.Grains.Grains
             return Task.FromResult(default(Guid?));
         }
 
-        public Task PostAsync(Guid id)
+        public async Task PostAsync(Guid id, T message)
         {
-            State.Queue.Enqueue(id);
+            dynamic unwrapped = message;
 
-            return Task.CompletedTask;
+            unwrapped.SequenceNumber = _sequenceNumber++;
+
+            var itemGrain = GrainFactory.GetGrain<ITransactionItemGrain<T>>(id);
+
+            await itemGrain.SetAsync(new Immutable<T>(unwrapped));
+
+            State.Queue.Enqueue(id);
         }
 
         public Task<TransactionGrainState> GetStateAsync()
@@ -142,7 +150,7 @@ namespace Orleans.Streaming.Grains.Grains
 
         private async Task FlushTimerAsync(object arg)
         {
-            await Task.Run(async () => await this.AsReference<ITransactionGrain>().FlushAsync());
+            await Task.Run(async () => await this.AsReference<ITransactionGrain<T>>().FlushAsync());
         }
 
         private async Task PersistAsync()

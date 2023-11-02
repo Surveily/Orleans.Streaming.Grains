@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Orleans.Concurrency;
+using Orleans.Providers;
 using Orleans.Streaming.Grains.Abstract;
 
 namespace Orleans.Streaming.Grains.Grains
@@ -29,7 +30,7 @@ namespace Orleans.Streaming.Grains.Grains
             {
                 _task.SetResult(success);
 
-                var transaction = GrainFactory.GetGrain<ITransactionGrain>(queue);
+                var transaction = GrainFactory.GetGrain<ITransactionGrain<MemoryMessageData>>(queue);
 
                 transaction.UnsubscribeAsync(this.AsReference<ITransactionObserver>());
             }
@@ -39,7 +40,7 @@ namespace Orleans.Streaming.Grains.Grains
 
         public async Task<bool> WaitAsync<T>(string queue)
         {
-            var transaction = GrainFactory.GetGrain<ITransactionGrain>(queue);
+            var transaction = GrainFactory.GetGrain<ITransactionGrain<MemoryMessageData>>(queue);
             await transaction.SubscribeAsync(this.AsReference<ITransactionObserver>());
             return await _task.Task;
         }
