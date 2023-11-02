@@ -42,7 +42,7 @@ namespace Orleans.Streaming.Grains.Streams
             _streamQueueMapper = streamQueueMapper;
         }
 
-        public bool IsRewindable => false;
+        public bool IsRewindable => true;
 
         public string Name => _providerName;
 

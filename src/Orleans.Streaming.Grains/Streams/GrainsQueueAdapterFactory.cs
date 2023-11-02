@@ -31,9 +31,9 @@ namespace Orleans.Streaming.Grains.Streams
         private readonly StreamCacheEvictionOptions _cacheOptions;
         private readonly StreamStatisticOptions _statisticOptions;
 
+        private TimePurgePredicate _purgePredicate;
         private IObjectPool<FixedSizeBuffer> _bufferPool;
         private BlockPoolMonitorDimensions _blockPoolMonitorDimensions;
-        private TimePurgePredicate _purgePredicate;
 
         public GrainsQueueAdapterFactory(string name,
                                          IMemoryMessageBodySerializer serializer,
@@ -54,6 +54,17 @@ namespace Orleans.Streaming.Grains.Streams
             _statisticOptions = statisticOptions;
 
             _purgePredicate = new TimePurgePredicate(cacheOptions.DataMinTimeInCache, cacheOptions.DataMaxAgeInCache);
+
+            if (_bufferPool == null)
+            {
+                // 1 meg block size pool
+                _blockPoolMonitorDimensions = new BlockPoolMonitorDimensions($"BlockPool-{Guid.NewGuid()}");
+
+                var oneMb = 1 << 20;
+                var objectPoolMonitor = new ObjectPoolMonitorBridge(new DefaultBlockPoolMonitor(_blockPoolMonitorDimensions), oneMb);
+
+                _bufferPool = new ObjectPool<FixedSizeBuffer>(() => new FixedSizeBuffer(oneMb), objectPoolMonitor, _statisticOptions.StatisticMonitorWriteInterval);
+            }
         }
 
         public static GrainsQueueAdapterFactory Create(IServiceProvider services, string name)
@@ -76,7 +87,6 @@ namespace Orleans.Streaming.Grains.Streams
 
         public IQueueCache CreateQueueCache(QueueId queueId)
         {
-            CreateBufferPoolIfNotCreatedYet();
             var logger = _loggerFactory.CreateLogger($"{typeof(GrainsPooledCache).FullName}.{_name}.{queueId}");
             var monitor = new DefaultCacheMonitor(new CacheMonitorDimensions(queueId.ToString(), _blockPoolMonitorDimensions.BlockPoolId));
             return new GrainsPooledCache(_bufferPool, _purgePredicate, logger, _serializer, monitor, _statisticOptions.StatisticMonitorWriteInterval, _cacheOptions.MetadataMinTimeInCache);
@@ -95,20 +105,6 @@ namespace Orleans.Streaming.Grains.Streams
         public IStreamQueueMapper GetStreamQueueMapper()
         {
             return _streamQueueMapper;
-        }
-
-        private void CreateBufferPoolIfNotCreatedYet()
-        {
-            if (_bufferPool == null)
-            {
-                // 1 meg block size pool
-                _blockPoolMonitorDimensions = new BlockPoolMonitorDimensions($"BlockPool-{Guid.NewGuid()}");
-
-                var oneMb = 1 << 20;
-                var objectPoolMonitor = new ObjectPoolMonitorBridge(new DefaultBlockPoolMonitor(_blockPoolMonitorDimensions), oneMb);
-
-                _bufferPool = new ObjectPool<FixedSizeBuffer>(() => new FixedSizeBuffer(oneMb), objectPoolMonitor, _statisticOptions.StatisticMonitorWriteInterval);
-            }
         }
     }
 }

@@ -19,15 +19,18 @@ namespace Orleans.Streaming.Grains.Services
     public class TransactionService : ITransactionService
     {
         private readonly IClusterClient _client;
+        private readonly ConcurrentDictionary<string, ITransactionGrain> _transactionCache;
 
         public TransactionService(IClusterClient client)
         {
             _client = client;
+
+            _transactionCache = new ConcurrentDictionary<string, ITransactionGrain>();
         }
 
         public async Task CompleteAsync<T>(Guid id, bool success, string queue)
         {
-            var transaction = _client.GetGrain<ITransactionGrain>(queue);
+            var transaction = GetTransactionGrain(queue);
 
             await transaction.CompleteAsync(id, success);
 
@@ -38,7 +41,7 @@ namespace Orleans.Streaming.Grains.Services
 
         public async Task<(Guid Id, Immutable<T> Item)?> PopAsync<T>(string queue)
         {
-            var transaction = _client.GetGrain<ITransactionGrain>(queue);
+            var transaction = GetTransactionGrain(queue);
             var id = await transaction.PopAsync();
 
             if (id != null && id.HasValue)
@@ -59,12 +62,17 @@ namespace Orleans.Streaming.Grains.Services
 
             await item.SetAsync(message);
 
-            var transaction = _client.GetGrain<ITransactionGrain>(queue);
+            var transaction = GetTransactionGrain(queue);
             var completion = wait ? _client.GetGrain<ITransactionProxyGrain>(id).WaitAsync<T>(queue)
                                   : Task.CompletedTask;
 
             await transaction.PostAsync(id);
             await completion;
+        }
+
+        private ITransactionGrain GetTransactionGrain(string queue)
+        {
+            return _transactionCache.GetOrAdd(queue, _client.GetGrain<ITransactionGrain>(queue));
         }
     }
 }
