@@ -57,34 +57,35 @@ namespace Orleans.Streaming.Grains.Streams
             var watch = Stopwatch.StartNew();
 
             List<IBatchContainer> batches;
-            Task<List<(Guid Id, Immutable<MemoryMessageData> Item)?>> task = null;
+
+            var task = Task.Run(async () =>
+            {
+                var messages = new List<(Guid Id, Immutable<MemoryMessageData> Item)?>();
+
+                (Guid Id, Immutable<MemoryMessageData> Item)? message;
+
+                do
+                {
+                    message = await _service.PopAsync<MemoryMessageData>(_queueId.ToString());
+
+                    // TODO: Null check for Immutable.Value
+                    if (message != null && message.HasValue)
+                    {
+                        // TODO: Restore message Dequeue Time assginment
+                        messages.Add(message.Value);
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+                while (message != null && message.HasValue && messages.Count < maxCount);
+
+                return messages;
+            });
 
             try
             {
-                task = Task.Run(async () =>
-                {
-                    var messages = new List<(Guid Id, Immutable<MemoryMessageData> Item)?>();
-
-                    do
-                    {
-                        var message = await _service.PopAsync<MemoryMessageData>(_queueId.ToString());
-
-                        // TODO: Null check for Immutable.Value
-                        if (message != null && message.HasValue)
-                        {
-                            // TODO: Restore message Dequeue Time assginment
-                            messages.Add(message);
-                        }
-                        else
-                        {
-                            break;
-                        }
-                    }
-                    while (messages.Count < maxCount);
-
-                    return messages;
-                });
-
                 _awaitingTasks.Add(task);
 
                 var eventData = await task;
