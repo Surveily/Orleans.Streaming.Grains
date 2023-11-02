@@ -8,6 +8,7 @@ using Orleans.Runtime;
 using Orleans.TestingHost;
 using Polly;
 using Polly.Retry;
+using Serilog;
 
 namespace Orleans.Streaming.Grains.Test
 {

@@ -9,6 +9,7 @@ using System.Security.Cryptography.X509Certificates;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Orleans.Configuration;
 using Orleans.Hosting;
@@ -19,6 +20,8 @@ using Orleans.Streaming.Grains.Services;
 using Orleans.Streaming.Grains.Streams;
 using Orleans.Streaming.Grains.Tests.Streams.Messages;
 using Orleans.TestingHost;
+using Serilog;
+using Serilog.Extensions.Logging;
 
 namespace Orleans.Streaming.Grains.Test
 {
@@ -38,6 +41,7 @@ namespace Orleans.Streaming.Grains.Test
             if (_fireAndForget)
             {
                 siloBuilder.ConfigureServices(Configure)
+                           .ConfigureServices(ConfigureInner)
                            .AddMemoryGrainStorageAsDefault()
                            .AddMemoryGrainStorage(name: "PubSubStore")
                            .AddGrainsStreams(name: "Default",
@@ -49,6 +53,7 @@ namespace Orleans.Streaming.Grains.Test
             {
 #pragma warning disable CS0618
                 siloBuilder.ConfigureServices(Configure)
+                           .ConfigureServices(ConfigureInner)
                            .AddMemoryGrainStorageAsDefault()
                            .AddMemoryGrainStorage(name: "PubSubStore")
                            .AddGrainsStreamsForTests(name: "Default",
@@ -61,6 +66,16 @@ namespace Orleans.Streaming.Grains.Test
 
         public void Configure(IConfiguration configuration, IClientBuilder clientBuilder)
         {
+        }
+
+        private void ConfigureInner(IServiceCollection services)
+        {
+            var logger = new LoggerConfiguration()
+                .WriteTo.Debug()
+                .WriteTo.Console()
+                .CreateLogger();
+
+            services.AddLogging(l => l.AddSerilog(logger, dispose: true));
         }
     }
 }
