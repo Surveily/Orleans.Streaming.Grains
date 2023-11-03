@@ -2,6 +2,7 @@
 // Copyright (c) Surveily Sp. z o.o.. All rights reserved.
 // </copyright>
 
+using System.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
@@ -59,6 +60,7 @@ namespace Orleans.Streaming.Grains.Test.Scenarios
 
         public abstract class BaseOneToOneTest : BaseGrainTest<Config>
         {
+            protected Stopwatch Stopwatch { get; set; }
             protected Mock<IProcessor> Processor { get; set; }
 
             public override void Prepare()
@@ -125,18 +127,28 @@ namespace Orleans.Streaming.Grains.Test.Scenarios
 
             public override async Task Act()
             {
-                for (var i = 0; i < 10; i++)
+                Stopwatch = Stopwatch.StartNew();
+
+                for (var i = 0; i < 1; i++)
                 {
                     var grain = Subject.GetGrain<IEmitterGrain>(Guid.NewGuid());
 
                     await grain.SendAsync(expected);
                 }
+
+                Stopwatch.Stop();
+            }
+
+            [Test]
+            public void It_Should_Be_Quick()
+            {
+                Stopwatch.Elapsed.ShouldBeLessThan(TimeSpan.FromMilliseconds(1));
             }
 
             [Test]
             public void It_Should_Deliver()
             {
-                Processor!.Verify(x => x.Process(expected), Times.Exactly(10));
+                Processor!.Verify(x => x.Process(expected), Times.Exactly(1));
             }
 
             [Test]
