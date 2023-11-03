@@ -127,20 +127,17 @@ namespace Orleans.Streaming.Grains.Grains
             var expired = State.Transactions.Where(x => (DateTimeOffset.UtcNow - x.Value.Retried) > _options.RetryTimeout)
                                             .ToList();
 
-            if (expired.Any())
+            foreach (var item in expired)
             {
-                foreach (var item in expired)
+                if (DateTimeOffset.UtcNow - State.Transactions[item.Key].Started > _options.PoisonTimeout)
                 {
-                    if (DateTimeOffset.UtcNow - State.Transactions[item.Key].Started > _options.PoisonTimeout)
-                    {
-                        await CompleteAsync(item.Key, false);
-                    }
-                    else
-                    {
-                        State.Transactions[item.Key].Retried = DateTimeOffset.UtcNow;
-                        State.Sequences[item.Key] = _sequenceNumber++;
-                        State.Queue.Enqueue(item.Key);
-                    }
+                    await CompleteAsync(item.Key, false);
+                }
+                else
+                {
+                    State.Transactions[item.Key].Retried = DateTimeOffset.UtcNow;
+                    State.Sequences[item.Key] = _sequenceNumber++;
+                    State.Queue.Enqueue(item.Key);
                 }
             }
 
