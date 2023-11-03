@@ -29,6 +29,7 @@ namespace Orleans.Streaming.Grains.Tests.Grains
         {
             public override void Configure(IServiceCollection services)
             {
+                services.AddSingleton<ITransactionService<int>, TransactionService<int>>();
                 services.AddSingleton<IMemoryMessageBodySerializer, DefaultMemoryMessageBodySerializer>();
             }
         }
@@ -36,10 +37,10 @@ namespace Orleans.Streaming.Grains.Tests.Grains
         public abstract class BaseTransactionTest : BaseGrainTest<Config>
         {
             protected IClusterClient client;
+            protected TransactionGrainState state;
             protected ITransactionService<int> service;
             protected IOptions<GrainsOptions> settings;
-
-            protected TransactionGrainState state;
+            protected (Guid Id, Immutable<int> Item, long Sequence)? result;
 
             public override void Prepare()
             {
@@ -51,8 +52,6 @@ namespace Orleans.Streaming.Grains.Tests.Grains
 
         public class WhenPoppingEmpty : BaseTransactionTest
         {
-            protected (Guid Id, Immutable<int> Item)? result;
-
             public override async Task Act()
             {
                 result = await service.PopAsync("1");
@@ -67,8 +66,6 @@ namespace Orleans.Streaming.Grains.Tests.Grains
 
         public abstract class BaseWhenPoppingSingle : BaseTransactionTest
         {
-            protected (Guid Id, Immutable<int> Item)? result;
-
             public override void Prepare()
             {
                 base.Prepare();
@@ -97,7 +94,7 @@ namespace Orleans.Streaming.Grains.Tests.Grains
         {
             public override async Task Act()
             {
-                await service.PostAsync(100, false, "1");
+                await service.PostAsync(new Immutable<int>(100), false, "1");
 
                 result = await service.PopAsync("1");
 
@@ -129,7 +126,7 @@ namespace Orleans.Streaming.Grains.Tests.Grains
         {
             public override async Task Act()
             {
-                await service.PostAsync(100, false, "1");
+                await service.PostAsync(new Immutable<int>(100), false, "1");
 
                 result = await service.PopAsync("1");
 
@@ -161,11 +158,11 @@ namespace Orleans.Streaming.Grains.Tests.Grains
 
         public class WhenPoppingSingleAfterComplete : BaseWhenPoppingSingle
         {
-            protected (Guid Id, Immutable<int> Item)? result2;
+            protected (Guid Id, Immutable<int> Item, long Sequence)? result2;
 
             public override async Task Act()
             {
-                await service.PostAsync(100, false, "1");
+                await service.PostAsync(new Immutable<int>(100), false, "1");
 
                 result = await service.PopAsync("1");
 
@@ -205,11 +202,11 @@ namespace Orleans.Streaming.Grains.Tests.Grains
 
         public class WhenPoppingSingleAfterCompletePoison : BaseWhenPoppingSingle
         {
-            protected (Guid Id, Immutable<int> Item)? result2;
+            protected (Guid Id, Immutable<int> Item, long Sequence)? result2;
 
             public override async Task Act()
             {
-                await service.PostAsync(100, false, "1");
+                await service.PostAsync(new Immutable<int>(100), false, "1");
 
                 result = await service.PopAsync("1");
 

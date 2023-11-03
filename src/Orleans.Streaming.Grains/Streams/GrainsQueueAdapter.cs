@@ -68,7 +68,7 @@ namespace Orleans.Streaming.Grains.Streams
                 EnqueueTimeUtc = DateTime.UtcNow,
             };
 
-            await _service.PostAsync(message, !_options.FireAndForgetDelivery, queueId.ToString());
+            await _service.PostAsync(new Immutable<MemoryMessageData>(message), !_options.FireAndForgetDelivery, queueId.ToString());
         }
     }
 }

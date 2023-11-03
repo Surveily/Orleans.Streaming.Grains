@@ -60,13 +60,11 @@ namespace Orleans.Streaming.Grains.Streams
 
             var task = Task.Run(async () =>
             {
-                var messages = new List<(Guid Id, Immutable<MemoryMessageData> Item)?>();
-
-                (Guid Id, Immutable<MemoryMessageData> Item)? message;
+                var messages = new List<(Guid Id, Immutable<MemoryMessageData> Item, long Sequence)?>();
 
                 do
                 {
-                    message = await _service.PopAsync(_queueId.ToString());
+                    var message = await _service.PopAsync(_queueId.ToString());
 
                     // TODO: Null check for Immutable.Value
                     if (message != null && message.HasValue)
@@ -79,7 +77,7 @@ namespace Orleans.Streaming.Grains.Streams
                         break;
                     }
                 }
-                while (message != null && message.HasValue && messages.Count < maxCount);
+                while (messages.Count < maxCount);
 
                 return messages;
             });
@@ -90,7 +88,7 @@ namespace Orleans.Streaming.Grains.Streams
 
                 var eventData = await task;
 
-                batches = eventData.Select(data => new GrainsBatchContainer(data.Value.Item.Value, _serializer)
+                batches = eventData.Select(data => new GrainsBatchContainer(data.Value.Item.Value, _serializer, data.Value.Sequence)
                 {
                     Id = data.Value.Id
                 }).ToList<IBatchContainer>();

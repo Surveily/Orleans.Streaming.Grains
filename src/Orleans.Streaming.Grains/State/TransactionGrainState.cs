@@ -21,6 +21,9 @@ namespace Orleans.Streaming.Grains.State
 
         [Id(2)]
         public Dictionary<Guid, TransactionGrainStatePeriod> Transactions { get; set; }
+
+        [Id(4)]
+        public Dictionary<Guid, long> Sequences { get; set; }
     }
 
     [GenerateSerializer]

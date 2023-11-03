@@ -38,6 +38,7 @@ namespace Orleans.Streaming.Grains.Grains
             {
                 State.Queue = new Queue<Guid>();
                 State.Poison = new Queue<Guid>();
+                State.Sequences = new Dictionary<Guid, long>();
                 State.Transactions = new Dictionary<Guid, TransactionGrainStatePeriod>();
 
                 await PersistAsync();
@@ -61,6 +62,8 @@ namespace Orleans.Streaming.Grains.Grains
         {
             if (State.Transactions.Remove(id, out _) || State.Poison.Contains(id))
             {
+                State.Sequences.Remove(id, out _);
+
                 if (!success)
                 {
                     State.Poison.Enqueue(id);
@@ -73,7 +76,7 @@ namespace Orleans.Streaming.Grains.Grains
             }
         }
 
-        public Task<Guid?> PopAsync()
+        public Task<(Guid?, long)> PopAsync()
         {
             if (State.Queue.TryDequeue(out var id))
             {
@@ -86,23 +89,18 @@ namespace Orleans.Streaming.Grains.Grains
                     });
                 }
 
-                return Task.FromResult(new Guid?(id));
+                return Task.FromResult((new Guid?(id), State.Sequences[id]));
             }
 
-            return Task.FromResult(default(Guid?));
+            return Task.FromResult((default(Guid?), default(long)));
         }
 
-        public async Task PostAsync(Guid id, T message)
+        public Task PostAsync(Guid id)
         {
-            dynamic unwrapped = message;
-
-            unwrapped.SequenceNumber = _sequenceNumber++;
-
-            var itemGrain = GrainFactory.GetGrain<ITransactionItemGrain<T>>(id);
-
-            await itemGrain.SetAsync(new Immutable<T>(unwrapped));
-
             State.Queue.Enqueue(id);
+            State.Sequences[id] = _sequenceNumber++;
+
+            return Task.CompletedTask;
         }
 
         public Task<TransactionGrainState> GetStateAsync()
@@ -140,6 +138,7 @@ namespace Orleans.Streaming.Grains.Grains
                     else
                     {
                         State.Transactions[item.Key].Retried = DateTimeOffset.UtcNow;
+                        State.Sequences[item.Key] = _sequenceNumber++;
                         State.Queue.Enqueue(item.Key);
                     }
                 }

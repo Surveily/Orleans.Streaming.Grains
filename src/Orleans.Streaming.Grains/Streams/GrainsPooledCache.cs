@@ -90,7 +90,7 @@ namespace Orleans.Streaming.Grains.Streams
                 Payload = new ArraySegment<byte>(payload.ToArray()),
             };
 
-            return new GrainsBatchContainer(message, _serializer);
+            return new GrainsBatchContainer(message, _serializer, cachedMessage.SequenceNumber);
         }
 
         /// <inheritdoc/>

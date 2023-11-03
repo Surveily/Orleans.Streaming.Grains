@@ -31,7 +31,6 @@ namespace Orleans.Streaming.Grains.Streams
 
         private static readonly Lazy<ObjectFactory> ObjectFactory = new Lazy<ObjectFactory>(() => ActivatorUtilities.CreateFactory(typeof(DefaultMemoryMessageBodySerializer), Type.EmptyTypes));
 
-        [Id(0)]
         private readonly EventSequenceToken _sequenceToken;
 
         [NonSerialized]
@@ -40,10 +39,12 @@ namespace Orleans.Streaming.Grains.Streams
         [NonSerialized]
         private IMemoryMessageBodySerializer _serializer;
 
-        public GrainsBatchContainer(MemoryMessageData messageData, IMemoryMessageBodySerializer serializer)
+        public GrainsBatchContainer(MemoryMessageData messageData, IMemoryMessageBodySerializer serializer, long sequence)
         {
             _serializer = serializer;
-            _sequenceToken = new EventSequenceToken(messageData.SequenceNumber);
+            _sequenceToken = new EventSequenceToken(sequence);
+
+            messageData.SequenceNumber = sequence;
 
             MessageData = messageData;
         }
@@ -53,7 +54,8 @@ namespace Orleans.Streaming.Grains.Streams
 
         public StreamId StreamId => MessageData.StreamId;
 
-        public StreamSequenceToken SequenceToken => _sequenceToken;
+        [Id(0)]
+        public StreamSequenceToken SequenceToken { get; set; }
 
         public IEnumerable<Tuple<T, StreamSequenceToken>> GetEvents<T>()
         {

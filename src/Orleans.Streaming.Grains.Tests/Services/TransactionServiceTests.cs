@@ -24,16 +24,17 @@ namespace Orleans.Streaming.Grains.Tests.Services
         public abstract class BaseTransactionServiceTest : BaseTest<TransactionService<int>>
         {
             protected Guid itemId;
-            protected int item;
-            protected Immutable<int> immutableItem;
+            protected long itemSequence;
+            protected Immutable<int> item;
             protected Mock<IClusterClient> client;
             protected Mock<ITransactionGrain<int>> transaction;
             protected Mock<ITransactionItemGrain<int>> message;
 
             public BaseTransactionServiceTest()
             {
-                item = 100;
+                item = new Immutable<int>(100);
                 client = new Mock<IClusterClient>();
+                itemSequence = DateTime.UtcNow.Ticks;
                 transaction = new Mock<ITransactionGrain<int>>();
                 message = new Mock<ITransactionItemGrain<int>>();
 
@@ -44,11 +45,10 @@ namespace Orleans.Streaming.Grains.Tests.Services
                 client.Setup(x => x.GetGrain<ITransactionGrain<int>>("1", null))
                       .Returns(transaction.Object);
 
-                message.Setup(x => x.SetAsync(It.IsAny<Immutable<int>>()))
-                       .Callback<Immutable<int>>(x => immutableItem = x)
+                message.Setup(x => x.SetAsync(item))
                        .Returns(Task.CompletedTask);
 
-                transaction.Setup(x => x.PostAsync(itemId, It.IsAny<int>()))
+                transaction.Setup(x => x.PostAsync(itemId))
                            .Returns(Task.CompletedTask);
 
                 Services.AddSingleton(client.Object);
@@ -78,19 +78,19 @@ namespace Orleans.Streaming.Grains.Tests.Services
             [Test]
             public void It_Should_Set_Item()
             {
-                message.Verify(x => x.SetAsync(immutableItem), Times.Once);
+                message.Verify(x => x.SetAsync(item), Times.Once);
             }
 
             [Test]
             public void It_Should_Post_Id()
             {
-                transaction.Verify(x => x.PostAsync(itemId, item), Times.Once);
+                transaction.Verify(x => x.PostAsync(itemId), Times.Once);
             }
         }
 
         public class WhenPopingEmpty : BaseTransactionServiceTest
         {
-            protected (Guid Id, Immutable<int> Item)? result;
+            protected (Guid Id, Immutable<int> Item, long Sequence)? result;
 
             public override async Task SetupAsync()
             {
@@ -114,15 +114,15 @@ namespace Orleans.Streaming.Grains.Tests.Services
 
         public class WhenPopingSingle : BaseTransactionServiceTest
         {
-            protected (Guid Id, Immutable<int> Item)? result;
+            protected (Guid Id, Immutable<int> Item, long Sequence)? result;
 
             public override async Task SetupAsync()
             {
                 transaction.Setup(x => x.PopAsync())
-                           .ReturnsAsync(() => itemId);
+                           .ReturnsAsync(() => (itemId, itemSequence));
 
                 message.Setup(x => x.GetAsync())
-                       .ReturnsAsync(immutableItem);
+                       .ReturnsAsync(item);
 
                 await base.SetupAsync();
                 await Subject.PostAsync(item, false, "1");
@@ -145,7 +145,7 @@ namespace Orleans.Streaming.Grains.Tests.Services
             [Test]
             public void It_Should_Return_Item()
             {
-                result.Value.Item.ShouldEqual(immutableItem);
+                result.Value.Item.ShouldEqual(item);
             }
 
             [Test]
@@ -163,13 +163,13 @@ namespace Orleans.Streaming.Grains.Tests.Services
             [Test]
             public void It_Should_Set_Item()
             {
-                message.Verify(x => x.SetAsync(immutableItem), Times.Once);
+                message.Verify(x => x.SetAsync(item), Times.Once);
             }
 
             [Test]
             public void It_Should_Post_Id()
             {
-                transaction.Verify(x => x.PostAsync(itemId, item), Times.Once);
+                transaction.Verify(x => x.PostAsync(itemId), Times.Once);
             }
 
             [Test]
