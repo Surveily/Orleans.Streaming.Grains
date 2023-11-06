@@ -5,10 +5,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using Orleans.Providers.Streams.Common;
 using Orleans.Runtime;
 using Orleans.Serialization;
@@ -16,92 +12,63 @@ using Orleans.Streams;
 
 namespace Orleans.Streaming.Grains.Streams
 {
-    /// <summary>
-    /// Generic container for Grains events.
-    /// </summary>
     [Serializable]
     [GenerateSerializer]
-    public class GrainsBatchContainer : IBatchContainer
+    [SerializationCallbacks(typeof(OnDeserializedCallbacks))]
+    internal sealed class GrainsBatchContainer<TSerializer> : IBatchContainer, IOnDeserialized
+        where TSerializer : class, IGrainsMessageBodySerializer
     {
-        /// <summary>
-        /// Need to store reference to the original Message to be able to delete it later on.
-        /// </summary>
-        [NonSerialized]
-        public Guid Id;
-
-        [JsonProperty]
-        [Id(1)]
-        private readonly List<object> _events;
-
-        [JsonProperty]
-        [Id(2)]
-        private readonly Dictionary<string, object> _requestContext;
-
-        [JsonProperty]
         [Id(0)]
-        private EventSequenceTokenV2 _sequenceToken;
+        private readonly EventSequenceToken _realToken;
 
-        private GrainsBatchContainer(StreamId streamId,
-                                     List<object> events,
-                                     Dictionary<string, object> requestContext)
+        [NonSerialized]
+        private TSerializer _serializer;
+
+        [NonSerialized]
+        private GrainsMessageBody _payload;
+
+        public GrainsBatchContainer(GrainsMessageData messageData, TSerializer serializer)
         {
-            StreamId = streamId;
-
-            _requestContext = requestContext;
-            _events = events ?? throw new ArgumentNullException(nameof(events), "Message contains no events");
+            _serializer = serializer;
+            MessageData = messageData;
+            _realToken = new EventSequenceToken(messageData.SequenceNumber);
         }
 
-        [Id(3)]
-        public StreamId StreamId { get; }
+        public StreamId StreamId => MessageData.StreamId;
 
-        public StreamSequenceToken SequenceToken => _sequenceToken;
+        [Id(1)]
+        public GrainsMessageData MessageData { get; set; }
+
+        public StreamSequenceToken SequenceToken => _realToken;
+
+        public long SequenceNumber => _realToken.SequenceNumber;
 
         public IEnumerable<Tuple<T, StreamSequenceToken>> GetEvents<T>()
         {
-            return _events.OfType<T>().Select((e, i) => Tuple.Create<T, StreamSequenceToken>(e, _sequenceToken.CreateSequenceTokenForEvent(i)));
+            return Payload().Events.Cast<T>().Select((e, i) => Tuple.Create<T, StreamSequenceToken>(e, _realToken.CreateSequenceTokenForEvent(i)));
         }
 
         public bool ImportRequestContext()
         {
-            if (_requestContext != null)
+            var context = Payload().RequestContext;
+
+            if (context != null)
             {
-                RequestContextExtensions.Import(_requestContext);
+                RequestContextExtensions.Import(context);
                 return true;
             }
 
             return false;
         }
 
-        public override string ToString()
+        void IOnDeserialized.OnDeserialized(DeserializationContext context)
         {
-            return string.Format($"[{nameof(GrainsBatchContainer)}:Stream={0},#Items={1}]", StreamId, _events.Count);
+            _serializer = GrainsMessageBodySerializerFactory<TSerializer>.GetOrCreateSerializer(context.ServiceProvider);
         }
 
-        internal static GrainsMessage ToMessage<T>(Serializer<GrainsBatchContainer> serializer, StreamId streamId, IEnumerable<T> events, Dictionary<string, object> requestContext)
+        private GrainsMessageBody Payload()
         {
-            var batchMessage = new GrainsBatchContainer(streamId, events.Cast<object>().ToList(), requestContext);
-            var rawBytes = serializer.SerializeToArray(batchMessage);
-
-            return new GrainsMessage
-            {
-                StreamId = streamId,
-                Data = rawBytes
-            };
-        }
-
-        internal static GrainsBatchContainer FromMessage(Serializer<GrainsBatchContainer> serializer, Guid id, GrainsMessage msg, long sequenceId)
-        {
-            if (msg != null)
-            {
-                var batch = serializer.Deserialize(msg.Data);
-
-                batch.Id = id;
-                batch._sequenceToken = new EventSequenceTokenV2(sequenceId);
-
-                return batch;
-            }
-
-            throw new InvalidOperationException("Payload is null");
+            return _payload ?? (_payload = _serializer.Deserialize(MessageData.Payload));
         }
     }
 }

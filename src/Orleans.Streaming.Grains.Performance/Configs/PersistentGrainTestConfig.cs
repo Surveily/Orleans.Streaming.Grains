@@ -6,7 +6,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using Orleans.Hosting;
-using Orleans.Streaming.Grains.Extensions;
+using Orleans.Streaming.Grains.Streams;
 using Orleans.Streaming.Grains.Tests.Streams.Messages;
 using Orleans.TestingHost;
 
@@ -22,10 +22,7 @@ namespace Orleans.Streaming.Grains.Performance.Configs
             siloBuilder.ConfigureServices(Configure)
                        .AddMemoryGrainStorageAsDefault()
                        .AddMemoryGrainStorage(name: "PubSubStore")
-                       .AddGrainsStreamsForTests(name: "Default",
-                                                 queueCount: 8,
-                                                 retry: TimeSpan.FromSeconds(1),
-                                                 poison: TimeSpan.FromSeconds(3));
+                       .AddMemoryStreams2(name: "Default");
 #pragma warning restore CS0618
         }
 

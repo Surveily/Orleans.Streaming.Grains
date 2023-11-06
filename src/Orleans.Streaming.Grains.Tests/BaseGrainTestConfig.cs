@@ -14,7 +14,6 @@ using Orleans.Configuration;
 using Orleans.Hosting;
 using Orleans.Providers.Streams.Common;
 using Orleans.Streaming.Grains.Abstract;
-using Orleans.Streaming.Grains.Extensions;
 using Orleans.Streaming.Grains.Services;
 using Orleans.Streaming.Grains.Streams;
 using Orleans.Streaming.Grains.Tests.Streams.Messages;
@@ -42,10 +41,7 @@ namespace Orleans.Streaming.Grains.Test
                            .ConfigureServices(ConfigureInner)
                            .AddMemoryGrainStorageAsDefault()
                            .AddMemoryGrainStorage(name: "PubSubStore")
-                           .AddGrainsStreams(name: "Default",
-                                             queueCount: 1,
-                                             retry: TimeSpan.FromSeconds(1),
-                                             poison: TimeSpan.FromSeconds(3));
+                           .AddMemoryStreams2(name: "Default");
             }
             else
             {
@@ -54,10 +50,7 @@ namespace Orleans.Streaming.Grains.Test
                            .ConfigureServices(ConfigureInner)
                            .AddMemoryGrainStorageAsDefault()
                            .AddMemoryGrainStorage(name: "PubSubStore")
-                           .AddGrainsStreamsForTests(name: "Default",
-                                                     queueCount: 3,
-                                                     retry: TimeSpan.FromSeconds(1),
-                                                     poison: TimeSpan.FromSeconds(3));
+                           .AddMemoryStreams2(name: "Default");
 #pragma warning restore CS0618
             }
         }
