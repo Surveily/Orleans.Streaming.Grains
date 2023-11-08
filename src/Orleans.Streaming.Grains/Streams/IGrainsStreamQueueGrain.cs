@@ -4,6 +4,7 @@
 
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Orleans.Streaming.Grains.Abstract;
 
 namespace Orleans.Streaming.Grains.Streams
 {
@@ -27,5 +28,9 @@ namespace Orleans.Streaming.Grains.Streams
         /// </param>
         /// <returns>A <see cref="Task"/> representing the operation.</returns>
         Task<List<GrainsMessageData>> Dequeue(int maxCount);
+
+        Task SubscribeAsync(ITransactionObserver observer);
+
+        Task UnsubscribeAsync(ITransactionObserver observer);
     }
 }

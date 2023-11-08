@@ -5,24 +5,28 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using Orleans.Runtime;
+using Orleans.Streaming.Grains.Abstract;
+using Orleans.Utilities;
 
 namespace Orleans.Streaming.Grains.Streams
 {
-    /// <summary>
-    /// Memory stream queue grain. This grain works as a storage queue of event data. Enqueue and Dequeue operations are supported.
-    /// the max event count sets the max storage limit to the queue.
-    /// </summary>
     public class GrainsStreamQueueGrain : Grain, IGrainsStreamQueueGrain, IGrainMigrationParticipant
     {
-        /// <summary>
-        /// The maximum event count.
-        /// </summary>
         private const int MaxEventCount = 16384;
 
-        private Queue<GrainsMessageData> _eventQueue = new Queue<GrainsMessageData>();
+        private readonly ObserverManager<ITransactionObserver> _subscriptions;
 
-        private long _sequenceNumber = DateTime.UtcNow.Ticks;
+        private long _sequenceNumber;
+        private Queue<GrainsMessageData> _eventQueue;
+
+        public GrainsStreamQueueGrain(ILoggerFactory logger)
+        {
+            _sequenceNumber = DateTime.UtcNow.Ticks;
+            _eventQueue = new Queue<GrainsMessageData>();
+            _subscriptions = new ObserverManager<ITransactionObserver>(TimeSpan.FromSeconds(30), logger.CreateLogger<GrainsStreamQueueGrain>());
+        }
 
         public Task Enqueue(GrainsMessageData data)
         {
@@ -47,6 +51,20 @@ namespace Orleans.Streaming.Grains.Streams
             }
 
             return Task.FromResult(list);
+        }
+
+        public Task SubscribeAsync(ITransactionObserver observer)
+        {
+            _subscriptions.Subscribe(observer, observer);
+
+            return Task.CompletedTask;
+        }
+
+        public Task UnsubscribeAsync(ITransactionObserver observer)
+        {
+            _subscriptions.Unsubscribe(observer);
+
+            return Task.CompletedTask;
         }
 
         public void OnDehydrate(IDehydrationContext dehydrationContext)
