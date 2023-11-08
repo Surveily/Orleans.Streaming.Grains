@@ -34,9 +34,9 @@ namespace Orleans.Streaming.Grains.Grains
         {
             if (State.Queue == null)
             {
-                State.Queue = new Queue<Guid>();
-                State.Poison = new Queue<Guid>();
-                State.Transactions = new Dictionary<Guid, TransactionGrainStatePeriod>();
+                State.Queue = new Queue<long>();
+                State.Poison = new Queue<long>();
+                State.Transactions = new Dictionary<long, TransactionGrainStatePeriod>();
 
                 await PersistAsync();
             }
@@ -55,7 +55,7 @@ namespace Orleans.Streaming.Grains.Grains
             await base.OnDeactivateAsync(reason, cancellationToken);
         }
 
-        public async Task CompleteAsync(Guid id, bool success)
+        public async Task CompleteAsync(long id, bool success)
         {
             if (State.Transactions.Remove(id, out _) || State.Poison.Contains(id))
             {
@@ -71,7 +71,7 @@ namespace Orleans.Streaming.Grains.Grains
             }
         }
 
-        public Task<Guid?> PopAsync()
+        public Task<long?> PopAsync()
         {
             if (State.Queue.TryDequeue(out var id))
             {
@@ -84,13 +84,13 @@ namespace Orleans.Streaming.Grains.Grains
                     });
                 }
 
-                return Task.FromResult(new Guid?(id));
+                return Task.FromResult(new long?(id));
             }
 
-            return Task.FromResult(default(Guid?));
+            return Task.FromResult(default(long?));
         }
 
-        public Task PostAsync(Guid id)
+        public Task PostAsync(long id)
         {
             State.Queue.Enqueue(id);
 

@@ -15,11 +15,11 @@ namespace Orleans.Streaming.Grains.Abstract
     {
         Task FlushAsync();
 
-        Task<Guid?> PopAsync();
+        Task<long?> PopAsync();
 
-        Task PostAsync(Guid id);
+        Task PostAsync(long id);
 
-        Task CompleteAsync(Guid id, bool success);
+        Task CompleteAsync(long id, bool success);
 
         Task<TransactionGrainState> GetStateAsync();
 

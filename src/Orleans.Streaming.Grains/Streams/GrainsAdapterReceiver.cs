@@ -8,6 +8,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using Orleans.Concurrency;
 using Orleans.Providers;
 using Orleans.Providers.Streams.Common;
 using Orleans.Streaming.Grains.Abstract;
@@ -19,17 +20,17 @@ namespace Orleans.Streaming.Grains.Streams
         where TSerializer : class, IMemoryMessageBodySerializer
     {
         private readonly ILogger _logger;
+        private readonly QueueId _queueId;
         private readonly TSerializer _serializer;
         private readonly List<Task> _awaitingTasks;
         private readonly ITransactionService _service;
-        private readonly IMemoryStreamQueueGrain _queueGrain;
         private readonly IQueueAdapterReceiverMonitor _receiverMonitor;
 
-        public GrainsAdapterReceiver(IMemoryStreamQueueGrain queueGrain, ILogger logger, TSerializer serializer, IQueueAdapterReceiverMonitor receiverMonitor, ITransactionService service)
+        public GrainsAdapterReceiver(QueueId queueId, ILogger logger, TSerializer serializer, IQueueAdapterReceiverMonitor receiverMonitor, ITransactionService service)
         {
             _logger = logger;
             _service = service;
-            _queueGrain = queueGrain;
+            _queueId = queueId;
             _serializer = serializer;
             _awaitingTasks = new List<Task>();
             _receiverMonitor = receiverMonitor;
@@ -45,10 +46,10 @@ namespace Orleans.Streaming.Grains.Streams
         {
             var watch = Stopwatch.StartNew();
             List<IBatchContainer> batches;
-            Task<List<MemoryMessageData>> task = null;
+            Task<List<Immutable<MemoryMessageData>>> task = null;
             try
             {
-                task = _queueGrain.Dequeue(maxCount);
+                task = _service.PopAsync<MemoryMessageData>(_queueId.ToString());
                 _awaitingTasks.Add(task);
                 var eventData = await task;
                 batches = eventData.Select(data => new GrainsBatchContainer<TSerializer>(data, _serializer)).ToList<IBatchContainer>();

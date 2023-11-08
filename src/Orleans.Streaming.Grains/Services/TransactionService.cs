@@ -25,7 +25,7 @@ namespace Orleans.Streaming.Grains.Services
             _client = client;
         }
 
-        public async Task CompleteAsync<T>(Guid id, bool success, string queue)
+        public async Task CompleteAsync<T>(long id, bool success, string queue)
         {
             var transaction = _client.GetGrain<ITransactionGrain>(queue);
 
@@ -36,7 +36,7 @@ namespace Orleans.Streaming.Grains.Services
             await item.DeleteAsync();
         }
 
-        public async Task<(Guid Id, Immutable<T> Item)?> PopAsync<T>(string queue)
+        public async Task<List<Immutable<T>>> PopAsync<T>(string queue)
         {
             var transaction = _client.GetGrain<ITransactionGrain>(queue);
             var id = await transaction.PopAsync();
@@ -46,7 +46,7 @@ namespace Orleans.Streaming.Grains.Services
                 var item = _client.GetGrain<ITransactionItemGrain<T>>(id.Value);
                 var result = await item.GetAsync();
 
-                return (id.Value, result);
+                return result;
             }
 
             return null;
@@ -54,7 +54,6 @@ namespace Orleans.Streaming.Grains.Services
 
         public async Task PostAsync<T>(Immutable<T> message, bool wait, string queue)
         {
-            var id = Guid.NewGuid();
             var item = _client.GetGrain<ITransactionItemGrain<T>>(id);
             await item.SetAsync(message);
 

@@ -14,6 +14,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Orleans.Concurrency;
 using Orleans.Configuration;
 using Orleans.Providers;
 using Orleans.Providers.Streams.Common;
@@ -36,12 +37,12 @@ namespace Orleans.Streaming.Grains.Streams
         private readonly IGrainFactory _grainFactory;
         private readonly ILoggerFactory _loggerFactory;
         private readonly ITransactionService _service;
+        private readonly GrainsOptions _grainsOptions;
         private readonly ILogger _logger;
         private readonly TSerializer _serializer;
         private readonly ulong _nameHash;
 
         private IStreamQueueMapper _streamQueueMapper;
-        private ConcurrentDictionary<QueueId, IMemoryStreamQueueGrain> _queueGrains;
         private IObjectPool<FixedSizeBuffer> _bufferPool;
         private BlockPoolMonitorDimensions _blockPoolMonitorDimensions;
         private IStreamFailureHandler _streamFailureHandler;
@@ -55,10 +56,12 @@ namespace Orleans.Streaming.Grains.Streams
             IServiceProvider serviceProvider,
             IGrainFactory grainFactory,
             ILoggerFactory loggerFactory,
-            ITransactionService service)
+            ITransactionService service,
+            GrainsOptions grainsOptions)
         {
             Name = providerName;
-            _service = service;
+            _service = service ?? throw new ArgumentNullException(nameof(service));
+            _grainsOptions = grainsOptions ?? throw new ArgumentNullException(nameof(grainsOptions));
             _queueMapperOptions = queueMapperOptions ?? throw new ArgumentNullException(nameof(queueMapperOptions));
             _cacheOptions = cacheOptions ?? throw new ArgumentNullException(nameof(cacheOptions));
             _statisticOptions = statisticOptions ?? throw new ArgumentException(nameof(statisticOptions));
@@ -91,10 +94,11 @@ namespace Orleans.Streaming.Grains.Streams
         public static GrainsAdapterFactory<TSerializer> Create(IServiceProvider services, string name)
         {
             var transactionService = services.GetServiceByName<ITransactionService>(name);
+            var grainOptions = services.GetOptionsByName<GrainsOptions>(name);
             var cachePurgeOptions = services.GetOptionsByName<StreamCacheEvictionOptions>(name);
             var statisticOptions = services.GetOptionsByName<StreamStatisticOptions>(name);
             var queueMapperOptions = services.GetOptionsByName<HashRingStreamQueueMapperOptions>(name);
-            var factory = ActivatorUtilities.CreateInstance<GrainsAdapterFactory<TSerializer>>(services, name, transactionService, cachePurgeOptions, statisticOptions, queueMapperOptions);
+            var factory = ActivatorUtilities.CreateInstance<GrainsAdapterFactory<TSerializer>>(services, name, transactionService, grainOptions, cachePurgeOptions, statisticOptions, queueMapperOptions);
             factory.Init();
             return factory;
         }
@@ -104,8 +108,6 @@ namespace Orleans.Streaming.Grains.Streams
         /// </summary>
         public void Init()
         {
-            _queueGrains = new ConcurrentDictionary<QueueId, IMemoryStreamQueueGrain>();
-
             if (cacheMonitorFactory == null)
             {
                 cacheMonitorFactory = (dimensions) => new DefaultCacheMonitor(dimensions);
@@ -149,7 +151,7 @@ namespace Orleans.Streaming.Grains.Streams
             var dimensions = new ReceiverMonitorDimensions(queueId.ToString());
             var receiverLogger = _loggerFactory.CreateLogger($"{typeof(GrainsAdapterReceiver<TSerializer>).FullName}.{Name}.{queueId}");
             var receiverMonitor = receiverMonitorFactory(dimensions);
-            var receiver = new GrainsAdapterReceiver<TSerializer>(GetQueueGrain(queueId), receiverLogger, _serializer, receiverMonitor, _service);
+            var receiver = new GrainsAdapterReceiver<TSerializer>(queueId, receiverLogger, _serializer, receiverMonitor, _service);
 
             return receiver;
         }
@@ -160,7 +162,7 @@ namespace Orleans.Streaming.Grains.Streams
             try
             {
                 var queueId = _streamQueueMapper.GetQueueForStream(streamId);
-                ArraySegment<byte> bodyBytes = _serializer.Serialize(new MemoryMessageBody(events.Cast<object>(), requestContext));
+                var bodyBytes = _serializer.Serialize(new MemoryMessageBody(events.Cast<object>(), requestContext));
                 var messageData = new MemoryMessageData
                 {
                     StreamId = streamId,
@@ -168,8 +170,7 @@ namespace Orleans.Streaming.Grains.Streams
                     Payload = bodyBytes
                 };
 
-                IMemoryStreamQueueGrain queueGrain = GetQueueGrain(queueId);
-                await queueGrain.Enqueue(messageData);
+                await _service.PostAsync(new Immutable<MemoryMessageData>(messageData)!, _grainsOptions.FireAndForgetDelivery, queueId.ToString());
             }
             catch (Exception exc)
             {
@@ -216,14 +217,6 @@ namespace Orleans.Streaming.Grains.Streams
             BinaryPrimitives.WriteUInt32LittleEndian(bytes[12..], queueId.GetNumericId());
 
             return new Guid(bytes);
-        }
-
-        /// <summary>
-        /// Get a MemoryStreamQueueGrain instance by queue Id.
-        /// </summary>
-        private IMemoryStreamQueueGrain GetQueueGrain(QueueId queueId)
-        {
-            return _queueGrains.GetOrAdd(queueId, (id, arg) => arg._grainFactory.GetGrain<IMemoryStreamQueueGrain>(arg.instance.GenerateDeterministicGuid(id)), (instance: this, _grainFactory));
         }
     }
 }

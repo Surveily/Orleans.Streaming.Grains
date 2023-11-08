@@ -11,7 +11,7 @@ using Orleans.Concurrency;
 
 namespace Orleans.Streaming.Grains.Abstract
 {
-    public interface ITransactionItemGrain<T> : IGrainWithGuidKey
+    public interface ITransactionItemGrain<T> : IGrainWithIntegerKey
     {
         Task<Immutable<T>> GetAsync();
 

@@ -14,13 +14,13 @@ namespace Orleans.Streaming.Grains.State
     public class TransactionGrainState
     {
         [Id(0)]
-        public Queue<Guid> Queue { get; set; }
+        public Queue<long> Queue { get; set; }
 
         [Id(1)]
-        public Queue<Guid> Poison { get; set; }
+        public Queue<long> Poison { get; set; }
 
         [Id(2)]
-        public Dictionary<Guid, TransactionGrainStatePeriod> Transactions { get; set; }
+        public Dictionary<long, TransactionGrainStatePeriod> Transactions { get; set; }
     }
 
     [GenerateSerializer]
