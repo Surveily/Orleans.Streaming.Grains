@@ -11,6 +11,7 @@ using Moq;
 using NUnit.Framework;
 using Orleans;
 using Orleans.Concurrency;
+using Orleans.Providers;
 using Orleans.Streaming.Grains.Abstract;
 using Orleans.Streaming.Grains.Services;
 using Orleans.Streaming.Grains.Test;
@@ -23,30 +24,47 @@ namespace Orleans.Streaming.Grains.Tests.Services
         public abstract class BaseTransactionServiceTest : BaseTest<TransactionService>
         {
             protected Guid itemId;
+            protected List<Guid> ids;
             protected Immutable<int> item;
             protected Mock<IClusterClient> client;
             protected Mock<ITransactionGrain> transaction;
+            protected Mock<ITransactionReaderGrain<int>> reader;
             protected Mock<ITransactionItemGrain<int>> message;
+            protected List<(Guid Id, Immutable<int> Item)> items;
 
             public BaseTransactionServiceTest()
             {
+                ids = new List<Guid>();
                 item = new Immutable<int>(100);
                 client = new Mock<IClusterClient>();
                 transaction = new Mock<ITransactionGrain>();
                 message = new Mock<ITransactionItemGrain<int>>();
+                reader = new Mock<ITransactionReaderGrain<int>>();
+                items = new List<(Guid Id, Immutable<int> Item)>();
 
                 client.Setup(x => x.GetGrain<ITransactionItemGrain<int>>(It.IsAny<Guid>(), null))
-                      .Callback<Guid, string>((id, _) => itemId = id)
+                      .Callback<Guid, string>((id, _) =>
+                      {
+                          itemId = id;
+                          ids.Add(itemId);
+                          items.Add((itemId, item));
+                      })
                       .Returns(message.Object);
 
                 client.Setup(x => x.GetGrain<ITransactionGrain>("1", null))
                       .Returns(transaction.Object);
 
+                client.Setup(x => x.GetGrain<ITransactionReaderGrain<int>>("1", null))
+                      .Returns(reader.Object);
+
                 message.Setup(x => x.SetAsync(It.IsAny<Immutable<int>>()))
                        .Returns(Task.CompletedTask);
 
+                reader.Setup(x => x.GetAsync(ids))
+                      .ReturnsAsync(new Immutable<List<(Guid Id, Immutable<int> Item)>>(items));
+
                 transaction.Setup(x => x.PopAsync(1))
-                           .ReturnsAsync(new List<Guid>());
+                           .ReturnsAsync(ids);
 
                 transaction.Setup(x => x.PostAsync(itemId))
                            .Returns(Task.CompletedTask);
@@ -118,9 +136,6 @@ namespace Orleans.Streaming.Grains.Tests.Services
 
             public override async Task SetupAsync()
             {
-                transaction.Setup(x => x.PopAsync(1))
-                           .ReturnsAsync(() => new List<Guid> { itemId });
-
                 message.Setup(x => x.GetAsync())
                        .ReturnsAsync(item);
 
@@ -149,9 +164,15 @@ namespace Orleans.Streaming.Grains.Tests.Services
             }
 
             [Test]
+            public void It_Should_Get_Reader()
+            {
+                client.Verify(x => x.GetGrain<ITransactionReaderGrain<int>>("1", null), Times.Exactly(1));
+            }
+
+            [Test]
             public void It_Should_Get_Item()
             {
-                client.Verify(x => x.GetGrain<ITransactionItemGrain<int>>(itemId, null), Times.Exactly(2));
+                client.Verify(x => x.GetGrain<ITransactionItemGrain<int>>(itemId, null), Times.Exactly(1));
             }
 
             [Test]
