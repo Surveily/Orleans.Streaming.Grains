@@ -10,18 +10,18 @@ Intel Xeon CPU E5-2673 v3 2.40GHz, 1 CPU, 2 logical and 2 physical cores
 
 Concurrent=True  Server=True  
 
-| Method         | Mean      | Error     | StdDev   | Completed Work Items | Lock Contentions | Allocated  |
-|--------------- |----------:|----------:|---------:|---------------------:|-----------------:|-----------:|
-| BroadcastAsync |  74.79 ms |  4.108 ms | 12.11 ms |              87.3333 |           2.0000 |  158.92 KB |
-| CompoundAsync  | 164.04 ms |  6.374 ms | 18.80 ms |             199.7500 |           3.7500 |  307.64 KB |
-| ExplosiveAsync | 272.35 ms | 13.966 ms | 38.47 ms |             550.0000 |           9.0000 | 1100.84 KB |
+| Method         | Mean      | Error     | StdDev   | Median    | Completed Work Items | Lock Contentions | Allocated  |
+|--------------- |----------:|----------:|---------:|----------:|---------------------:|-----------------:|-----------:|
+| BroadcastAsync |  77.87 ms |  4.684 ms | 13.81 ms |  81.58 ms |              83.1429 |           0.4286 |  155.37 KB |
+| CompoundAsync  | 184.10 ms |  5.029 ms | 14.83 ms | 193.41 ms |             187.2500 |                - |  301.05 KB |
+| ExplosiveAsync | 356.11 ms | 10.680 ms | 31.49 ms | 344.16 ms |             459.5000 |           2.0000 | 1563.35 KB |
 
 ## GrainStreams
 
 Concurrent=True  Server=True  
 
-| Method         | Mean      | Error     | StdDev   | Completed Work Items | Lock Contentions | Allocated  |
-|--------------- |----------:|----------:|---------:|---------------------:|-----------------:|-----------:|
-| BroadcastAsync |  72.49 ms |  4.870 ms | 14.36 ms |             147.2857 |           2.5714 |  257.12 KB |
-| CompoundAsync  | 157.27 ms |  7.281 ms | 21.47 ms |             341.5000 |           3.7500 |  572.71 KB |
-| ExplosiveAsync | 332.09 ms | 12.292 ms | 36.24 ms |            1898.0000 |          11.0000 | 2982.95 KB |
+| Method         | Mean      | Error    | StdDev    | Completed Work Items | Lock Contentions | Allocated  |
+|--------------- |----------:|---------:|----------:|---------------------:|-----------------:|-----------:|
+| BroadcastAsync |  79.85 ms | 3.576 ms | 10.544 ms |             114.1250 |           0.6250 |  227.72 KB |
+| CompoundAsync  | 193.46 ms | 3.821 ms |  7.976 ms |             356.3333 |           2.3333 |  593.62 KB |
+| ExplosiveAsync | 316.61 ms | 9.694 ms | 28.278 ms |            2292.5000 |           9.0000 | 3542.52 KB |
