@@ -82,7 +82,12 @@ namespace Orleans.Streaming.Grains.Streams
         {
             int readOffset = 0;
             ArraySegment<byte> payload = SegmentBuilder.ReadNextBytes(cachedMessage.Segment, ref readOffset);
-            GrainsMessageData message = GrainsMessageData.Create(cachedMessage.StreamId, new ArraySegment<byte>(payload.ToArray()));
+            MemoryMessageData message = new MemoryMessageData
+            {
+                StreamId = cachedMessage.StreamId,
+                EnqueueTimeUtc = DateTime.UtcNow,
+                Payload = new ArraySegment<byte>(payload.ToArray())
+            };
             message.SequenceNumber = cachedMessage.SequenceNumber;
             return new GrainsBatchContainer<TSerializer>(message, _serializer);
         }
@@ -93,7 +98,7 @@ namespace Orleans.Streaming.Grains.Streams
             return new EventSequenceToken(cachedMessage.SequenceNumber);
         }
 
-        private CachedMessage QueueMessageToCachedMessage(GrainsMessageData queueMessage, DateTime dequeueTimeUtc)
+        private CachedMessage QueueMessageToCachedMessage(MemoryMessageData queueMessage, DateTime dequeueTimeUtc)
         {
             StreamPosition streamPosition = GetStreamPosition(queueMessage);
             return new CachedMessage()
@@ -106,7 +111,7 @@ namespace Orleans.Streaming.Grains.Streams
             };
         }
 
-        private ArraySegment<byte> SerializeMessageIntoPooledSegment(GrainsMessageData queueMessage)
+        private ArraySegment<byte> SerializeMessageIntoPooledSegment(MemoryMessageData queueMessage)
         {
             int size = SegmentBuilder.CalculateAppendSize(queueMessage.Payload);
 
@@ -130,7 +135,7 @@ namespace Orleans.Streaming.Grains.Streams
             return segment;
         }
 
-        private StreamPosition GetStreamPosition(GrainsMessageData queueMessage)
+        private StreamPosition GetStreamPosition(MemoryMessageData queueMessage)
         {
             return new StreamPosition(queueMessage.StreamId,
                 new EventSequenceTokenV2(queueMessage.SequenceNumber));

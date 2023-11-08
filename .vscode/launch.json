@@ -25,7 +25,7 @@
             "program": "${workspaceFolder}/src/Orleans.Streaming.Grains.Performance/bin/Debug/net7.0/Orleans.Streaming.Grains.Performance.dll",
             "args": [
                 "--filter",
-                "*Test*",
+                "*OneToManyPersistentTest.ExplosiveAsync*",
                 "-m",
                 "-t"
             ],

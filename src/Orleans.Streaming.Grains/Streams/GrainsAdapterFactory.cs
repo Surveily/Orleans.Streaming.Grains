@@ -38,7 +38,7 @@ namespace Orleans.Streaming.Grains.Streams
         private readonly TSerializer _serializer;
         private readonly ulong _nameHash;
         private IStreamQueueMapper _streamQueueMapper;
-        private ConcurrentDictionary<QueueId, IGrainsStreamQueueGrain> _queueGrains;
+        private ConcurrentDictionary<QueueId, IMemoryStreamQueueGrain> _queueGrains;
         private IObjectPool<FixedSizeBuffer> _bufferPool;
         private BlockPoolMonitorDimensions _blockPoolMonitorDimensions;
         private IStreamFailureHandler _streamFailureHandler;
@@ -98,7 +98,7 @@ namespace Orleans.Streaming.Grains.Streams
         /// </summary>
         public void Init()
         {
-            _queueGrains = new ConcurrentDictionary<QueueId, IGrainsStreamQueueGrain>();
+            _queueGrains = new ConcurrentDictionary<QueueId, IMemoryStreamQueueGrain>();
 
             if (cacheMonitorFactory == null)
             {
@@ -154,8 +154,14 @@ namespace Orleans.Streaming.Grains.Streams
             {
                 var queueId = _streamQueueMapper.GetQueueForStream(streamId);
                 ArraySegment<byte> bodyBytes = _serializer.Serialize(new MemoryMessageBody(events.Cast<object>(), requestContext));
-                var messageData = GrainsMessageData.Create(streamId, bodyBytes);
-                IGrainsStreamQueueGrain queueGrain = GetQueueGrain(queueId);
+                var messageData = new MemoryMessageData
+                {
+                    StreamId = streamId,
+                    EnqueueTimeUtc = DateTime.UtcNow,
+                    Payload = bodyBytes
+                };
+
+                IMemoryStreamQueueGrain queueGrain = GetQueueGrain(queueId);
                 await queueGrain.Enqueue(messageData);
             }
             catch (Exception exc)
@@ -208,9 +214,9 @@ namespace Orleans.Streaming.Grains.Streams
         /// <summary>
         /// Get a MemoryStreamQueueGrain instance by queue Id.
         /// </summary>
-        private IGrainsStreamQueueGrain GetQueueGrain(QueueId queueId)
+        private IMemoryStreamQueueGrain GetQueueGrain(QueueId queueId)
         {
-            return _queueGrains.GetOrAdd(queueId, (id, arg) => arg._grainFactory.GetGrain<IGrainsStreamQueueGrain>(arg.instance.GenerateDeterministicGuid(id)), (instance: this, _grainFactory));
+            return _queueGrains.GetOrAdd(queueId, (id, arg) => arg._grainFactory.GetGrain<IMemoryStreamQueueGrain>(arg.instance.GenerateDeterministicGuid(id)), (instance: this, _grainFactory));
         }
     }
 }

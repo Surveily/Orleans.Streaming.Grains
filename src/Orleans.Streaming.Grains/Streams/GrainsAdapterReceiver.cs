@@ -17,13 +17,13 @@ namespace Orleans.Streaming.Grains.Streams
     internal class GrainsAdapterReceiver<TSerializer> : IQueueAdapterReceiver
         where TSerializer : class, IMemoryMessageBodySerializer
     {
-        private readonly IGrainsStreamQueueGrain _queueGrain;
+        private readonly IMemoryStreamQueueGrain _queueGrain;
         private readonly List<Task> _awaitingTasks;
         private readonly ILogger _logger;
         private readonly TSerializer _serializer;
         private readonly IQueueAdapterReceiverMonitor _receiverMonitor;
 
-        public GrainsAdapterReceiver(IGrainsStreamQueueGrain queueGrain, ILogger logger, TSerializer serializer, IQueueAdapterReceiverMonitor receiverMonitor)
+        public GrainsAdapterReceiver(IMemoryStreamQueueGrain queueGrain, ILogger logger, TSerializer serializer, IQueueAdapterReceiverMonitor receiverMonitor)
         {
             _queueGrain = queueGrain;
             _logger = logger;
@@ -42,7 +42,7 @@ namespace Orleans.Streaming.Grains.Streams
         {
             var watch = Stopwatch.StartNew();
             List<IBatchContainer> batches;
-            Task<List<GrainsMessageData>> task = null;
+            Task<List<MemoryMessageData>> task = null;
             try
             {
                 task = _queueGrain.Dequeue(maxCount);

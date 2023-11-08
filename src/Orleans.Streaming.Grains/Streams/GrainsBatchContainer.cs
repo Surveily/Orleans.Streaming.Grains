@@ -28,7 +28,7 @@ namespace Orleans.Streaming.Grains.Streams
         [NonSerialized]
         private MemoryMessageBody _payload;
 
-        public GrainsBatchContainer(GrainsMessageData messageData, TSerializer serializer)
+        public GrainsBatchContainer(MemoryMessageData messageData, TSerializer serializer)
         {
             _serializer = serializer;
             MessageData = messageData;
@@ -38,7 +38,7 @@ namespace Orleans.Streaming.Grains.Streams
         public StreamId StreamId => MessageData.StreamId;
 
         [Id(1)]
-        public GrainsMessageData MessageData { get; set; }
+        public MemoryMessageData MessageData { get; set; }
 
         public StreamSequenceToken SequenceToken => _realToken;
 
