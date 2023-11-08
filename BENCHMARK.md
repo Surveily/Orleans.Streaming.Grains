@@ -10,18 +10,18 @@ Intel Xeon CPU E5-2673 v3 2.40GHz, 1 CPU, 2 logical and 2 physical cores
 
 Concurrent=True  Server=True  
 
-| Method         | Mean      | Error     | StdDev   | Median    | Completed Work Items | Lock Contentions | Allocated  |
-|--------------- |----------:|----------:|---------:|----------:|---------------------:|-----------------:|-----------:|
-| BroadcastAsync |  77.87 ms |  4.684 ms | 13.81 ms |  81.58 ms |              83.1429 |           0.4286 |  155.37 KB |
-| CompoundAsync  | 184.10 ms |  5.029 ms | 14.83 ms | 193.41 ms |             187.2500 |                - |  301.05 KB |
-| ExplosiveAsync | 356.11 ms | 10.680 ms | 31.49 ms | 344.16 ms |             459.5000 |           2.0000 | 1563.35 KB |
+| Method         | Mean      | Error     | StdDev    | Median    | Completed Work Items | Lock Contentions | Allocated  |
+|--------------- |----------:|----------:|----------:|----------:|---------------------:|-----------------:|-----------:|
+| BroadcastAsync |  94.82 ms |  2.148 ms |  6.334 ms |  96.67 ms |             103.7143 |           1.1429 |  167.54 KB |
+| CompoundAsync  | 177.99 ms |  6.631 ms | 19.551 ms | 191.30 ms |             181.6667 |           1.3333 |  298.69 KB |
+| ExplosiveAsync | 351.57 ms | 17.234 ms | 50.814 ms | 382.60 ms |             502.0000 |           2.0000 | 1096.38 KB |
 
 ## GrainStreams
 
 Concurrent=True  Server=True  
 
-| Method         | Mean      | Error    | StdDev    | Completed Work Items | Lock Contentions | Allocated  |
-|--------------- |----------:|---------:|----------:|---------------------:|-----------------:|-----------:|
-| BroadcastAsync |  79.85 ms | 3.576 ms | 10.544 ms |             114.1250 |           0.6250 |  227.72 KB |
-| CompoundAsync  | 193.46 ms | 3.821 ms |  7.976 ms |             356.3333 |           2.3333 |  593.62 KB |
-| ExplosiveAsync | 316.61 ms | 9.694 ms | 28.278 ms |            2292.5000 |           9.0000 | 3542.52 KB |
+| Method         | Mean      | Error     | StdDev   | Completed Work Items | Lock Contentions | Allocated  |
+|--------------- |----------:|----------:|---------:|---------------------:|-----------------:|-----------:|
+| BroadcastAsync |  78.25 ms |  4.725 ms | 13.93 ms |             129.8333 |           0.8333 |  315.02 KB |
+| CompoundAsync  | 144.83 ms |  6.416 ms | 18.92 ms |             288.5000 |           1.2500 |  570.87 KB |
+| ExplosiveAsync | 315.64 ms | 11.602 ms | 34.21 ms |            1741.5000 |          10.5000 | 3212.29 KB |
