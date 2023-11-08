@@ -1,3 +1,7 @@
+# Why?
+
+This library allows you to use Grains Storage Providers as a storage layer for Persistent Streams. Our benchmarks show 10% speed advantage over `MemoryStreams`.
+
 # Orleans.Streaming.Grains
 
 [![NuGet](https://img.shields.io/nuget/v/Orleans.Streaming.Grains.svg?style=flat)](https://www.nuget.org/packages/Orleans.Streaming.Grains)
