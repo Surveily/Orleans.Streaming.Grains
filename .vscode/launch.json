@@ -9,7 +9,7 @@
             "program": "${workspaceFolder}/src/Orleans.Streaming.Grains.Performance/bin/Release/net7.0/Orleans.Streaming.Grains.Performance.dll",
             "args": [
                 "--filter",
-                "*OneToManyPersistentTest.ExplosiveAsync*",
+                "*Persist*",
                 "-m",
                 "-t"
             ],
@@ -25,7 +25,7 @@
             "program": "${workspaceFolder}/src/Orleans.Streaming.Grains.Performance/bin/Debug/net7.0/Orleans.Streaming.Grains.Performance.dll",
             "args": [
                 "--filter",
-                "*Basic*",
+                "*Persist*",
                 "-m",
                 "-t"
             ],
