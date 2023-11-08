@@ -2,7 +2,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Performance Test",
+            "name": "Test",
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "release",
@@ -10,6 +10,22 @@
             "args": [
                 "--filter",
                 "*Persist*",
+                "-m",
+                "-t"
+            ],
+            "cwd": "${workspaceFolder}/src/Orleans.Streaming.Grains.Performance",
+            "console": "internalConsole",
+            "stopAtEntry": false
+        },
+        {
+            "name": "Debug",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/src/Orleans.Streaming.Grains.Performance/bin/Debug/net7.0/Orleans.Streaming.Grains.Performance.dll",
+            "args": [
+                "--filter",
+                "*OneToManyPersistentTest.ExplosiveAsync*",
                 "-m",
                 "-t"
             ],
