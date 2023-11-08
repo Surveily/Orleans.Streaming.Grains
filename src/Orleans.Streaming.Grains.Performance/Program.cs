@@ -14,6 +14,24 @@ namespace Orleans.Streaming.Grains.Performance
     {
         public static void Main(string[] args)
         {
+#if DEBUG
+            RunVerbose(args);
+#else
+            RunSummaries(args);
+#endif
+        }
+
+        private static void RunVerbose(string[] args)
+        {
+            var config = DefaultConfig.Instance
+                                      .WithOptions(ConfigOptions.DisableOptimizationsValidator);
+
+            BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly)
+                             .Run(args, config);
+        }
+
+        private static void RunSummaries(string[] args)
+        {
             var config = new ManualConfig
             {
                 UnionRule = ConfigUnionRule.AlwaysUseGlobal
