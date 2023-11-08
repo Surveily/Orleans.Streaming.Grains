@@ -104,23 +104,22 @@ namespace Orleans.Streaming.Grains.Performance.Scenarios
 
         public class OneToManyPersistentTest : BenchmarkBaseSilo<PersistentConfig>
         {
-            protected string resultText;
             protected string expectedText = "text";
-
-            protected byte[] resultData;
             protected byte[] expectedData = new byte[1024];
 
             protected Mock<IProcessor> processor;
-            protected IOptions<GrainsOptions> settings;
 
             [Benchmark]
             [GcConcurrent]
             [GcServer(true)]
             public async Task BroadcastAsync()
             {
-                var grain = Client.GetGrain<IEmitterGrain>(Guid.NewGuid());
+                await RunAndWait(1, async () =>
+                {
+                    var grain = Client.GetGrain<IEmitterGrain>(Guid.NewGuid());
 
-                await grain.BroadcastAsync(expectedText, expectedData);
+                    await grain.BroadcastAsync(expectedText, expectedData);
+                });
             }
 
             [Benchmark]
@@ -128,9 +127,12 @@ namespace Orleans.Streaming.Grains.Performance.Scenarios
             [GcServer(true)]
             public async Task CompoundAsync()
             {
-                var grain = Client.GetGrain<IEmitterGrain>(Guid.NewGuid());
+                await RunAndWait(1, async () =>
+                {
+                    var grain = Client.GetGrain<IEmitterGrain>(Guid.NewGuid());
 
-                await grain.CompoundAsync(expectedText, expectedData);
+                    await grain.CompoundAsync(expectedText, expectedData);
+                });
             }
 
             [Benchmark]
@@ -138,15 +140,45 @@ namespace Orleans.Streaming.Grains.Performance.Scenarios
             [GcServer(true)]
             public async Task ExplosiveAsync()
             {
-                var grain = Client.GetGrain<IEmitterGrain>(Guid.NewGuid());
+                await RunAndWait(20, async () =>
+                {
+                    var grain = Client.GetGrain<IEmitterGrain>(Guid.NewGuid());
 
-                await grain.ExplosiveAsync(expectedText, expectedData);
+                    await grain.ExplosiveAsync(expectedText, expectedData);
+                });
             }
 
             protected override void Prepare()
             {
                 processor = Container.GetService<Mock<IProcessor>>();
-                settings = Container.GetService<IOptions<GrainsOptions>>();
+            }
+
+            private async Task RunAndWait(int counter, Func<Task> operation)
+            {
+                string resultText = null;
+                long resultTextCounter = 0;
+                byte[] resultData = null;
+                long resultDataCounter = 0;
+
+                processor!.Setup(x => x.Process(It.IsAny<string>()))
+                          .Callback<string>(x =>
+                          {
+                              Interlocked.Increment(ref resultTextCounter);
+
+                              resultText = resultTextCounter == counter ? x : null;
+                          });
+
+                processor!.Setup(x => x.Process(It.IsAny<byte[]>()))
+                          .Callback<byte[]>(x =>
+                          {
+                              Interlocked.Increment(ref resultDataCounter);
+
+                              resultData = resultDataCounter == counter ? x : null;
+                          });
+
+                await operation();
+
+                await Task.WhenAll(WaitFor(() => resultData), WaitFor(() => resultText));
             }
         }
     }

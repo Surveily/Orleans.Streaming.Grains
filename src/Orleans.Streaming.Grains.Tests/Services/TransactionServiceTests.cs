@@ -45,6 +45,9 @@ namespace Orleans.Streaming.Grains.Tests.Services
                 message.Setup(x => x.SetAsync(It.IsAny<Immutable<int>>()))
                        .Returns(Task.CompletedTask);
 
+                transaction.Setup(x => x.PopAsync(1))
+                           .ReturnsAsync(new List<Guid>());
+
                 transaction.Setup(x => x.PostAsync(itemId))
                            .Returns(Task.CompletedTask);
 
@@ -87,36 +90,36 @@ namespace Orleans.Streaming.Grains.Tests.Services
 
         public class WhenPopingEmpty : BaseTransactionServiceTest
         {
-            protected (Guid Id, Immutable<int> Item)? result;
+            protected List<(Guid Id, Immutable<int> Item)> results;
 
             public override async Task SetupAsync()
             {
                 await base.SetupAsync();
 
-                result = await Subject.PopAsync<int>("1");
+                results = await Subject.PopAsync<int>("1", 1);
             }
 
             [Test]
             public void It_Should_Return_Null()
             {
-                result.ShouldBeNull();
+                results.ShouldBeEmpty();
             }
 
             [Test]
             public void It_Should_Pop()
             {
-                transaction.Verify(x => x.PopAsync(), Times.Once);
+                transaction.Verify(x => x.PopAsync(1), Times.Once);
             }
         }
 
         public class WhenPopingSingle : BaseTransactionServiceTest
         {
-            protected (Guid Id, Immutable<int> Item)? result;
+            protected List<(Guid Id, Immutable<int> Item)> results;
 
             public override async Task SetupAsync()
             {
-                transaction.Setup(x => x.PopAsync())
-                           .ReturnsAsync(() => itemId);
+                transaction.Setup(x => x.PopAsync(1))
+                           .ReturnsAsync(() => new List<Guid> { itemId });
 
                 message.Setup(x => x.GetAsync())
                        .ReturnsAsync(item);
@@ -124,25 +127,25 @@ namespace Orleans.Streaming.Grains.Tests.Services
                 await base.SetupAsync();
                 await Subject.PostAsync(item, false, "1");
 
-                result = await Subject.PopAsync<int>("1");
+                results = await Subject.PopAsync<int>("1", 1);
             }
 
             [Test]
             public void It_Should_Return()
             {
-                result.HasValue.ShouldBeTrue();
+                results.ShouldNotBeEmpty();
             }
 
             [Test]
             public void It_Should_Return_Id()
             {
-                result.Value.Id.ShouldEqual(itemId);
+                results.First().Id.ShouldEqual(itemId);
             }
 
             [Test]
             public void It_Should_Return_Item()
             {
-                result.Value.Item.ShouldEqual(item);
+                results.First().Item.ShouldEqual(item);
             }
 
             [Test]
@@ -172,7 +175,7 @@ namespace Orleans.Streaming.Grains.Tests.Services
             [Test]
             public void It_Should_Pop()
             {
-                transaction.Verify(x => x.PopAsync(), Times.Once);
+                transaction.Verify(x => x.PopAsync(1), Times.Once);
             }
         }
     }

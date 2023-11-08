@@ -38,20 +38,10 @@ namespace Orleans.Streaming.Grains.Streams
         {
             var result = new List<IBatchContainer>();
 
-            do
+            foreach (var message in await _service.PopAsync<GrainsMessage>(_queueId.ToString(), maxCount))
             {
-                var message = await _service.PopAsync<GrainsMessage>(_queueId.ToString());
-
-                if (message != null && message.HasValue && message.Value.Item.Value != null)
-                {
-                    result.Add(GrainsBatchContainer.FromMessage(_serializationManager, message.Value.Id, message.Value.Item.Value, _lastReadMessage++));
-                }
-                else
-                {
-                    break;
-                }
+                result.Add(GrainsBatchContainer.FromMessage(_serializationManager, message.Id, message.Item.Value, _lastReadMessage++));
             }
-            while (result.Count < maxCount);
 
             return result;
         }

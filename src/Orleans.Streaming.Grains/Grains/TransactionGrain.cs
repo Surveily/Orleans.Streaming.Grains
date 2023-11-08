@@ -71,9 +71,11 @@ namespace Orleans.Streaming.Grains.Grains
             }
         }
 
-        public Task<Guid?> PopAsync()
+        public Task<List<Guid>> PopAsync(int maxCount)
         {
-            if (State.Queue.TryDequeue(out var id))
+            var results = new List<Guid>();
+
+            while (results.Count < maxCount && State.Queue.TryDequeue(out var id))
             {
                 if (!State.Transactions.ContainsKey(id))
                 {
@@ -84,10 +86,10 @@ namespace Orleans.Streaming.Grains.Grains
                     });
                 }
 
-                return Task.FromResult(new Guid?(id));
+                results.Add(id);
             }
 
-            return Task.FromResult(default(Guid?));
+            return Task.FromResult(results);
         }
 
         public Task PostAsync(Guid id)

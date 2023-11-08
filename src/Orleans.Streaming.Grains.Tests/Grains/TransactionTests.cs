@@ -49,23 +49,23 @@ namespace Orleans.Streaming.Grains.Tests.Grains
 
         public class WhenPoppingEmpty : BaseTransactionTest
         {
-            protected (Guid Id, Immutable<int> Item)? result;
+            protected List<(Guid Id, Immutable<int> Item)> results;
 
             public override async Task Act()
             {
-                result = await service.PopAsync<int>("1");
+                results = await service.PopAsync<int>("1", 1);
             }
 
             [Test]
             public void It_Should_Return_Null()
             {
-                result.ShouldBeNull();
+                results.ShouldBeEmpty();
             }
         }
 
         public abstract class BaseWhenPoppingSingle : BaseTransactionTest
         {
-            protected (Guid Id, Immutable<int> Item)? result;
+            protected List<(Guid Id, Immutable<int> Item)> results;
 
             public override void Prepare()
             {
@@ -75,19 +75,19 @@ namespace Orleans.Streaming.Grains.Tests.Grains
             [Test]
             public void It_Should_Return()
             {
-                result.HasValue.ShouldBeTrue();
+                results.ShouldNotBeEmpty();
             }
 
             [Test]
             public void It_Should_Return_Item()
             {
-                result.Value.Item.Value.ShouldEqual(100);
+                results.First().Item.Value.ShouldEqual(100);
             }
 
             [Test]
             public void It_Should_Return_Id()
             {
-                result.Value.Id.ShouldNotEqual(Guid.Empty);
+                results.First().Id.ShouldNotEqual(Guid.Empty);
             }
         }
 
@@ -97,7 +97,7 @@ namespace Orleans.Streaming.Grains.Tests.Grains
             {
                 await service.PostAsync(new Immutable<int>(100), false, "1");
 
-                result = await service.PopAsync<int>("1");
+                results = await service.PopAsync<int>("1", 1);
 
                 var transaction = client.GetGrain<ITransactionGrain>("1");
 
@@ -129,7 +129,7 @@ namespace Orleans.Streaming.Grains.Tests.Grains
             {
                 await service.PostAsync(new Immutable<int>(100), false, "1");
 
-                result = await service.PopAsync<int>("1");
+                results = await service.PopAsync<int>("1", 1);
 
                 var transaction = client.GetGrain<ITransactionGrain>("1");
 
@@ -159,17 +159,17 @@ namespace Orleans.Streaming.Grains.Tests.Grains
 
         public class WhenPoppingSingleAfterComplete : BaseWhenPoppingSingle
         {
-            protected (Guid Id, Immutable<int> Item)? result2;
+            protected List<(Guid Id, Immutable<int> Item)> results2;
 
             public override async Task Act()
             {
                 await service.PostAsync(new Immutable<int>(100), false, "1");
 
-                result = await service.PopAsync<int>("1");
+                results = await service.PopAsync<int>("1", 1);
 
-                await service.CompleteAsync<int>(result.Value.Id, true, "1");
+                await service.CompleteAsync<int>(results.First().Id, true, "1");
 
-                result2 = await service.PopAsync<int>("1");
+                results2 = await service.PopAsync<int>("1", 1);
 
                 var transaction = client.GetGrain<ITransactionGrain>("1");
 
@@ -179,7 +179,7 @@ namespace Orleans.Streaming.Grains.Tests.Grains
             [Test]
             public void It_Should_Return_Second_Null()
             {
-                result2.ShouldBeNull();
+                results2.ShouldBeEmpty();
             }
 
             [Test]
@@ -203,17 +203,17 @@ namespace Orleans.Streaming.Grains.Tests.Grains
 
         public class WhenPoppingSingleAfterCompletePoison : BaseWhenPoppingSingle
         {
-            protected (Guid Id, Immutable<int> Item)? result2;
+            protected List<(Guid Id, Immutable<int> Item)> results2;
 
             public override async Task Act()
             {
                 await service.PostAsync(new Immutable<int>(100), false, "1");
 
-                result = await service.PopAsync<int>("1");
+                results = await service.PopAsync<int>("1", 1);
 
-                await service.CompleteAsync<int>(result.Value.Id, false, "1");
+                await service.CompleteAsync<int>(results.First().Id, false, "1");
 
-                result2 = await service.PopAsync<int>("1");
+                results2 = await service.PopAsync<int>("1", 1);
 
                 var transaction = client.GetGrain<ITransactionGrain>("1");
 
@@ -223,7 +223,7 @@ namespace Orleans.Streaming.Grains.Tests.Grains
             [Test]
             public void It_Should_Return_Second_Null()
             {
-                result2.ShouldBeNull();
+                results2.ShouldBeEmpty();
             }
 
             [Test]

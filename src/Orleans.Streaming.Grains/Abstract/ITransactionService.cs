@@ -12,7 +12,7 @@ namespace Orleans.Streaming.Grains.Abstract
 {
     public interface ITransactionService
     {
-        Task<(Guid Id, Immutable<T> Item)?> PopAsync<T>(string queue);
+        Task<List<(Guid Id, Immutable<T> Item)>> PopAsync<T>(string queue, int maxCount);
 
         Task PostAsync<T>(Immutable<T> message, bool wait, string queue);
 
