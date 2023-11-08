@@ -10,21 +10,21 @@
     <AdditionalFiles Include="..\stylecop.json" Link="stylecop.json" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Moq" Version="4.18.4" />
+    <PackageReference Include="Moq" Version="4.20.69" />
     <PackageReference Include="Polly" Version="7.2.4" />
-    <PackageReference Include="NUnit" Version="3.13.3" />
+    <PackageReference Include="NUnit" Version="3.14.0" />
     <PackageReference Include="NUnit.ConsoleRunner" Version="3.16.3" />
     <PackageReference Include="NUnit3TestAdapter" Version="4.5.0" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.6.3" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.7.2" />
     <PackageReference Include="Should-DotNetStandard" Version="1.0.0" />
     <PackageReference Include="Serilog.Extensions.Logging" Version="7.0.0" />
     <PackageReference Include="Serilog.Sinks.Console" Version="4.1.0" />
     <PackageReference Include="Serilog.Sinks.Debug" Version="2.0.0" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.Orleans.Client" Version="7.2.1" />
-    <PackageReference Include="Microsoft.Orleans.Server" Version="7.2.1" />
-    <PackageReference Include="Microsoft.Orleans.TestingHost" Version="7.2.1" />
+    <PackageReference Include="Microsoft.Orleans.Client" Version="7.2.3" />
+    <PackageReference Include="Microsoft.Orleans.Server" Version="7.2.3" />
+    <PackageReference Include="Microsoft.Orleans.TestingHost" Version="7.2.3" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Orleans.Streaming.Grains\Orleans.Streaming.Grains.csproj" />
