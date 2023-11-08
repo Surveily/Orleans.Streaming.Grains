@@ -1,6 +1,6 @@
 # Why?
 
-This library allows you to use Grains Storage Providers as a storage layer for Persistent Streams. Our benchmarks show 10% speed advantage over `MemoryStreams`.
+This library allows you to use [Grains Storage](https://learn.microsoft.com/en-us/dotnet/orleans/grains/grain-persistence/?pivots=orleans-7-0) as a storage layer for Persistent Streams. Our benchmarks show 10% speed advantage over `MemoryStreams`.
 
 # Orleans.Streaming.Grains
 
