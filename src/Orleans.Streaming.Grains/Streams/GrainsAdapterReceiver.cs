@@ -8,13 +8,14 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using Orleans.Providers;
 using Orleans.Providers.Streams.Common;
 using Orleans.Streams;
 
 namespace Orleans.Streaming.Grains.Streams
 {
     internal class GrainsAdapterReceiver<TSerializer> : IQueueAdapterReceiver
-        where TSerializer : class, IGrainsMessageBodySerializer
+        where TSerializer : class, IMemoryMessageBodySerializer
     {
         private readonly IGrainsStreamQueueGrain _queueGrain;
         private readonly List<Task> _awaitingTasks;

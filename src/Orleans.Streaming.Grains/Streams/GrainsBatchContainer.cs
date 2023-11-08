@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Orleans.Providers;
 using Orleans.Providers.Streams.Common;
 using Orleans.Runtime;
 using Orleans.Serialization;
@@ -16,7 +17,7 @@ namespace Orleans.Streaming.Grains.Streams
     [GenerateSerializer]
     [SerializationCallbacks(typeof(OnDeserializedCallbacks))]
     internal sealed class GrainsBatchContainer<TSerializer> : IBatchContainer, IOnDeserialized
-        where TSerializer : class, IGrainsMessageBodySerializer
+        where TSerializer : class, IMemoryMessageBodySerializer
     {
         [Id(0)]
         private readonly EventSequenceToken _realToken;
@@ -25,7 +26,7 @@ namespace Orleans.Streaming.Grains.Streams
         private TSerializer _serializer;
 
         [NonSerialized]
-        private GrainsMessageBody _payload;
+        private MemoryMessageBody _payload;
 
         public GrainsBatchContainer(GrainsMessageData messageData, TSerializer serializer)
         {
@@ -66,7 +67,7 @@ namespace Orleans.Streaming.Grains.Streams
             _serializer = GrainsMessageBodySerializerFactory<TSerializer>.GetOrCreateSerializer(context.ServiceProvider);
         }
 
-        private GrainsMessageBody Payload()
+        private MemoryMessageBody Payload()
         {
             return _payload ?? (_payload = _serializer.Deserialize(MessageData.Payload));
         }

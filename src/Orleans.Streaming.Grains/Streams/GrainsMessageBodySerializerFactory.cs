@@ -4,11 +4,12 @@
 
 using System;
 using Microsoft.Extensions.DependencyInjection;
+using Orleans.Providers;
 
 namespace Orleans.Streaming.Grains.Streams
 {
     internal static class GrainsMessageBodySerializerFactory<TSerializer>
-        where TSerializer : class, IGrainsMessageBodySerializer
+        where TSerializer : class, IMemoryMessageBodySerializer
     {
         private static readonly Lazy<ObjectFactory> ObjectFactory = new Lazy<ObjectFactory>(
             () => ActivatorUtilities.CreateFactory(

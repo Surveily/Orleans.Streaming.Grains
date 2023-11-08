@@ -15,6 +15,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Orleans.Configuration;
+using Orleans.Providers;
 using Orleans.Providers.Streams.Common;
 using Orleans.Runtime;
 using Orleans.Streams;
@@ -22,7 +23,7 @@ using Orleans.Streams;
 namespace Orleans.Streaming.Grains.Streams
 {
     public class GrainsAdapterFactory<TSerializer> : IQueueAdapterFactory, IQueueAdapter, IQueueAdapterCache
-        where TSerializer : class, IGrainsMessageBodySerializer
+        where TSerializer : class, IMemoryMessageBodySerializer
     {
         protected Func<CacheMonitorDimensions, ICacheMonitor> cacheMonitorFactory;
         protected Func<BlockPoolMonitorDimensions, IBlockPoolMonitor> blockPoolMonitorFactory;
@@ -152,7 +153,7 @@ namespace Orleans.Streaming.Grains.Streams
             try
             {
                 var queueId = _streamQueueMapper.GetQueueForStream(streamId);
-                ArraySegment<byte> bodyBytes = _serializer.Serialize(new GrainsMessageBody(events.Cast<object>(), requestContext));
+                ArraySegment<byte> bodyBytes = _serializer.Serialize(new MemoryMessageBody(events.Cast<object>(), requestContext));
                 var messageData = GrainsMessageData.Create(streamId, bodyBytes);
                 IGrainsStreamQueueGrain queueGrain = GetQueueGrain(queueId);
                 await queueGrain.Enqueue(messageData);

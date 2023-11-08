@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using Microsoft.Extensions.Logging;
+using Orleans.Providers;
 using Orleans.Providers.Streams.Common;
 using Orleans.Runtime;
 using Orleans.Streams;
@@ -14,7 +15,7 @@ using Orleans.Streams;
 namespace Orleans.Streaming.Grains.Streams
 {
     public class GrainsPooledCache<TSerializer> : IQueueCache, ICacheDataAdapter
-        where TSerializer : class, IGrainsMessageBodySerializer
+        where TSerializer : class, IMemoryMessageBodySerializer
     {
         private readonly IObjectPool<FixedSizeBuffer> _bufferPool;
         private readonly TSerializer _serializer;

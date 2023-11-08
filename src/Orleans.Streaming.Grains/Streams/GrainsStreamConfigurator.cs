@@ -12,9 +12,9 @@ namespace Orleans.Streaming.Grains.Streams
     /// <summary>
     /// Configures memory streams.
     /// </summary>
-    /// <typeparam name="TSerializer">The message body serializer type, which must implement <see cref="IGrainsMessageBodySerializer"/>.</typeparam>
+    /// <typeparam name="TSerializer">The message body serializer type, which must implement <see cref="IMemoryMessageBodySerializer"/>.</typeparam>
     public class GrainsStreamConfigurator<TSerializer> : ClusterClientPersistentStreamConfigurator, IClusterClientGrainsStreamConfigurator
-          where TSerializer : class, IGrainsMessageBodySerializer
+          where TSerializer : class, IMemoryMessageBodySerializer
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="GrainsStreamConfigurator{TSerializer}"/> class.
