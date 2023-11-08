@@ -18,6 +18,7 @@ using Orleans.Configuration;
 using Orleans.Providers;
 using Orleans.Providers.Streams.Common;
 using Orleans.Runtime;
+using Orleans.Streaming.Grains.Abstract;
 using Orleans.Streams;
 
 namespace Orleans.Streaming.Grains.Streams
@@ -34,9 +35,11 @@ namespace Orleans.Streaming.Grains.Streams
         private readonly HashRingStreamQueueMapperOptions _queueMapperOptions;
         private readonly IGrainFactory _grainFactory;
         private readonly ILoggerFactory _loggerFactory;
+        private readonly ITransactionService _service;
         private readonly ILogger _logger;
         private readonly TSerializer _serializer;
         private readonly ulong _nameHash;
+
         private IStreamQueueMapper _streamQueueMapper;
         private ConcurrentDictionary<QueueId, IMemoryStreamQueueGrain> _queueGrains;
         private IObjectPool<FixedSizeBuffer> _bufferPool;
@@ -51,9 +54,11 @@ namespace Orleans.Streaming.Grains.Streams
             HashRingStreamQueueMapperOptions queueMapperOptions,
             IServiceProvider serviceProvider,
             IGrainFactory grainFactory,
-            ILoggerFactory loggerFactory)
+            ILoggerFactory loggerFactory,
+            ITransactionService service)
         {
             Name = providerName;
+            _service = service;
             _queueMapperOptions = queueMapperOptions ?? throw new ArgumentNullException(nameof(queueMapperOptions));
             _cacheOptions = cacheOptions ?? throw new ArgumentNullException(nameof(cacheOptions));
             _statisticOptions = statisticOptions ?? throw new ArgumentException(nameof(statisticOptions));
@@ -85,10 +90,11 @@ namespace Orleans.Streaming.Grains.Streams
         /// <returns>A mew <see cref="GrainsAdapterFactory{TSerializer}"/> instance.</returns>
         public static GrainsAdapterFactory<TSerializer> Create(IServiceProvider services, string name)
         {
+            var transactionService = services.GetServiceByName<ITransactionService>(name);
             var cachePurgeOptions = services.GetOptionsByName<StreamCacheEvictionOptions>(name);
             var statisticOptions = services.GetOptionsByName<StreamStatisticOptions>(name);
             var queueMapperOptions = services.GetOptionsByName<HashRingStreamQueueMapperOptions>(name);
-            var factory = ActivatorUtilities.CreateInstance<GrainsAdapterFactory<TSerializer>>(services, name, cachePurgeOptions, statisticOptions, queueMapperOptions);
+            var factory = ActivatorUtilities.CreateInstance<GrainsAdapterFactory<TSerializer>>(services, name, transactionService, cachePurgeOptions, statisticOptions, queueMapperOptions);
             factory.Init();
             return factory;
         }
@@ -143,7 +149,8 @@ namespace Orleans.Streaming.Grains.Streams
             var dimensions = new ReceiverMonitorDimensions(queueId.ToString());
             var receiverLogger = _loggerFactory.CreateLogger($"{typeof(GrainsAdapterReceiver<TSerializer>).FullName}.{Name}.{queueId}");
             var receiverMonitor = receiverMonitorFactory(dimensions);
-            IQueueAdapterReceiver receiver = new GrainsAdapterReceiver<TSerializer>(GetQueueGrain(queueId), receiverLogger, _serializer, receiverMonitor);
+            var receiver = new GrainsAdapterReceiver<TSerializer>(GetQueueGrain(queueId), receiverLogger, _serializer, receiverMonitor, _service);
+
             return receiver;
         }
 

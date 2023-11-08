@@ -6,6 +6,9 @@ using System;
 using Microsoft.Extensions.DependencyInjection;
 using Orleans.Configuration;
 using Orleans.Providers;
+using Orleans.Runtime;
+using Orleans.Streaming.Grains.Abstract;
+using Orleans.Streaming.Grains.Services;
 
 namespace Orleans.Streaming.Grains.Streams
 {
@@ -13,7 +16,7 @@ namespace Orleans.Streaming.Grains.Streams
     /// Configures memory streams.
     /// </summary>
     /// <typeparam name="TSerializer">The message body serializer type, which must implement <see cref="IMemoryMessageBodySerializer"/>.</typeparam>
-    public class SiloGrainsStreamConfigurator<TSerializer> : SiloRecoverableStreamConfigurator, ISiloMemoryStreamConfigurator
+    public class SiloGrainsStreamConfigurator<TSerializer> : SiloRecoverableStreamConfigurator, ISiloPersistentStreamConfigurator
           where TSerializer : class, IMemoryMessageBodySerializer
     {
         /// <summary>
@@ -26,6 +29,7 @@ namespace Orleans.Streaming.Grains.Streams
             : base(name, configureServicesDelegate, GrainsAdapterFactory<TSerializer>.Create)
         {
             ConfigureDelegate(services => services.ConfigureNamedOptionForLogging<HashRingStreamQueueMapperOptions>(name));
+            ConfigureDelegate(services => services.AddSingletonNamedService<ITransactionService, TransactionService>(name));
         }
     }
 }

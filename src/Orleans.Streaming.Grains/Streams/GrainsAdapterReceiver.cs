@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Orleans.Providers;
 using Orleans.Providers.Streams.Common;
+using Orleans.Streaming.Grains.Abstract;
 using Orleans.Streams;
 
 namespace Orleans.Streaming.Grains.Streams
@@ -17,16 +18,18 @@ namespace Orleans.Streaming.Grains.Streams
     internal class GrainsAdapterReceiver<TSerializer> : IQueueAdapterReceiver
         where TSerializer : class, IMemoryMessageBodySerializer
     {
-        private readonly IMemoryStreamQueueGrain _queueGrain;
-        private readonly List<Task> _awaitingTasks;
         private readonly ILogger _logger;
         private readonly TSerializer _serializer;
+        private readonly List<Task> _awaitingTasks;
+        private readonly ITransactionService _service;
+        private readonly IMemoryStreamQueueGrain _queueGrain;
         private readonly IQueueAdapterReceiverMonitor _receiverMonitor;
 
-        public GrainsAdapterReceiver(IMemoryStreamQueueGrain queueGrain, ILogger logger, TSerializer serializer, IQueueAdapterReceiverMonitor receiverMonitor)
+        public GrainsAdapterReceiver(IMemoryStreamQueueGrain queueGrain, ILogger logger, TSerializer serializer, IQueueAdapterReceiverMonitor receiverMonitor, ITransactionService service)
         {
-            _queueGrain = queueGrain;
             _logger = logger;
+            _service = service;
+            _queueGrain = queueGrain;
             _serializer = serializer;
             _awaitingTasks = new List<Task>();
             _receiverMonitor = receiverMonitor;

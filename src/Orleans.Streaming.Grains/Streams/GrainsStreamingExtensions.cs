@@ -38,7 +38,7 @@ namespace Orleans.Streaming.Grains.Streams
             Action<IClusterClientGrainsStreamConfigurator> configure = null)
             where TSerializer : class, IMemoryMessageBodySerializer
         {
-            var memoryStreamConfigurator = new GrainsStreamConfigurator<TSerializer>(name, builder);
+            var memoryStreamConfigurator = new ClientGrainsStreamConfigurator<TSerializer>(name, builder);
             configure?.Invoke(memoryStreamConfigurator);
             return builder;
         }
@@ -53,7 +53,7 @@ namespace Orleans.Streaming.Grains.Streams
         /// <param name="configure">The configuration delegate.</param>
         /// <returns>The silo builder.</returns>
         public static ISiloBuilder AddMemoryStreams2(this ISiloBuilder builder, string name,
-                Action<ISiloMemoryStreamConfigurator> configure = null)
+                Action<ISiloPersistentStreamConfigurator> configure = null)
         {
             return AddMemoryStreams2<DefaultMemoryMessageBodySerializer>(builder, name, configure);
         }
@@ -67,7 +67,7 @@ namespace Orleans.Streaming.Grains.Streams
         /// <param name="configure">The configuration delegate.</param>
         /// <returns>The silo builder.</returns>
         public static ISiloBuilder AddMemoryStreams2<TSerializer>(this ISiloBuilder builder, string name,
-            Action<ISiloMemoryStreamConfigurator> configure = null)
+            Action<ISiloPersistentStreamConfigurator> configure = null)
              where TSerializer : class, IMemoryMessageBodySerializer
         {
             var memoryStreamConfiguretor = new SiloGrainsStreamConfigurator<TSerializer>(name, configureDelegate => builder.ConfigureServices(configureDelegate));
