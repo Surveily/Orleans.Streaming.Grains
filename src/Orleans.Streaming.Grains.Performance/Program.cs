@@ -2,22 +2,16 @@
 // Copyright (c) Surveily Sp. z o.o.. All rights reserved.
 // </copyright>
 
+using BenchmarkDotNet.Analysers;
 using BenchmarkDotNet.Configs;
+using BenchmarkDotNet.Exporters;
+using BenchmarkDotNet.Loggers;
 using BenchmarkDotNet.Running;
 
 namespace Orleans.Streaming.Grains.Performance
 {
     public class Program
     {
-        public static void Main(string[] args)
-        {
-            var config = DefaultConfig.Instance;
-
-            BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly)
-                             .Run(args, config);
-        }
-
-        /*
         public static void Main(string[] args)
         {
             var config = new ManualConfig
@@ -32,18 +26,15 @@ namespace Orleans.Streaming.Grains.Performance
             config.AddValidator(DefaultConfig.Instance.GetValidators().ToArray());
             config.AddColumnProvider(DefaultConfig.Instance.GetColumnProviders().ToArray());
 
+            var logger = ConsoleLogger.Default;
             var summaries = BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly)
                                              .Run(args, config);
 
             foreach (var summary in summaries)
             {
-                MarkdownExporter.Console.ExportToLog(summary, ConsoleLogger.Default);
-                ConclusionHelper.Print(ConsoleLogger.Default, config.GetAnalysers()
-                                                                    .First()
-                                                                    .Analyse(summary)
-                                                                    .ToList());
+                MarkdownExporter.Console.ExportToLog(summary, logger);
+                ConclusionHelper.Print(logger, summary.BenchmarksCases.First().Config.GetCompositeAnalyser().Analyse(summary).ToList());
             }
         }
-        */
     }
 }
