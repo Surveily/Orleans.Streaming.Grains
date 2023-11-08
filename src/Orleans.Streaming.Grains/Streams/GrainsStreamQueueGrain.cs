@@ -6,8 +6,10 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Orleans.Runtime;
 using Orleans.Streaming.Grains.Abstract;
+using Orleans.Streaming.Grains.State;
 using Orleans.Utilities;
 
 namespace Orleans.Streaming.Grains.Streams
@@ -16,15 +18,19 @@ namespace Orleans.Streaming.Grains.Streams
     {
         private const int MaxEventCount = 16384;
 
+        private readonly IOptions<GrainsOptions> _options;
         private readonly ObserverManager<ITransactionObserver> _subscriptions;
 
         private long _sequenceNumber;
         private Queue<GrainsMessageData> _eventQueue;
+        private Dictionary<Guid, TransactionGrainStatePeriod> _transactions;
 
-        public GrainsStreamQueueGrain(ILoggerFactory logger)
+        public GrainsStreamQueueGrain(IOptions<GrainsOptions> options, ILoggerFactory logger)
         {
+            _options = options;
             _sequenceNumber = DateTime.UtcNow.Ticks;
             _eventQueue = new Queue<GrainsMessageData>();
+            _transactions = new Dictionary<Guid, TransactionGrainStatePeriod>();
             _subscriptions = new ObserverManager<ITransactionObserver>(TimeSpan.FromSeconds(30), logger.CreateLogger<GrainsStreamQueueGrain>());
         }
 
@@ -51,6 +57,22 @@ namespace Orleans.Streaming.Grains.Streams
             }
 
             return Task.FromResult(list);
+        }
+
+        public async Task CompleteAsync(Guid id, bool success)
+        {
+            if (_transactions.Remove(id, out _) /*|| State.Poison.Contains(id)*/)
+            {
+                /*if (!success)
+                {
+                    State.Poison.Enqueue(id);
+                }*/
+
+                if (_subscriptions.Any())
+                {
+                    await _subscriptions.Notify(x => x.CompletedAsync(id, success, this.GetPrimaryKeyString()));
+                }
+            }
         }
 
         public Task SubscribeAsync(ITransactionObserver observer)

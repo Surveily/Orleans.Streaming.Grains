@@ -29,6 +29,8 @@ namespace Orleans.Streaming.Grains.Streams
         /// <returns>A <see cref="Task"/> representing the operation.</returns>
         Task<List<GrainsMessageData>> Dequeue(int maxCount);
 
+        Task CompleteAsync(Guid id, bool success);
+
         Task SubscribeAsync(ITransactionObserver observer);
 
         Task UnsubscribeAsync(ITransactionObserver observer);
