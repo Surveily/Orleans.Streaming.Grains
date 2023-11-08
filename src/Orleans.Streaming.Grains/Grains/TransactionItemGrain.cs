@@ -18,11 +18,13 @@ namespace Orleans.Streaming.Grains.Grains
     {
         private bool _deleted;
 
-        public async Task DeleteAsync()
+        public Task DeleteAsync()
         {
-            await ClearStateAsync();
-
             _deleted = true;
+
+            _ = RegisterTimer(PersistTimerAsync, null, TimeSpan.FromSeconds(1), TimeSpan.FromDays(1));
+
+            return Task.CompletedTask;
         }
 
         public Task<Immutable<T>> GetAsync()
@@ -51,7 +53,11 @@ namespace Orleans.Streaming.Grains.Grains
 
         public async Task PersistAsync()
         {
-            if (!_deleted)
+            if (_deleted)
+            {
+                await ClearStateAsync();
+            }
+            else
             {
                 await WriteStateAsync();
             }
