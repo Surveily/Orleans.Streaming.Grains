@@ -20,8 +20,8 @@ Concurrent=True  Server=True
 
 Concurrent=True  Server=True  
 
-| Method         | Mean       | Error    | StdDev   | Completed Work Items | Lock Contentions | Allocated |
-|--------------- |-----------:|---------:|---------:|---------------------:|-----------------:|----------:|
-| BroadcastAsync |   164.6 ms |  4.94 ms | 14.57 ms |             718.3333 |           2.0000 |    1.1 MB |
-| CompoundAsync  |   397.9 ms | 20.62 ms | 60.79 ms |            2278.0000 |           5.0000 |   3.41 MB |
-| ExplosiveAsync | 1,086.1 ms | 28.81 ms | 83.12 ms |           22663.0000 |          46.0000 |  37.27 MB |
+| Method         | Mean      | Error     | StdDev   | Completed Work Items | Lock Contentions | Allocated  |
+|--------------- |----------:|----------:|---------:|---------------------:|-----------------:|-----------:|
+| BroadcastAsync |  72.49 ms |  4.870 ms | 14.36 ms |             147.2857 |           2.5714 |  257.12 KB |
+| CompoundAsync  | 157.27 ms |  7.281 ms | 21.47 ms |             341.5000 |           3.7500 |  572.71 KB |
+| ExplosiveAsync | 332.09 ms | 12.292 ms | 36.24 ms |            1898.0000 |          11.0000 | 2982.95 KB |
