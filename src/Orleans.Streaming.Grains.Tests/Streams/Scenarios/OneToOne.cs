@@ -2,6 +2,7 @@
 // Copyright (c) Surveily Sp. z o.o.. All rights reserved.
 // </copyright>
 
+using System.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
@@ -107,6 +108,7 @@ namespace Orleans.Streaming.Grains.Test.Scenarios
         {
             protected byte[] result;
             protected byte[] expected = new byte[1024];
+            protected List<Stopwatch> timers = new List<Stopwatch>();
 
             public override void Prepare()
             {
@@ -127,8 +129,17 @@ namespace Orleans.Streaming.Grains.Test.Scenarios
                 {
                     var grain = Subject.GetGrain<IEmitterGrain>(Guid.NewGuid());
 
+                    timers.Add(Stopwatch.StartNew());
                     await grain.SendAsync(expected);
+                    timers.Last().Stop();
                 }
+            }
+
+            [Test]
+            public void It_Should_Fast()
+            {
+                TimeSpan.FromTicks(Convert.ToInt64(timers.Average(x => x.Elapsed.Ticks)))
+                        .ShouldBeLessThan(TimeSpan.FromMilliseconds(200));
             }
 
             [Test]
