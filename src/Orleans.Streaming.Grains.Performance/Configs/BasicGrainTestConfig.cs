@@ -20,7 +20,9 @@ namespace Orleans.Streaming.Grains.Performance.Configs
         public void Configure(ISiloBuilder siloBuilder)
         {
             siloBuilder.ConfigureServices(Configure)
-                       .AddMemoryStreams("Default");
+                       .AddMemoryGrainStorageAsDefault()
+                       .AddMemoryGrainStorage(ProviderConstants.DEFAULT_PUBSUB_PROVIDER_NAME)
+                       .AddMemoryStreams(ProviderConstants.DEFAULT_STORAGE_PROVIDER_NAME);
         }
 
         public void Configure(IConfiguration configuration, IClientBuilder clientBuilder)

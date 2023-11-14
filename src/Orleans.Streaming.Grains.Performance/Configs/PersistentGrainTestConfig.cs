@@ -22,11 +22,11 @@ namespace Orleans.Streaming.Grains.Performance.Configs
 #pragma warning disable CS0618
             siloBuilder.ConfigureServices(Configure)
                        .AddMemoryGrainStorageAsDefault()
-                       .AddMemoryGrainStorage(name: "PubSubStore")
-                       .AddGrainsStreamsForTests(name: "Default",
-                                                 queueCount: 8,
-                                                 retry: TimeSpan.FromSeconds(1),
-                                                 poison: TimeSpan.FromSeconds(3));
+                       .AddMemoryGrainStorage(ProviderConstants.DEFAULT_PUBSUB_PROVIDER_NAME)
+                       .AddGrainsStreams(name: ProviderConstants.DEFAULT_STORAGE_PROVIDER_NAME,
+                                         queueCount: 8,
+                                         retry: TimeSpan.FromSeconds(1),
+                                         poison: TimeSpan.FromSeconds(3));
 #pragma warning restore CS0618
         }
 

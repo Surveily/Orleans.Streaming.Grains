@@ -17,12 +17,14 @@ using Orleans.Streaming.Grains.Services;
 using Orleans.Streaming.Grains.Streams;
 using Orleans.Streaming.Grains.Tests.Streams.Grains;
 using Orleans.Streaming.Grains.Tests.Streams.Messages;
+using Orleans.TestingHost;
 
 namespace Orleans.Streaming.Grains.Performance.Scenarios
 {
     public class OneToMany
     {
-        public class OneToManyBasicTest : BenchmarkBaseSilo<BasicConfig>
+        public abstract class BaseOneToManyTest<T> : BenchmarkBaseSilo<T>
+          where T : ISiloConfigurator, IClientBuilderConfigurator, new()
         {
             protected string expectedText = "text";
             protected byte[] expectedData = new byte[1024];
@@ -102,52 +104,12 @@ namespace Orleans.Streaming.Grains.Performance.Scenarios
             }
         }
 
-        public class OneToManyPersistentTest : BenchmarkBaseSilo<PersistentConfig>
+        public class OneToManyBasicTest : BaseOneToManyTest<BasicConfig>
         {
-            protected string resultText;
-            protected string expectedText = "text";
+        }
 
-            protected byte[] resultData;
-            protected byte[] expectedData = new byte[1024];
-
-            protected Mock<IProcessor> processor;
-            protected IOptions<GrainsOptions> settings;
-
-            [Benchmark]
-            [GcConcurrent]
-            [GcServer(true)]
-            public async Task BroadcastAsync()
-            {
-                var grain = Client.GetGrain<IEmitterGrain>(Guid.NewGuid());
-
-                await grain.BroadcastAsync(expectedText, expectedData);
-            }
-
-            [Benchmark]
-            [GcConcurrent]
-            [GcServer(true)]
-            public async Task CompoundAsync()
-            {
-                var grain = Client.GetGrain<IEmitterGrain>(Guid.NewGuid());
-
-                await grain.CompoundAsync(expectedText, expectedData);
-            }
-
-            [Benchmark]
-            [GcConcurrent]
-            [GcServer(true)]
-            public async Task ExplosiveAsync()
-            {
-                var grain = Client.GetGrain<IEmitterGrain>(Guid.NewGuid());
-
-                await grain.ExplosiveAsync(expectedText, expectedData);
-            }
-
-            protected override void Prepare()
-            {
-                processor = Container.GetService<Mock<IProcessor>>();
-                settings = Container.GetService<IOptions<GrainsOptions>>();
-            }
+        public class OneToManyPersistentTest : BaseOneToManyTest<PersistentConfig>
+        {
         }
     }
 }

@@ -36,15 +36,14 @@ namespace Orleans.Streaming.Grains.Grains
         {
             if (State.Queue == null)
             {
-                State.Queue = new Queue<Guid>();
                 State.Poison = new Queue<Guid>();
-                State.Sequences = new Dictionary<Guid, long>();
+                State.Queue = new Queue<(Guid, long)>();
                 State.Transactions = new Dictionary<Guid, TransactionGrainStatePeriod>();
 
                 await PersistAsync();
             }
 
-            var timeout = _options.RetryTimeout / 5;
+            var timeout = _options.RetryTimeout / 3;
 
             _ = RegisterTimer(FlushTimerAsync, null, timeout, timeout);
 
@@ -62,8 +61,6 @@ namespace Orleans.Streaming.Grains.Grains
         {
             if (State.Transactions.Remove(id, out _) || State.Poison.Contains(id))
             {
-                State.Sequences.Remove(id, out _);
-
                 if (!success)
                 {
                     State.Poison.Enqueue(id);
@@ -76,10 +73,14 @@ namespace Orleans.Streaming.Grains.Grains
             }
         }
 
-        public Task<(Guid?, long)> PopAsync()
+        public Task<List<(Guid, long)>> PopAsync(int maxCount)
         {
-            if (State.Queue.TryDequeue(out var id))
+            var results = new List<(Guid, long)>();
+
+            while (results.Count < maxCount && State.Queue.TryDequeue(out var key))
             {
+                var (id, _) = key;
+
                 if (!State.Transactions.ContainsKey(id))
                 {
                     State.Transactions.Add(id, new TransactionGrainStatePeriod
@@ -89,16 +90,15 @@ namespace Orleans.Streaming.Grains.Grains
                     });
                 }
 
-                return Task.FromResult((new Guid?(id), State.Sequences[id]));
+                results.Add(key);
             }
 
-            return Task.FromResult((default(Guid?), default(long)));
+            return Task.FromResult(results);
         }
 
         public Task PostAsync(Guid id)
         {
-            State.Queue.Enqueue(id);
-            State.Sequences[id] = _sequenceNumber++;
+            State.Queue.Enqueue((id, _sequenceNumber++));
 
             return Task.CompletedTask;
         }
@@ -138,8 +138,7 @@ namespace Orleans.Streaming.Grains.Grains
                     else
                     {
                         State.Transactions[item.Key].Retried = DateTimeOffset.UtcNow;
-                        State.Sequences[item.Key] = _sequenceNumber++;
-                        State.Queue.Enqueue(item.Key);
+                        State.Queue.Enqueue((item.Key, _sequenceNumber++));
                     }
                 }
             }
@@ -149,7 +148,7 @@ namespace Orleans.Streaming.Grains.Grains
 
         private async Task FlushTimerAsync(object arg)
         {
-            await Task.Run(async () => await this.AsReference<ITransactionGrain<T>>().FlushAsync());
+            await this.AsReference<ITransactionGrain<T>>().FlushAsync();
         }
 
         private async Task PersistAsync()

@@ -37,19 +37,21 @@ namespace Orleans.Streaming.Grains.Services
             await item.DeleteAsync();
         }
 
-        public async Task<(Guid Id, Immutable<T> Item, long Sequence)?> PopAsync(string queue)
+        public async Task<List<(Guid Id, Immutable<T> Item, long Sequence)>> PopAsync(string queue, int maxCount)
         {
-            var (id, sequence) = await GetTransactionGrain(queue).PopAsync();
+            var transaction = _client.GetGrain<ITransactionGrain<T>>(queue);
+            var ids = await transaction.PopAsync(maxCount);
 
-            if (id != null && id.HasValue && sequence > 0)
+            if (ids.Any())
             {
-                var item = _client.GetGrain<ITransactionItemGrain<T>>(id.Value);
-                var result = await item.GetAsync();
+                var reader = _client.GetGrain<ITransactionReaderGrain<T>>(queue);
+                var result = await reader.GetAsync(ids);
 
-                return (id.Value, result, sequence);
+                return result.Value;
             }
 
-            return null;
+            return Enumerable.Empty<(Guid, Immutable<T>, long)>()
+                             .ToList();
         }
 
         public async Task PostAsync(Immutable<T> message, bool wait, string queue)

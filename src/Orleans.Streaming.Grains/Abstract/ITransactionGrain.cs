@@ -16,7 +16,7 @@ namespace Orleans.Streaming.Grains.Abstract
     {
         Task FlushAsync();
 
-        Task<(Guid?, long)> PopAsync();
+        Task<List<(Guid, long)>> PopAsync(int maxCount);
 
         Task PostAsync(Guid id);
 

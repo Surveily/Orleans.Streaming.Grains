@@ -2,6 +2,7 @@
 // Copyright (c) Surveily Sp. z o.o.. All rights reserved.
 // </copyright>
 
+using Orleans.Providers;
 using Orleans.Runtime;
 using Orleans.Streaming.Grains.Tests.Streams.Messages;
 using Orleans.Streams;
@@ -24,7 +25,7 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Grains
 
         public override async Task OnActivateAsync(CancellationToken cancellationToken)
         {
-            var streamProvider = this.GetStreamProvider("Default");
+            var streamProvider = this.GetStreamProvider(ProviderConstants.DEFAULT_STORAGE_PROVIDER_NAME);
             var stream = StreamFactory.Create<SimpleMessage>(streamProvider, this.GetPrimaryKey());
             var broadcastStream = StreamFactory.Create<BroadcastMessage>(streamProvider, this.GetPrimaryKey());
 

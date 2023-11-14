@@ -26,27 +26,47 @@ namespace Orleans.Streaming.Grains.Tests.Services
             protected Guid itemId;
             protected long itemSequence;
             protected Immutable<int> item;
+            protected List<(Guid, long)> ids;
             protected Mock<IClusterClient> client;
             protected Mock<ITransactionGrain<int>> transaction;
+            protected Mock<ITransactionReaderGrain<int>> reader;
             protected Mock<ITransactionItemGrain<int>> message;
+            protected List<(Guid Id, Immutable<int> Item, long Sequence)> items;
 
             public BaseTransactionServiceTest()
             {
+                ids = new List<(Guid, long)>();
                 item = new Immutable<int>(100);
                 client = new Mock<IClusterClient>();
-                itemSequence = DateTime.UtcNow.Ticks;
                 transaction = new Mock<ITransactionGrain<int>>();
                 message = new Mock<ITransactionItemGrain<int>>();
+                reader = new Mock<ITransactionReaderGrain<int>>();
+                items = new List<(Guid Id, Immutable<int> Item, long Sequence)>();
 
                 client.Setup(x => x.GetGrain<ITransactionItemGrain<int>>(It.IsAny<Guid>(), null))
-                      .Callback<Guid, string>((id, _) => itemId = id)
+                      .Callback<Guid, string>((id, _) =>
+                      {
+                          itemId = id;
+                          itemSequence++;
+                          ids.Add((itemId, itemSequence));
+                          items.Add((itemId, item, itemSequence));
+                      })
                       .Returns(message.Object);
 
                 client.Setup(x => x.GetGrain<ITransactionGrain<int>>("1", null))
                       .Returns(transaction.Object);
 
-                message.Setup(x => x.SetAsync(item))
+                client.Setup(x => x.GetGrain<ITransactionReaderGrain<int>>("1", null))
+                      .Returns(reader.Object);
+
+                message.Setup(x => x.SetAsync(It.IsAny<Immutable<int>>()))
                        .Returns(Task.CompletedTask);
+
+                reader.Setup(x => x.GetAsync(ids))
+                      .ReturnsAsync(new Immutable<List<(Guid Id, Immutable<int> Item, long Sequence)>>(items));
+
+                transaction.Setup(x => x.PopAsync(1))
+                           .ReturnsAsync(ids);
 
                 transaction.Setup(x => x.PostAsync(itemId))
                            .Returns(Task.CompletedTask);
@@ -90,68 +110,71 @@ namespace Orleans.Streaming.Grains.Tests.Services
 
         public class WhenPopingEmpty : BaseTransactionServiceTest
         {
-            protected (Guid Id, Immutable<int> Item, long Sequence)? result;
+            protected List<(Guid Id, Immutable<int> Item, long Sequence)> results;
 
             public override async Task SetupAsync()
             {
                 await base.SetupAsync();
 
-                result = await Subject.PopAsync("1");
+                results = await Subject.PopAsync("1", 1);
             }
 
             [Test]
             public void It_Should_Return_Null()
             {
-                result.ShouldBeNull();
+                results.ShouldBeEmpty();
             }
 
             [Test]
             public void It_Should_Pop()
             {
-                transaction.Verify(x => x.PopAsync(), Times.Once);
+                transaction.Verify(x => x.PopAsync(1), Times.Once);
             }
         }
 
         public class WhenPopingSingle : BaseTransactionServiceTest
         {
-            protected (Guid Id, Immutable<int> Item, long Sequence)? result;
+            protected List<(Guid Id, Immutable<int> Item, long Sequence)> results;
 
             public override async Task SetupAsync()
             {
-                transaction.Setup(x => x.PopAsync())
-                           .ReturnsAsync(() => (itemId, itemSequence));
-
                 message.Setup(x => x.GetAsync())
                        .ReturnsAsync(item);
 
                 await base.SetupAsync();
                 await Subject.PostAsync(item, false, "1");
 
-                result = await Subject.PopAsync("1");
+                results = await Subject.PopAsync("1", 1);
             }
 
             [Test]
             public void It_Should_Return()
             {
-                result.HasValue.ShouldBeTrue();
+                results.ShouldNotBeEmpty();
             }
 
             [Test]
             public void It_Should_Return_Id()
             {
-                result.Value.Id.ShouldEqual(itemId);
+                results.First().Id.ShouldEqual(itemId);
             }
 
             [Test]
             public void It_Should_Return_Item()
             {
-                result.Value.Item.ShouldEqual(item);
+                results.First().Item.ShouldEqual(item);
+            }
+
+            [Test]
+            public void It_Should_Get_Reader()
+            {
+                client.Verify(x => x.GetGrain<ITransactionReaderGrain<int>>("1", null), Times.Exactly(1));
             }
 
             [Test]
             public void It_Should_Get_Item()
             {
-                client.Verify(x => x.GetGrain<ITransactionItemGrain<int>>(itemId, null), Times.Exactly(2));
+                client.Verify(x => x.GetGrain<ITransactionItemGrain<int>>(itemId, null), Times.Exactly(1));
             }
 
             [Test]
@@ -175,7 +198,7 @@ namespace Orleans.Streaming.Grains.Tests.Services
             [Test]
             public void It_Should_Pop()
             {
-                transaction.Verify(x => x.PopAsync(), Times.Once);
+                transaction.Verify(x => x.PopAsync(1), Times.Once);
             }
         }
     }

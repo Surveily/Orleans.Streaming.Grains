@@ -13,6 +13,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Orleans.Configuration;
 using Orleans.Hosting;
+using Orleans.Providers;
 using Orleans.Providers.Streams.Common;
 using Orleans.Streaming.Grains.Abstract;
 using Orleans.Streaming.Grains.Extensions;
@@ -43,8 +44,8 @@ namespace Orleans.Streaming.Grains.Test
                 siloBuilder.ConfigureServices(Configure)
                            .ConfigureServices(ConfigureInner)
                            .AddMemoryGrainStorageAsDefault()
-                           .AddMemoryGrainStorage(name: "PubSubStore")
-                           .AddGrainsStreams(name: "Default",
+                           .AddMemoryGrainStorage(ProviderConstants.DEFAULT_PUBSUB_PROVIDER_NAME)
+                           .AddGrainsStreams(name: ProviderConstants.DEFAULT_STORAGE_PROVIDER_NAME,
                                              queueCount: 1,
                                              retry: TimeSpan.FromSeconds(1),
                                              poison: TimeSpan.FromSeconds(3));
@@ -55,8 +56,8 @@ namespace Orleans.Streaming.Grains.Test
                 siloBuilder.ConfigureServices(Configure)
                            .ConfigureServices(ConfigureInner)
                            .AddMemoryGrainStorageAsDefault()
-                           .AddMemoryGrainStorage(name: "PubSubStore")
-                           .AddGrainsStreamsForTests(name: "Default",
+                           .AddMemoryGrainStorage(ProviderConstants.DEFAULT_PUBSUB_PROVIDER_NAME)
+                           .AddGrainsStreamsForTests(name: ProviderConstants.DEFAULT_STORAGE_PROVIDER_NAME,
                                                      queueCount: 3,
                                                      retry: TimeSpan.FromSeconds(1),
                                                      poison: TimeSpan.FromSeconds(3));

@@ -23,10 +23,10 @@ namespace Orleans.Streaming.Grains.Streams
         private readonly ILogger _logger;
         private readonly QueueId _queueId;
         private readonly List<Task> _awaitingTasks;
-        private readonly ITransactionService<MemoryMessageData> _service;
         private readonly IStreamQueueMapper _streamQueueMapper;
         private readonly IMemoryMessageBodySerializer _serializer;
         private readonly IQueueAdapterReceiverMonitor _receiverMonitor;
+        private readonly ITransactionService<MemoryMessageData> _service;
 
         public GrainsQueueAdapterReceiver(ILogger logger,
                                           QueueId queueId,
@@ -58,29 +58,7 @@ namespace Orleans.Streaming.Grains.Streams
 
             List<IBatchContainer> batches;
 
-            var task = Task.Run(async () =>
-            {
-                var messages = new List<(Guid Id, Immutable<MemoryMessageData> Item, long Sequence)?>();
-
-                do
-                {
-                    var message = await _service.PopAsync(_queueId.ToString());
-
-                    // TODO: Null check for Immutable.Value
-                    if (message != null && message.HasValue)
-                    {
-                        // TODO: Restore message Dequeue Time assginment
-                        messages.Add(message.Value);
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
-                while (messages.Count < maxCount);
-
-                return messages;
-            });
+            var task = _service.PopAsync(_queueId.ToString(), maxCount);
 
             try
             {
@@ -88,9 +66,9 @@ namespace Orleans.Streaming.Grains.Streams
 
                 var eventData = await task;
 
-                batches = eventData.Select(data => new GrainsBatchContainer(data.Value.Item.Value, _serializer, data.Value.Sequence)
+                batches = eventData.Select(data => new GrainsBatchContainer(data.Item.Value, _serializer, data.Sequence)
                 {
-                    Id = data.Value.Id
+                    Id = data.Id
                 }).ToList<IBatchContainer>();
 
                 watch.Stop();
@@ -99,8 +77,8 @@ namespace Orleans.Streaming.Grains.Streams
 
                 if (eventData.Count > 0)
                 {
-                    var oldestMessage = eventData[0].Value.Item.Value.EnqueueTimeUtc;
-                    var newestMessage = eventData[eventData.Count - 1].Value.Item.Value.EnqueueTimeUtc;
+                    var oldestMessage = eventData[0].Item.Value.EnqueueTimeUtc;
+                    var newestMessage = eventData[eventData.Count - 1].Item.Value.EnqueueTimeUtc;
 
                     _receiverMonitor?.TrackMessagesReceived(batches.Count, oldestMessage, newestMessage);
                 }
