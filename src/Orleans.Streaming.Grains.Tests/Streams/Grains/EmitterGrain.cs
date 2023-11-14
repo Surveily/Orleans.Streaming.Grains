@@ -3,6 +3,7 @@
 // </copyright>
 
 using Orleans.Concurrency;
+using Orleans.Providers;
 using Orleans.Runtime;
 using Orleans.Streaming.Grains.Tests.Streams.Messages;
 using Orleans.Streams;
@@ -20,7 +21,7 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Grains
         public override async Task OnActivateAsync(CancellationToken cancellationToken)
         {
             var id = this.GetPrimaryKey();
-            var streamProvider = this.GetStreamProvider("Default");
+            var streamProvider = this.GetStreamProvider(ProviderConstants.DEFAULT_STORAGE_PROVIDER_NAME);
 
             _blobStream = StreamFactory.Create<BlobMessage>(streamProvider, id);
             _simpleStream = StreamFactory.Create<SimpleMessage>(streamProvider, id);
