@@ -148,7 +148,7 @@ namespace Orleans.Streaming.Grains.Grains
 
         private async Task FlushTimerAsync(object arg)
         {
-            await this.AsReference<ITransactionGrain<T>>().FlushAsync();
+            await Task.Run(async () => await this.AsReference<ITransactionGrain<T>>().FlushAsync());
         }
 
         private async Task PersistAsync()

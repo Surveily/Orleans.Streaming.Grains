@@ -65,7 +65,7 @@ namespace Orleans.Streaming.Grains.Grains
 
         private async Task PersistTimerAsync(object arg)
         {
-            await this.AsReference<ITransactionItemGrain<T>>().PersistAsync();
+            await Task.Run(async () => await this.AsReference<ITransactionItemGrain<T>>().PersistAsync());
         }
     }
 }

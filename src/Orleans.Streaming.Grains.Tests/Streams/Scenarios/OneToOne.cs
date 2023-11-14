@@ -129,12 +129,11 @@ namespace Orleans.Streaming.Grains.Test.Scenarios
             {
                 for (var i = 0; i < 10; i++)
                 {
-                    var sw = Stopwatch.StartNew();
                     var grain = Subject.GetGrain<IEmitterGrain>(Guid.NewGuid());
 
+                    timers.Add(Stopwatch.StartNew());
                     await grain.SendAsync(expected);
-                    sw.Stop();
-                    timers.Add(sw);
+                    timers.Last().Stop();
                 }
             }
 
