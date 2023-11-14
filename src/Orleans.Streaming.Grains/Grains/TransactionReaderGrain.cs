@@ -16,19 +16,19 @@ namespace Orleans.Streaming.Grains.Grains
 {
     public class TransactionReaderGrain<T> : Grain, ITransactionReaderGrain<T>
     {
-        public async Task<Immutable<List<(Guid Id, Immutable<T> Item)>>> GetAsync(List<Guid> ids)
+        public async Task<Immutable<List<(Guid Id, Immutable<T> Item, long Sequence)>>> GetAsync(List<(Guid, long)> ids)
         {
-            var results = new List<(Guid Id, Immutable<T> Item)>();
+            var results = new List<(Guid, Immutable<T>, long)>();
 
-            foreach (var id in ids)
+            foreach (var (id, sequence) in ids)
             {
                 var itemGrain = GrainFactory.GetGrain<ITransactionItemGrain<T>>(id);
                 var item = await itemGrain.GetAsync();
 
-                results.Add((id, item));
+                results.Add((id, item, sequence));
             }
 
-            return new Immutable<List<(Guid Id, Immutable<T> Item)>>(results);
+            return new Immutable<List<(Guid, Immutable<T>, long)>>(results);
         }
     }
 }

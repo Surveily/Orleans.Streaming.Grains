@@ -19,23 +19,25 @@ using Orleans.Utilities;
 
 namespace Orleans.Streaming.Grains.Grains
 {
-    public class TransactionGrain : Grain<TransactionGrainState>, ITransactionGrain
+    public class TransactionGrain<T> : Grain<TransactionGrainState>, ITransactionGrain<T>
     {
         private readonly GrainsOptions _options;
         private readonly ObserverManager<ITransactionObserver> _subscriptions;
 
+        private long _sequenceNumber = DateTime.UtcNow.Ticks;
+
         public TransactionGrain(IOptions<GrainsOptions> options, ILoggerFactory logger)
         {
             _options = options.Value;
-            _subscriptions = new ObserverManager<ITransactionObserver>(TimeSpan.FromSeconds(30), logger.CreateLogger<TransactionGrain>());
+            _subscriptions = new ObserverManager<ITransactionObserver>(TimeSpan.FromSeconds(30), logger.CreateLogger<TransactionGrain<T>>());
         }
 
         public override async Task OnActivateAsync(CancellationToken cancellationToken)
         {
             if (State.Queue == null)
             {
-                State.Queue = new Queue<Guid>();
                 State.Poison = new Queue<Guid>();
+                State.Queue = new Queue<(Guid, long)>();
                 State.Transactions = new Dictionary<Guid, TransactionGrainStatePeriod>();
 
                 await PersistAsync();
@@ -71,12 +73,14 @@ namespace Orleans.Streaming.Grains.Grains
             }
         }
 
-        public Task<List<Guid>> PopAsync(int maxCount)
+        public Task<List<(Guid, long)>> PopAsync(int maxCount)
         {
-            var results = new List<Guid>();
+            var results = new List<(Guid, long)>();
 
-            while (results.Count < maxCount && State.Queue.TryDequeue(out var id))
+            while (results.Count < maxCount && State.Queue.TryDequeue(out var key))
             {
+                var (id, _) = key;
+
                 if (!State.Transactions.ContainsKey(id))
                 {
                     State.Transactions.Add(id, new TransactionGrainStatePeriod
@@ -86,7 +90,7 @@ namespace Orleans.Streaming.Grains.Grains
                     });
                 }
 
-                results.Add(id);
+                results.Add(key);
             }
 
             return Task.FromResult(results);
@@ -94,7 +98,7 @@ namespace Orleans.Streaming.Grains.Grains
 
         public Task PostAsync(Guid id)
         {
-            State.Queue.Enqueue(id);
+            State.Queue.Enqueue((id, _sequenceNumber++));
 
             return Task.CompletedTask;
         }
@@ -134,7 +138,7 @@ namespace Orleans.Streaming.Grains.Grains
                     else
                     {
                         State.Transactions[item.Key].Retried = DateTimeOffset.UtcNow;
-                        State.Queue.Enqueue(item.Key);
+                        State.Queue.Enqueue((item.Key, _sequenceNumber++));
                     }
                 }
             }
@@ -144,7 +148,7 @@ namespace Orleans.Streaming.Grains.Grains
 
         private async Task FlushTimerAsync(object arg)
         {
-            await Task.Run(async () => await this.AsReference<ITransactionGrain>().FlushAsync());
+            await Task.Run(async () => await this.AsReference<ITransactionGrain<T>>().FlushAsync());
         }
 
         private async Task PersistAsync()

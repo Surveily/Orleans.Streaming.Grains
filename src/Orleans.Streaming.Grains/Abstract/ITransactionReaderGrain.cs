@@ -13,6 +13,6 @@ namespace Orleans.Streaming.Grains.Abstract
 {
     public interface ITransactionReaderGrain<T> : IGrainWithStringKey
     {
-        Task<Immutable<List<(Guid Id, Immutable<T> Item)>>> GetAsync(List<Guid> ids);
+        Task<Immutable<List<(Guid Id, Immutable<T> Item, long Sequence)>>> GetAsync(List<(Guid, long)> ids);
     }
 }

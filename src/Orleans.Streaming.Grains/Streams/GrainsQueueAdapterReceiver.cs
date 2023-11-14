@@ -5,9 +5,13 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using Orleans.Concurrency;
+using Orleans.Providers;
+using Orleans.Providers.Streams.Common;
 using Orleans.Serialization;
 using Orleans.Streaming.Grains.Abstract;
 using Orleans.Streams;
@@ -16,54 +20,116 @@ namespace Orleans.Streaming.Grains.Streams
 {
     public class GrainsQueueAdapterReceiver : IQueueAdapterReceiver
     {
+        private readonly ILogger _logger;
         private readonly QueueId _queueId;
-        private readonly ITransactionService _service;
+        private readonly List<Task> _awaitingTasks;
         private readonly IStreamQueueMapper _streamQueueMapper;
-        private readonly Serializer<GrainsBatchContainer> _serializationManager;
+        private readonly IMemoryMessageBodySerializer _serializer;
+        private readonly IQueueAdapterReceiverMonitor _receiverMonitor;
+        private readonly ITransactionService<MemoryMessageData> _service;
 
-        private long _lastReadMessage;
-
-        public GrainsQueueAdapterReceiver(QueueId queueId,
-                                          ITransactionService service,
+        public GrainsQueueAdapterReceiver(ILogger logger,
+                                          QueueId queueId,
+                                          ITransactionService<MemoryMessageData> service,
                                           IStreamQueueMapper streamQueueMapper,
-                                          Serializer<GrainsBatchContainer> serializationManager)
+                                          IMemoryMessageBodySerializer serializer,
+                                          IQueueAdapterReceiverMonitor receiverMonitor)
         {
+            _logger = logger;
             _queueId = queueId;
             _service = service;
+            _serializer = serializer;
+            _receiverMonitor = receiverMonitor;
             _streamQueueMapper = streamQueueMapper;
-            _serializationManager = serializationManager;
-        }
 
-        public async Task<IList<IBatchContainer>> GetQueueMessagesAsync(int maxCount)
-        {
-            var result = new List<IBatchContainer>();
-
-            foreach (var message in await _service.PopAsync<GrainsMessage>(_queueId.ToString(), maxCount))
-            {
-                result.Add(GrainsBatchContainer.FromMessage(_serializationManager, message.Id, message.Item.Value, _lastReadMessage++));
-            }
-
-            return result;
+            _awaitingTasks = new List<Task>();
         }
 
         public Task Initialize(TimeSpan timeout)
         {
+            _receiverMonitor?.TrackInitialization(true, TimeSpan.MinValue, null);
+
             return Task.CompletedTask;
+        }
+
+        public async Task<IList<IBatchContainer>> GetQueueMessagesAsync(int maxCount)
+        {
+            var watch = Stopwatch.StartNew();
+
+            List<IBatchContainer> batches;
+
+            var task = _service.PopAsync(_queueId.ToString(), maxCount);
+
+            try
+            {
+                _awaitingTasks.Add(task);
+
+                var eventData = await task;
+
+                batches = eventData.Select(data => new GrainsBatchContainer(data.Item.Value, _serializer, data.Sequence)
+                {
+                    Id = data.Id
+                }).ToList<IBatchContainer>();
+
+                watch.Stop();
+
+                _receiverMonitor?.TrackRead(true, watch.Elapsed, null);
+
+                if (eventData.Count > 0)
+                {
+                    var oldestMessage = eventData[0].Item.Value.EnqueueTimeUtc;
+                    var newestMessage = eventData[eventData.Count - 1].Item.Value.EnqueueTimeUtc;
+
+                    _receiverMonitor?.TrackMessagesReceived(batches.Count, oldestMessage, newestMessage);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, $"Exception thrown in {nameof(GrainsQueueAdapterReceiver)}.{nameof(GetQueueMessagesAsync)}.");
+
+                watch.Stop();
+
+                _receiverMonitor?.TrackRead(true, watch.Elapsed, ex);
+
+                throw;
+            }
+            finally
+            {
+                _awaitingTasks.Remove(task);
+            }
+
+            return batches;
         }
 
         public async Task MessagesDeliveredAsync(IList<IBatchContainer> messages)
         {
-            foreach (var message in messages.OfType<GrainsBatchContainer>())
+            foreach (var message in messages.Cast<GrainsBatchContainer>())
             {
                 var queue = _streamQueueMapper.GetQueueForStream(message.StreamId);
 
-                await _service.CompleteAsync<GrainsMessage>(message.Id, true, queue.ToString());
+                await _service.CompleteAsync(message.Id, true, queue.ToString());
             }
         }
 
-        public Task Shutdown(TimeSpan timeout)
+        public async Task Shutdown(TimeSpan timeout)
         {
-            return Task.CompletedTask;
+            var watch = Stopwatch.StartNew();
+
+            try
+            {
+                if (_awaitingTasks.Count != 0)
+                {
+                    await Task.WhenAll(_awaitingTasks);
+                }
+
+                watch.Stop();
+                _receiverMonitor?.TrackShutdown(true, watch.Elapsed, null);
+            }
+            catch (Exception ex)
+            {
+                watch.Stop();
+                _receiverMonitor?.TrackShutdown(false, watch.Elapsed, ex);
+            }
         }
     }
 }

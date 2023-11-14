@@ -9,6 +9,7 @@ using System.Security.Cryptography.X509Certificates;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Orleans.Configuration;
 using Orleans.Hosting;
@@ -21,6 +22,7 @@ using Orleans.Streaming.Grains.Streams;
 using Orleans.Streaming.Grains.Tests.Streams.Messages;
 using Orleans.TestingHost;
 using Serilog;
+using Serilog.Extensions.Logging;
 
 namespace Orleans.Streaming.Grains.Test
 {

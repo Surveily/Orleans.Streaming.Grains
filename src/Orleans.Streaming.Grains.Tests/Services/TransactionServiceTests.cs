@@ -21,37 +21,39 @@ namespace Orleans.Streaming.Grains.Tests.Services
 {
     public class TransactionServiceTests
     {
-        public abstract class BaseTransactionServiceTest : BaseTest<TransactionService>
+        public abstract class BaseTransactionServiceTest : BaseTest<TransactionService<int>>
         {
             protected Guid itemId;
-            protected List<Guid> ids;
+            protected long itemSequence;
             protected Immutable<int> item;
+            protected List<(Guid, long)> ids;
             protected Mock<IClusterClient> client;
-            protected Mock<ITransactionGrain> transaction;
+            protected Mock<ITransactionGrain<int>> transaction;
             protected Mock<ITransactionReaderGrain<int>> reader;
             protected Mock<ITransactionItemGrain<int>> message;
-            protected List<(Guid Id, Immutable<int> Item)> items;
+            protected List<(Guid Id, Immutable<int> Item, long Sequence)> items;
 
             public BaseTransactionServiceTest()
             {
-                ids = new List<Guid>();
+                ids = new List<(Guid, long)>();
                 item = new Immutable<int>(100);
                 client = new Mock<IClusterClient>();
-                transaction = new Mock<ITransactionGrain>();
+                transaction = new Mock<ITransactionGrain<int>>();
                 message = new Mock<ITransactionItemGrain<int>>();
                 reader = new Mock<ITransactionReaderGrain<int>>();
-                items = new List<(Guid Id, Immutable<int> Item)>();
+                items = new List<(Guid Id, Immutable<int> Item, long Sequence)>();
 
                 client.Setup(x => x.GetGrain<ITransactionItemGrain<int>>(It.IsAny<Guid>(), null))
                       .Callback<Guid, string>((id, _) =>
                       {
                           itemId = id;
-                          ids.Add(itemId);
-                          items.Add((itemId, item));
+                          itemSequence++;
+                          ids.Add((itemId, itemSequence));
+                          items.Add((itemId, item, itemSequence));
                       })
                       .Returns(message.Object);
 
-                client.Setup(x => x.GetGrain<ITransactionGrain>("1", null))
+                client.Setup(x => x.GetGrain<ITransactionGrain<int>>("1", null))
                       .Returns(transaction.Object);
 
                 client.Setup(x => x.GetGrain<ITransactionReaderGrain<int>>("1", null))
@@ -61,7 +63,7 @@ namespace Orleans.Streaming.Grains.Tests.Services
                        .Returns(Task.CompletedTask);
 
                 reader.Setup(x => x.GetAsync(ids))
-                      .ReturnsAsync(new Immutable<List<(Guid Id, Immutable<int> Item)>>(items));
+                      .ReturnsAsync(new Immutable<List<(Guid Id, Immutable<int> Item, long Sequence)>>(items));
 
                 transaction.Setup(x => x.PopAsync(1))
                            .ReturnsAsync(ids);
@@ -90,7 +92,7 @@ namespace Orleans.Streaming.Grains.Tests.Services
             [Test]
             public void It_Should_Get_Transaction()
             {
-                client.Verify(x => x.GetGrain<ITransactionGrain>("1", null), Times.Once);
+                client.Verify(x => x.GetGrain<ITransactionGrain<int>>("1", null), Times.Once);
             }
 
             [Test]
@@ -108,13 +110,13 @@ namespace Orleans.Streaming.Grains.Tests.Services
 
         public class WhenPopingEmpty : BaseTransactionServiceTest
         {
-            protected List<(Guid Id, Immutable<int> Item)> results;
+            protected List<(Guid Id, Immutable<int> Item, long Sequence)> results;
 
             public override async Task SetupAsync()
             {
                 await base.SetupAsync();
 
-                results = await Subject.PopAsync<int>("1", 1);
+                results = await Subject.PopAsync("1", 1);
             }
 
             [Test]
@@ -132,7 +134,7 @@ namespace Orleans.Streaming.Grains.Tests.Services
 
         public class WhenPopingSingle : BaseTransactionServiceTest
         {
-            protected List<(Guid Id, Immutable<int> Item)> results;
+            protected List<(Guid Id, Immutable<int> Item, long Sequence)> results;
 
             public override async Task SetupAsync()
             {
@@ -142,7 +144,7 @@ namespace Orleans.Streaming.Grains.Tests.Services
                 await base.SetupAsync();
                 await Subject.PostAsync(item, false, "1");
 
-                results = await Subject.PopAsync<int>("1", 1);
+                results = await Subject.PopAsync("1", 1);
             }
 
             [Test]
@@ -178,7 +180,7 @@ namespace Orleans.Streaming.Grains.Tests.Services
             [Test]
             public void It_Should_Get_Transaction()
             {
-                client.Verify(x => x.GetGrain<ITransactionGrain>("1", null), Times.Exactly(2));
+                client.Verify(x => x.GetGrain<ITransactionGrain<int>>("1", null), Times.Exactly(2));
             }
 
             [Test]

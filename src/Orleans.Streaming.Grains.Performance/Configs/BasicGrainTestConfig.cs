@@ -39,6 +39,7 @@ namespace Orleans.Streaming.Grains.Performance.Configs
         {
             services.AddSingleton(processor);
             services.AddSingleton(processor.Object);
+            services.AddSingleton<IMemoryMessageBodySerializer, DefaultMemoryMessageBodySerializer>();
         }
 
         public void Dispose()

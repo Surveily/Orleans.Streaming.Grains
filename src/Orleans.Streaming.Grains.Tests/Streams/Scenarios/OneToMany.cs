@@ -9,6 +9,7 @@ using Microsoft.Extensions.Options;
 using Moq;
 using NUnit.Framework;
 using Orleans.Hosting;
+using Orleans.Providers;
 using Orleans.Streaming.Grains.Abstract;
 using Orleans.Streaming.Grains.Services;
 using Orleans.Streaming.Grains.State;
@@ -36,6 +37,7 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Scenarios
             {
                 services.AddSingleton(processor);
                 services.AddSingleton(processor.Object);
+                services.AddSingleton<IMemoryMessageBodySerializer, DefaultMemoryMessageBodySerializer>();
             }
 
             public void Dispose()
@@ -136,7 +138,7 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Scenarios
             {
                 for (var i = 0; i < Settings.Value.QueueCount; i++)
                 {
-                    var grain = Subject.GetGrain<ITransactionGrain>($"{nameof(CompoundMessage).ToLower()}-{i}");
+                    var grain = Subject.GetGrain<ITransactionGrain<MemoryMessageData>>($"{nameof(CompoundMessage).ToLower()}-{i}");
                     var state = await grain.GetStateAsync();
 
                     state.Queue.ShouldBeEmpty();
@@ -148,7 +150,7 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Scenarios
             {
                 for (var i = 0; i < Settings.Value.QueueCount; i++)
                 {
-                    var grain = Subject.GetGrain<ITransactionGrain>($"{nameof(CompoundMessage).ToLower()}-{i}");
+                    var grain = Subject.GetGrain<ITransactionGrain<MemoryMessageData>>($"{nameof(CompoundMessage).ToLower()}-{i}");
                     var state = await grain.GetStateAsync();
 
                     state.Poison.ShouldBeEmpty();
@@ -160,7 +162,7 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Scenarios
             {
                 for (var i = 0; i < Settings.Value.QueueCount; i++)
                 {
-                    var grain = Subject.GetGrain<ITransactionGrain>($"{nameof(CompoundMessage).ToLower()}-{i}");
+                    var grain = Subject.GetGrain<ITransactionGrain<MemoryMessageData>>($"{nameof(CompoundMessage).ToLower()}-{i}");
                     var state = await grain.GetStateAsync();
 
                     state.Transactions.ShouldBeEmpty();
@@ -228,7 +230,7 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Scenarios
             {
                 for (var i = 0; i < Settings.Value.QueueCount; i++)
                 {
-                    var grain = Subject.GetGrain<ITransactionGrain>($"{nameof(ExplosiveMessage).ToLower()}-{i}");
+                    var grain = Subject.GetGrain<ITransactionGrain<MemoryMessageData>>($"{nameof(ExplosiveMessage).ToLower()}-{i}");
                     var state = await grain.GetStateAsync();
 
                     state.Queue.ShouldBeEmpty();
@@ -240,7 +242,7 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Scenarios
             {
                 for (var i = 0; i < Settings.Value.QueueCount; i++)
                 {
-                    var grain = Subject.GetGrain<ITransactionGrain>($"{nameof(ExplosiveMessage).ToLower()}-{i}");
+                    var grain = Subject.GetGrain<ITransactionGrain<MemoryMessageData>>($"{nameof(ExplosiveMessage).ToLower()}-{i}");
                     var state = await grain.GetStateAsync();
 
                     state.Poison.ShouldBeEmpty();
@@ -252,7 +254,7 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Scenarios
             {
                 for (var i = 0; i < Settings.Value.QueueCount; i++)
                 {
-                    var grain = Subject.GetGrain<ITransactionGrain>($"{nameof(ExplosiveMessage).ToLower()}-{i}");
+                    var grain = Subject.GetGrain<ITransactionGrain<MemoryMessageData>>($"{nameof(ExplosiveMessage).ToLower()}-{i}");
                     var state = await grain.GetStateAsync();
 
                     state.Transactions.ShouldBeEmpty();
@@ -323,7 +325,7 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Scenarios
             {
                 for (var i = 0; i < Settings.Value.QueueCount; i++)
                 {
-                    var grain = Subject.GetGrain<ITransactionGrain>($"{nameof(BroadcastMessage).ToLower()}-{i}");
+                    var grain = Subject.GetGrain<ITransactionGrain<MemoryMessageData>>($"{nameof(BroadcastMessage).ToLower()}-{i}");
                     var state = await grain.GetStateAsync();
 
                     state.Queue.ShouldBeEmpty();
@@ -335,7 +337,7 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Scenarios
             {
                 for (var i = 0; i < Settings.Value.QueueCount; i++)
                 {
-                    var grain = Subject.GetGrain<ITransactionGrain>($"{nameof(BroadcastMessage).ToLower()}-{i}");
+                    var grain = Subject.GetGrain<ITransactionGrain<MemoryMessageData>>($"{nameof(BroadcastMessage).ToLower()}-{i}");
                     var state = await grain.GetStateAsync();
 
                     state.Poison.ShouldBeEmpty();
@@ -347,7 +349,7 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Scenarios
             {
                 for (var i = 0; i < Settings.Value.QueueCount; i++)
                 {
-                    var grain = Subject.GetGrain<ITransactionGrain>($"{nameof(BroadcastMessage).ToLower()}-{i}");
+                    var grain = Subject.GetGrain<ITransactionGrain<MemoryMessageData>>($"{nameof(BroadcastMessage).ToLower()}-{i}");
                     var state = await grain.GetStateAsync();
 
                     state.Transactions.ShouldBeEmpty();
@@ -384,7 +386,7 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Scenarios
             public override async Task Act()
             {
                 var grain = Subject.GetGrain<IEmitterGrain>(Guid.NewGuid());
-                var transaction = Subject.GetGrain<ITransactionGrain>($"{nameof(BroadcastMessage).ToLower()}-0");
+                var transaction = Subject.GetGrain<ITransactionGrain<MemoryMessageData>>($"{nameof(BroadcastMessage).ToLower()}-0");
 
                 await grain.BroadcastAsync(expectedText, expectedData);
 
@@ -490,7 +492,7 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Scenarios
             public override async Task Act()
             {
                 var grain = Subject.GetGrain<IEmitterGrain>(Guid.NewGuid());
-                var transaction = Subject.GetGrain<ITransactionGrain>(nameof(BroadcastMessage));
+                var transaction = Subject.GetGrain<ITransactionGrain<MemoryMessageData>>(nameof(BroadcastMessage));
 
                 await grain.BroadcastAsync(expectedText, expectedData);
 

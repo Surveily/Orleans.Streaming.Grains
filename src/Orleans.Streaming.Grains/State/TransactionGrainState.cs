@@ -14,7 +14,7 @@ namespace Orleans.Streaming.Grains.State
     public class TransactionGrainState
     {
         [Id(0)]
-        public Queue<Guid> Queue { get; set; }
+        public Queue<(Guid, long)> Queue { get; set; }
 
         [Id(1)]
         public Queue<Guid> Poison { get; set; }

@@ -9,6 +9,7 @@ using Moq;
 using NUnit.Framework;
 using Orleans.Configuration;
 using Orleans.Hosting;
+using Orleans.Providers;
 using Orleans.Streaming.Grains.Abstract;
 using Orleans.Streaming.Grains.Services;
 using Orleans.Streaming.Grains.State;
@@ -36,6 +37,7 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Scenarios
             {
                 services.AddSingleton(processor);
                 services.AddSingleton(processor.Object);
+                services.AddSingleton<IMemoryMessageBodySerializer, DefaultMemoryMessageBodySerializer>();
             }
 
             public void Dispose()
@@ -141,7 +143,7 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Scenarios
             {
                 for (var i = 0; i < Settings.Value.QueueCount; i++)
                 {
-                    var grain = Subject.GetGrain<ITransactionGrain>($"default-{i}");
+                    var grain = Subject.GetGrain<ITransactionGrain<MemoryMessageData>>($"default-{i}");
                     var state = await grain.GetStateAsync();
 
                     state.Queue.ShouldBeEmpty();
@@ -153,7 +155,7 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Scenarios
             {
                 for (var i = 0; i < Settings.Value.QueueCount; i++)
                 {
-                    var grain = Subject.GetGrain<ITransactionGrain>($"default-{i}");
+                    var grain = Subject.GetGrain<ITransactionGrain<MemoryMessageData>>($"default-{i}");
                     var state = await grain.GetStateAsync();
 
                     state.Poison.ShouldBeEmpty();
@@ -165,7 +167,7 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Scenarios
             {
                 for (var i = 0; i < Settings.Value.QueueCount; i++)
                 {
-                    var grain = Subject.GetGrain<ITransactionGrain>($"default-{i}");
+                    var grain = Subject.GetGrain<ITransactionGrain<MemoryMessageData>>($"default-{i}");
                     var state = await grain.GetStateAsync();
 
                     state.Transactions.ShouldBeEmpty();
@@ -238,7 +240,7 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Scenarios
             {
                 for (var i = 0; i < Settings.Value.QueueCount; i++)
                 {
-                    var grain = Subject.GetGrain<ITransactionGrain>($"default-{i}");
+                    var grain = Subject.GetGrain<ITransactionGrain<MemoryMessageData>>($"default-{i}");
                     var state = await grain.GetStateAsync();
 
                     state.Queue.ShouldBeEmpty();
@@ -250,7 +252,7 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Scenarios
             {
                 for (var i = 0; i < Settings.Value.QueueCount; i++)
                 {
-                    var grain = Subject.GetGrain<ITransactionGrain>($"default-{i}");
+                    var grain = Subject.GetGrain<ITransactionGrain<MemoryMessageData>>($"default-{i}");
                     var state = await grain.GetStateAsync();
 
                     state.Poison.ShouldBeEmpty();
@@ -262,7 +264,7 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Scenarios
             {
                 for (var i = 0; i < Settings.Value.QueueCount; i++)
                 {
-                    var grain = Subject.GetGrain<ITransactionGrain>($"default-{i}");
+                    var grain = Subject.GetGrain<ITransactionGrain<MemoryMessageData>>($"default-{i}");
                     var state = await grain.GetStateAsync();
 
                     state.Transactions.ShouldBeEmpty();
@@ -310,7 +312,7 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Scenarios
             }
 
             [Test]
-            public void It_Should_Deliver_Text() 
+            public void It_Should_Deliver_Text()
             {
                 Processor!.Verify(x => x.Process(expectedText), Times.Exactly(10));
             }
@@ -338,7 +340,7 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Scenarios
             {
                 for (var i = 0; i < Settings.Value.QueueCount; i++)
                 {
-                    var grain = Subject.GetGrain<ITransactionGrain>($"default-{i}");
+                    var grain = Subject.GetGrain<ITransactionGrain<MemoryMessageData>>($"default-{i}");
                     var state = await grain.GetStateAsync();
 
                     state.Queue.ShouldBeEmpty();
@@ -350,7 +352,7 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Scenarios
             {
                 for (var i = 0; i < Settings.Value.QueueCount; i++)
                 {
-                    var grain = Subject.GetGrain<ITransactionGrain>($"default-{i}");
+                    var grain = Subject.GetGrain<ITransactionGrain<MemoryMessageData>>($"default-{i}");
                     var state = await grain.GetStateAsync();
 
                     state.Poison.ShouldBeEmpty();
@@ -362,7 +364,7 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Scenarios
             {
                 for (var i = 0; i < Settings.Value.QueueCount; i++)
                 {
-                    var grain = Subject.GetGrain<ITransactionGrain>($"default-{i}");
+                    var grain = Subject.GetGrain<ITransactionGrain<MemoryMessageData>>($"default-{i}");
                     var state = await grain.GetStateAsync();
 
                     state.Transactions.ShouldBeEmpty();
@@ -403,7 +405,7 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Scenarios
             public override async Task Act()
             {
                 var grain = Subject.GetGrain<IEmitterGrain>(Guid.NewGuid());
-                var transaction = Subject.GetGrain<ITransactionGrain>($"default-0");
+                var transaction = Subject.GetGrain<ITransactionGrain<MemoryMessageData>>($"default-0");
 
                 await grain.BroadcastAsync(expectedText, expectedData);
 

@@ -1,6 +1,7 @@
 {
     "dotnet.defaultSolution": "src/Orleans.Streaming.Grains.sln",
     "cSpell.words": [
+        "Serilog",
         "Surveily"
     ]
 }

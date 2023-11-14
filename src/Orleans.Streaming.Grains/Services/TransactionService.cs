@@ -16,29 +16,30 @@ using Orleans.Utilities;
 
 namespace Orleans.Streaming.Grains.Services
 {
-    public class TransactionService : ITransactionService
+    public class TransactionService<T> : ITransactionService<T>
     {
         private readonly IClusterClient _client;
+        private readonly ConcurrentDictionary<string, ITransactionGrain<T>> _transactionCache;
 
         public TransactionService(IClusterClient client)
         {
             _client = client;
+
+            _transactionCache = new ConcurrentDictionary<string, ITransactionGrain<T>>();
         }
 
-        public async Task CompleteAsync<T>(Guid id, bool success, string queue)
+        public async Task CompleteAsync(Guid id, bool success, string queue)
         {
-            var transaction = _client.GetGrain<ITransactionGrain>(queue);
-
-            await transaction.CompleteAsync(id, success);
+            await GetTransactionGrain(queue).CompleteAsync(id, success);
 
             var item = _client.GetGrain<ITransactionItemGrain<T>>(id);
 
             await item.DeleteAsync();
         }
 
-        public async Task<List<(Guid Id, Immutable<T> Item)>> PopAsync<T>(string queue, int maxCount)
+        public async Task<List<(Guid Id, Immutable<T> Item, long Sequence)>> PopAsync(string queue, int maxCount)
         {
-            var transaction = _client.GetGrain<ITransactionGrain>(queue);
+            var transaction = _client.GetGrain<ITransactionGrain<T>>(queue);
             var ids = await transaction.PopAsync(maxCount);
 
             if (ids.Any())
@@ -49,22 +50,27 @@ namespace Orleans.Streaming.Grains.Services
                 return result.Value;
             }
 
-            return Enumerable.Empty<(Guid Id, Immutable<T> Item)>()
+            return Enumerable.Empty<(Guid, Immutable<T>, long)>()
                              .ToList();
         }
 
-        public async Task PostAsync<T>(Immutable<T> message, bool wait, string queue)
+        public async Task PostAsync(Immutable<T> message, bool wait, string queue)
         {
             var id = Guid.NewGuid();
             var item = _client.GetGrain<ITransactionItemGrain<T>>(id);
+
             await item.SetAsync(message);
 
-            var transaction = _client.GetGrain<ITransactionGrain>(queue);
             var completion = wait ? _client.GetGrain<ITransactionProxyGrain>(id).WaitAsync<T>(queue)
                                   : Task.CompletedTask;
 
-            await transaction.PostAsync(id);
+            await GetTransactionGrain(queue).PostAsync(id);
             await completion;
+        }
+
+        private ITransactionGrain<T> GetTransactionGrain(string queue)
+        {
+            return _transactionCache.GetOrAdd(queue, _client.GetGrain<ITransactionGrain<T>>(queue));
         }
     }
 }
