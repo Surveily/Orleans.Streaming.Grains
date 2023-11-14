@@ -25,7 +25,10 @@ namespace Orleans.Streaming.Grains.Grains
                 var itemGrain = GrainFactory.GetGrain<ITransactionItemGrain<T>>(id);
                 var item = await itemGrain.GetAsync();
 
-                results.Add((id, item));
+                if (item.Value != null)
+                {
+                    results.Add((id, item));
+                }
             }
 
             return new Immutable<List<(Guid Id, Immutable<T> Item)>>(results);
