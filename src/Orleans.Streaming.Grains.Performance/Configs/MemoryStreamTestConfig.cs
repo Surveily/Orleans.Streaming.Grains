@@ -1,4 +1,4 @@
-// <copyright file="PersistentGrainTestConfig.cs" company="Surveily Sp. z o.o.">
+// <copyright file="MemoryStreamTestConfig.cs" company="Surveily Sp. z o.o.">
 // Copyright (c) Surveily Sp. z o.o.. All rights reserved.
 // </copyright>
 
@@ -13,21 +13,16 @@ using Orleans.TestingHost;
 
 namespace Orleans.Streaming.Grains.Performance.Configs
 {
-    public abstract class PersistentGrainTestConfig : ISiloConfigurator, IClientBuilderConfigurator
+    public abstract class MemoryStreamTestConfig : ISiloConfigurator, IClientBuilderConfigurator
     {
         public abstract void Configure(IServiceCollection services);
 
         public void Configure(ISiloBuilder siloBuilder)
         {
-#pragma warning disable CS0618
             siloBuilder.ConfigureServices(Configure)
                        .AddMemoryGrainStorageAsDefault()
                        .AddMemoryGrainStorage(ProviderConstants.DEFAULT_PUBSUB_PROVIDER_NAME)
-                       .AddGrainsStreams(name: ProviderConstants.DEFAULT_STORAGE_PROVIDER_NAME,
-                                         queueCount: 8,
-                                         retry: TimeSpan.FromSeconds(1),
-                                         poison: TimeSpan.FromSeconds(3));
-#pragma warning restore CS0618
+                       .AddMemoryStreams(ProviderConstants.DEFAULT_STORAGE_PROVIDER_NAME);
         }
 
         public void Configure(IConfiguration configuration, IClientBuilder clientBuilder)
@@ -35,7 +30,7 @@ namespace Orleans.Streaming.Grains.Performance.Configs
         }
     }
 
-    public class PersistentConfig : PersistentGrainTestConfig, IDisposable
+    public class MemoryStreamConfig : MemoryStreamTestConfig, IDisposable
     {
         protected Mock<IProcessor> processor = new Mock<IProcessor>();
         private bool _isDisposed;
