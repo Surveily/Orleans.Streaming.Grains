@@ -6,28 +6,57 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Orleans.BroadcastChannel;
 using Orleans.Concurrency;
 using Orleans.Providers;
+using Orleans.Runtime;
 using Orleans.Streaming.Grains.Tests.Streams.Messages;
 using Orleans.Streams;
 
 namespace Orleans.Streaming.Grains.Tests.Streams.Grains
 {
     [ImplicitStreamSubscription(nameof(ExplosiveMessage))]
-    public class ExplosiveReceiverGrain : Grain, IExplosiveReceiverGrain
+    [ImplicitChannelSubscription(nameof(ExplosiveMessage))]
+    public class ExplosiveReceiverGrain : Grain, IExplosiveReceiverGrain, IOnBroadcastChannelSubscribed
     {
         private IAsyncStream<ExplosiveNextMessage> _nextStream;
         private StreamSubscriptionHandle<ExplosiveMessage> _subscription;
+        private IBroadcastChannelWriter<ExplosiveNextMessage> _nextChannel;
 
         public override async Task OnActivateAsync(CancellationToken cancellationToken)
         {
-            var streamProvider = this.GetStreamProvider(ProviderConstants.DEFAULT_STORAGE_PROVIDER_NAME);
-            var stream = StreamFactory.Create<ExplosiveMessage>(streamProvider, this.GetPrimaryKey());
+            var id = this.GetPrimaryKey();
+            var streamProvider = ServiceProvider.GetServiceByName<IStreamProvider>(ProviderConstants.DEFAULT_STORAGE_PROVIDER_NAME);
+            var broadcastProvider = ServiceProvider.GetServiceByName<IBroadcastChannelProvider>(ProviderConstants.DEFAULT_STORAGE_PROVIDER_NAME);
 
-            _subscription = await stream.SubscribeAsync(OnNextAsync);
-            _nextStream = StreamFactory.Create<ExplosiveNextMessage>(streamProvider, this.GetPrimaryKey());
+            if (streamProvider != null)
+            {
+                var stream = StreamFactory.Create<ExplosiveMessage>(streamProvider, id);
+
+                _subscription = await stream.SubscribeAsync(OnNextAsync);
+                _nextStream = StreamFactory.Create<ExplosiveNextMessage>(streamProvider, id);
+            }
+
+            if (broadcastProvider != null)
+            {
+                _nextChannel = broadcastProvider.GetChannelWriter<ExplosiveNextMessage>(ChannelId.Create(nameof(ExplosiveNextMessage), id));
+            }
 
             await base.OnActivateAsync(cancellationToken);
+        }
+
+        public async Task OnSubscribed(IBroadcastChannelSubscription subscription)
+        {
+            await subscription.Attach<ExplosiveMessage>(OnNextAsync);
+        }
+
+        private async Task OnNextAsync(ExplosiveMessage message)
+        {
+            await _nextChannel.Publish(new ExplosiveNextMessage
+            {
+                Data = message.Data,
+                Text = message.Text,
+            });
         }
 
         private async Task OnNextAsync(ExplosiveMessage message, StreamSequenceToken token)
@@ -41,18 +70,34 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Grains
     }
 
     [ImplicitStreamSubscription(nameof(ExplosiveMessage))]
-    public class ExplosiveSecondReceiverGrain : Grain, IExplosiveReceiverGrain
+    [ImplicitChannelSubscription(nameof(ExplosiveMessage))]
+    public class ExplosiveSecondReceiverGrain : Grain, IExplosiveReceiverGrain, IOnBroadcastChannelSubscribed
     {
         private StreamSubscriptionHandle<ExplosiveMessage> _subscription;
 
         public override async Task OnActivateAsync(CancellationToken cancellationToken)
         {
-            var streamProvider = this.GetStreamProvider(ProviderConstants.DEFAULT_STORAGE_PROVIDER_NAME);
-            var stream = StreamFactory.Create<ExplosiveMessage>(streamProvider, this.GetPrimaryKey());
+            var id = this.GetPrimaryKey();
+            var streamProvider = ServiceProvider.GetServiceByName<IStreamProvider>(ProviderConstants.DEFAULT_STORAGE_PROVIDER_NAME);
 
-            _subscription = await stream.SubscribeAsync(OnNextAsync);
+            if (streamProvider != null)
+            {
+                var stream = StreamFactory.Create<ExplosiveMessage>(streamProvider, id);
+
+                _subscription = await stream.SubscribeAsync(OnNextAsync);
+            }
 
             await base.OnActivateAsync(cancellationToken);
+        }
+
+        public async Task OnSubscribed(IBroadcastChannelSubscription subscription)
+        {
+            await subscription.Attach<ExplosiveMessage>(OnNextAsync);
+        }
+
+        private Task OnNextAsync(ExplosiveMessage message)
+        {
+            return Task.CompletedTask;
         }
 
         private Task OnNextAsync(ExplosiveMessage message, StreamSequenceToken token)
@@ -62,27 +107,64 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Grains
     }
 
     [ImplicitStreamSubscription(nameof(ExplosiveNextMessage))]
-    public class ExplosiveNextFirstReceiverGrain : Grain, IExplosiveReceiverGrain
+    [ImplicitChannelSubscription(nameof(ExplosiveNextMessage))]
+    public class ExplosiveNextFirstReceiverGrain : Grain, IExplosiveReceiverGrain, IOnBroadcastChannelSubscribed
     {
         private List<IAsyncStream<CompoundMessage>> _compoundStreams;
         private StreamSubscriptionHandle<ExplosiveNextMessage> _subscription;
+        private List<IBroadcastChannelWriter<CompoundMessage>> _compoundChannels;
 
         public override async Task OnActivateAsync(CancellationToken cancellationToken)
         {
-            var streamProvider = this.GetStreamProvider(ProviderConstants.DEFAULT_STORAGE_PROVIDER_NAME);
+            var streamProvider = ServiceProvider.GetServiceByName<IStreamProvider>(ProviderConstants.DEFAULT_STORAGE_PROVIDER_NAME);
+            var broadcastProvider = ServiceProvider.GetServiceByName<IBroadcastChannelProvider>(ProviderConstants.DEFAULT_STORAGE_PROVIDER_NAME);
 
-            _compoundStreams = new List<IAsyncStream<CompoundMessage>>();
-
-            foreach (var id in Catalogue.Ids)
+            if (streamProvider != null)
             {
-                _compoundStreams.Add(StreamFactory.Create<CompoundMessage>(streamProvider, id));
+                _compoundStreams = new List<IAsyncStream<CompoundMessage>>();
+
+                foreach (var id in Catalogue.Ids)
+                {
+                    _compoundStreams.Add(StreamFactory.Create<CompoundMessage>(streamProvider, id));
+                }
+
+                var stream = StreamFactory.Create<ExplosiveNextMessage>(streamProvider, this.GetPrimaryKey());
+
+                _subscription = await stream.SubscribeAsync(OnNextAsync);
             }
 
-            var stream = StreamFactory.Create<ExplosiveNextMessage>(streamProvider, this.GetPrimaryKey());
+            if (broadcastProvider != null)
+            {
+                _compoundChannels = new List<IBroadcastChannelWriter<CompoundMessage>>();
 
-            _subscription = await stream.SubscribeAsync(OnNextAsync);
+                foreach (var id in Catalogue.Ids)
+                {
+                    _compoundChannels.Add(broadcastProvider.GetChannelWriter<CompoundMessage>(ChannelId.Create(nameof(CompoundMessage), id)));
+                }
+            }
 
             await base.OnActivateAsync(cancellationToken);
+        }
+
+        public async Task OnSubscribed(IBroadcastChannelSubscription subscription)
+        {
+            await subscription.Attach<ExplosiveNextMessage>(OnNextAsync);
+        }
+
+        private async Task OnNextAsync(ExplosiveNextMessage message)
+        {
+            var tasks = new List<Task>();
+
+            foreach (var compoundChannel in _compoundChannels)
+            {
+                tasks.Add(compoundChannel.Publish(new CompoundMessage
+                {
+                    Data = message.Data,
+                    Text = message.Text,
+                }));
+            }
+
+            await Task.WhenAll(tasks);
         }
 
         private async Task OnNextAsync(ExplosiveNextMessage message, StreamSequenceToken token)
@@ -103,27 +185,64 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Grains
     }
 
     [ImplicitStreamSubscription(nameof(ExplosiveNextMessage))]
-    public class ExplosiveNextSecondReceiverGrain : Grain, IExplosiveReceiverGrain
+    [ImplicitChannelSubscription(nameof(ExplosiveNextMessage))]
+    public class ExplosiveNextSecondReceiverGrain : Grain, IExplosiveReceiverGrain, IOnBroadcastChannelSubscribed
     {
         private List<IAsyncStream<CompoundMessage>> _compoundStreams;
         private StreamSubscriptionHandle<ExplosiveNextMessage> _subscription;
+        private List<IBroadcastChannelWriter<CompoundMessage>> _compoundChannels;
 
         public override async Task OnActivateAsync(CancellationToken cancellationToken)
         {
-            var streamProvider = this.GetStreamProvider(ProviderConstants.DEFAULT_STORAGE_PROVIDER_NAME);
+            var streamProvider = ServiceProvider.GetServiceByName<IStreamProvider>(ProviderConstants.DEFAULT_STORAGE_PROVIDER_NAME);
+            var broadcastProvider = ServiceProvider.GetServiceByName<IBroadcastChannelProvider>(ProviderConstants.DEFAULT_STORAGE_PROVIDER_NAME);
 
-            _compoundStreams = new List<IAsyncStream<CompoundMessage>>();
-
-            foreach (var id in Catalogue.Ids)
+            if (streamProvider != null)
             {
-                _compoundStreams.Add(StreamFactory.Create<CompoundMessage>(streamProvider, id));
+                _compoundStreams = new List<IAsyncStream<CompoundMessage>>();
+
+                foreach (var id in Catalogue.Ids)
+                {
+                    _compoundStreams.Add(StreamFactory.Create<CompoundMessage>(streamProvider, id));
+                }
+
+                var stream = StreamFactory.Create<ExplosiveNextMessage>(streamProvider, this.GetPrimaryKey());
+
+                _subscription = await stream.SubscribeAsync(OnNextAsync);
             }
 
-            var stream = StreamFactory.Create<ExplosiveNextMessage>(streamProvider, this.GetPrimaryKey());
+            if (broadcastProvider != null)
+            {
+                _compoundChannels = new List<IBroadcastChannelWriter<CompoundMessage>>();
 
-            _subscription = await stream.SubscribeAsync(OnNextAsync);
+                foreach (var id in Catalogue.Ids)
+                {
+                    _compoundChannels.Add(broadcastProvider.GetChannelWriter<CompoundMessage>(ChannelId.Create(nameof(CompoundMessage), id)));
+                }
+            }
 
             await base.OnActivateAsync(cancellationToken);
+        }
+
+        public async Task OnSubscribed(IBroadcastChannelSubscription subscription)
+        {
+            await subscription.Attach<ExplosiveNextMessage>(OnNextAsync);
+        }
+
+        private async Task OnNextAsync(ExplosiveNextMessage message)
+        {
+            var tasks = new List<Task>();
+
+            foreach (var compoundChannel in _compoundChannels)
+            {
+                tasks.Add(compoundChannel.Publish(new CompoundMessage
+                {
+                    Data = message.Data,
+                    Text = message.Text,
+                }));
+            }
+
+            await Task.WhenAll(tasks);
         }
 
         private async Task OnNextAsync(ExplosiveNextMessage message, StreamSequenceToken token)

@@ -2,6 +2,7 @@
 // Copyright (c) Surveily Sp. z o.o.. All rights reserved.
 // </copyright>
 
+using Orleans.BroadcastChannel;
 using Orleans.Providers;
 using Orleans.Runtime;
 using Orleans.Streaming.Grains.Tests.Streams.Messages;
@@ -11,7 +12,9 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Grains
 {
     [ImplicitStreamSubscription(nameof(BlobMessage))]
     [ImplicitStreamSubscription(nameof(BroadcastMessage))]
-    public class BlobReceiverGrain : Grain, IBlobReceiverGrain
+    [ImplicitChannelSubscription(nameof(BlobMessage))]
+    [ImplicitChannelSubscription(nameof(BroadcastMessage))]
+    public class BlobReceiverGrain : Grain, IBlobReceiverGrain, IOnBroadcastChannelSubscribed
     {
         private readonly IProcessor _processor;
 
@@ -25,12 +28,28 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Grains
 
         public override async Task OnActivateAsync(CancellationToken cancellationToken)
         {
-            var streamProvider = this.GetStreamProvider(ProviderConstants.DEFAULT_STORAGE_PROVIDER_NAME);
-            var stream = StreamFactory.Create<BlobMessage>(streamProvider, this.GetPrimaryKey());
-            var broadcastStream = StreamFactory.Create<BroadcastMessage>(streamProvider, this.GetPrimaryKey());
+            var id = this.GetPrimaryKey();
+            var streamProvider = ServiceProvider.GetServiceByName<IStreamProvider>(ProviderConstants.DEFAULT_STORAGE_PROVIDER_NAME);
 
-            _subscription = await stream.SubscribeAsync(OnNextAsync);
-            _broadcast = await broadcastStream.SubscribeAsync(OnBroadcastAsync);
+            if (streamProvider != null)
+            {
+                var stream = StreamFactory.Create<BlobMessage>(streamProvider, id);
+                var broadcastStream = StreamFactory.Create<BroadcastMessage>(streamProvider, id);
+
+                _subscription = await stream.SubscribeAsync(OnNextAsync);
+                _broadcast = await broadcastStream.SubscribeAsync(OnBroadcastAsync);
+            }
+        }
+
+        public async Task OnSubscribed(IBroadcastChannelSubscription subscription)
+        {
+            await subscription.Attach<BlobMessage>(OnNextAsync);
+            await subscription.Attach<BroadcastMessage>(OnBroadcastAsync);
+        }
+
+        private async Task OnNextAsync(BlobMessage message)
+        {
+            await OnNextAsync(message, null);
         }
 
         private Task OnNextAsync(BlobMessage message, StreamSequenceToken token)
@@ -38,6 +57,11 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Grains
             _processor.Process(message.Data.Value);
 
             return Task.CompletedTask;
+        }
+
+        private async Task OnBroadcastAsync(BroadcastMessage message)
+        {
+            await OnBroadcastAsync(message, null);
         }
 
         private Task OnBroadcastAsync(BroadcastMessage message, StreamSequenceToken token)

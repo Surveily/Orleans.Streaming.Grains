@@ -104,11 +104,15 @@ namespace Orleans.Streaming.Grains.Performance.Scenarios
             }
         }
 
+        public class OneToManyGrainsStreamTest : BaseOneToManyTest<GrainsStreamConfig>
+        {
+        }
+
         public class OneToManyMemoryStreamTest : BaseOneToManyTest<MemoryStreamConfig>
         {
         }
 
-        public class OneToManyGrainsStreamTest : BaseOneToManyTest<GrainsStreamConfig>
+        public class OneToManyBroadcastChannelTest : BaseOneToManyTest<BroadcastChannelConfig>
         {
         }
     }

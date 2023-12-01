@@ -26,5 +26,6 @@
   <ItemGroup>
     <PackageReference Include="StyleCop.Analyzers" Version="1.1.118" PrivateAssets="all" />
     <PackageReference Include="BenchmarkDotNet" Version="0.13.10" />
+    <PackageReference Include="Microsoft.Orleans.BroadcastChannel" Version="7.2.3" />
   </ItemGroup>
 </Project>
