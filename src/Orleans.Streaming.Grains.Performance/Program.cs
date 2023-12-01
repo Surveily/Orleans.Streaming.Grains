@@ -17,14 +17,22 @@ namespace Orleans.Streaming.Grains.Performance
 #if DEBUG
             RunVerbose(args);
 #else
+            // Run(args);
             RunSummaries(args);
 #endif
         }
 
+        private static void Run(string[] args)
+        {
+            var config = DefaultConfig.Instance;
+
+            BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly)
+                             .Run(args, config);
+        }
+
         private static void RunVerbose(string[] args)
         {
-            var config = DefaultConfig.Instance
-                                      .WithOptions(ConfigOptions.DisableOptimizationsValidator);
+            var config = new DebugInProcessConfig();
 
             BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly)
                              .Run(args, config);

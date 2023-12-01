@@ -2,6 +2,7 @@
 // Copyright (c) Surveily Sp. z o.o.. All rights reserved.
 // </copyright>
 
+using System.Text;
 using Orleans.BroadcastChannel;
 using Orleans.Providers;
 using Orleans.Runtime;
@@ -43,8 +44,19 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Grains
 
         public async Task OnSubscribed(IBroadcastChannelSubscription subscription)
         {
-            await subscription.Attach<BlobMessage>(OnNextAsync);
-            await subscription.Attach<BroadcastMessage>(OnBroadcastAsync);
+            var id = subscription.ChannelId;
+            var message = Encoding.Default.GetString(id.Namespace.ToArray());
+
+            // TODO: Channels don't support multiple subs.
+            if (message == nameof(BlobMessage))
+            {
+                await subscription.Attach<BlobMessage>(OnNextAsync);
+            }
+
+            if (message == nameof(BroadcastMessage))
+            {
+                await subscription.Attach<BroadcastMessage>(OnBroadcastAsync);
+            }
         }
 
         private async Task OnNextAsync(BlobMessage message)

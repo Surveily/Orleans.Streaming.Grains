@@ -19,9 +19,6 @@
                 "kind": "build",
                 "isDefault": true
             },
-            "presentation": {
-                "reveal": "silent"
-            },
             "problemMatcher": "$msCompile"
         },
         {
@@ -40,9 +37,6 @@
             ],
             "group": {
                 "kind": "build",
-            },
-            "presentation": {
-                "reveal": "silent"
             },
             "problemMatcher": "$msCompile"
         }
