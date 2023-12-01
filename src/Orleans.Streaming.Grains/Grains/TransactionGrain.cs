@@ -41,7 +41,7 @@ namespace Orleans.Streaming.Grains.Grains
                 await PersistAsync();
             }
 
-            var timeout = _options.RetryTimeout / 3;
+            var timeout = _options.RetryTimeout / 10;
 
             _ = RegisterTimer(FlushTimerAsync, null, timeout, timeout);
 
