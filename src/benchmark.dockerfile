@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/vscode/devcontainers/dotnet:dev-7.0
+FROM mcr.microsoft.com/vscode/devcontainers/dotnet:8.0
 ARG version
 ARG password
 ARG TARGETARCH
