@@ -49,7 +49,7 @@ jobs:
           push: false
           build-args: |
             password=${{ secrets.NUGET }}
-            version=7.2.${{ github.run_number }}
+            version=8.0.${{ github.run_number }}-rc1
           tags: |
             surveily/orleans.streaming.grains:${{ steps.date.outputs.date }}.${{ github.run_number }}
           labels: ${{ steps.meta.outputs.labels }}

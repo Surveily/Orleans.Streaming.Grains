@@ -6,7 +6,7 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "release",
-            "program": "${workspaceFolder}/src/Orleans.Streaming.Grains.Performance/bin/Release/net7.0/Orleans.Streaming.Grains.Performance.dll",
+            "program": "${workspaceFolder}/src/Orleans.Streaming.Grains.Performance/bin/Release/net8.0/Orleans.Streaming.Grains.Performance.dll",
             "args": [
                 "--filter",
                 "*Channel*",
@@ -22,7 +22,7 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}/src/Orleans.Streaming.Grains.Performance/bin/Debug/net7.0/Orleans.Streaming.Grains.Performance.dll",
+            "program": "${workspaceFolder}/src/Orleans.Streaming.Grains.Performance/bin/Debug/net8.0/Orleans.Streaming.Grains.Performance.dll",
             "args": [
                 "--filter",
                 "*Channel*",

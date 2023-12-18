@@ -3,6 +3,7 @@
 // </copyright>
 
 using System.Text;
+using Microsoft.Extensions.DependencyInjection;
 using Orleans.BroadcastChannel;
 using Orleans.Providers;
 using Orleans.Runtime;
@@ -30,7 +31,7 @@ namespace Orleans.Streaming.Grains.Tests.Streams.Grains
         public override async Task OnActivateAsync(CancellationToken cancellationToken)
         {
             var id = this.GetPrimaryKey();
-            var streamProvider = ServiceProvider.GetServiceByName<IStreamProvider>(ProviderConstants.DEFAULT_STORAGE_PROVIDER_NAME);
+            var streamProvider = ServiceProvider.GetKeyedService<IStreamProvider>(ProviderConstants.DEFAULT_STORAGE_PROVIDER_NAME);
 
             if (streamProvider != null)
             {

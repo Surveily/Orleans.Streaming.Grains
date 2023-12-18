@@ -79,8 +79,8 @@ namespace Orleans.Streaming.Grains.Extensions
 
                               if (!fireAndForgetDelivery)
                               {
-                                  services.AddSingletonNamedService<IStreamQueueBalancer>(name, (f, n) => new GrainsQueueBalancer());
-                                  services.AddSingletonNamedService<IStreamQueueMapper>(name, (f, n) => new GrainsQueueMapper(queueCount));
+                                  services.AddKeyedSingleton<IStreamQueueBalancer>(name, (f, n) => new GrainsQueueBalancer());
+                                  services.AddKeyedSingleton<IStreamQueueMapper>(name, (f, n) => new GrainsQueueMapper(queueCount));
                               }
                           })
                           .Configure<GrainsOptions>(options =>
