@@ -27,6 +27,6 @@
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.8.0-2.final" PrivateAssets="all" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.1.118" PrivateAssets="all" />
     <PackageReference Include="BenchmarkDotNet" Version="0.13.11" />
-    <PackageReference Include="Microsoft.Orleans.BroadcastChannel" Version="8.0.0-rc1" />
+    <PackageReference Include="Microsoft.Orleans.BroadcastChannel" Version="8.0.0-rc2" />
   </ItemGroup>
 </Project>

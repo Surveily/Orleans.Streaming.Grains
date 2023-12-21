@@ -22,10 +22,10 @@
     <PackageReference Include="Serilog.Sinks.Debug" Version="2.0.0" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.Orleans.Client" Version="8.0.0-rc1" />
-    <PackageReference Include="Microsoft.Orleans.Server" Version="8.0.0-rc1" />
-    <PackageReference Include="Microsoft.Orleans.TestingHost" Version="8.0.0-rc1" />
-    <PackageReference Include="Microsoft.Orleans.BroadcastChannel" Version="8.0.0-rc1" />
+    <PackageReference Include="Microsoft.Orleans.Client" Version="8.0.0-rc2" />
+    <PackageReference Include="Microsoft.Orleans.Server" Version="8.0.0-rc2" />
+    <PackageReference Include="Microsoft.Orleans.TestingHost" Version="8.0.0-rc2" />
+    <PackageReference Include="Microsoft.Orleans.BroadcastChannel" Version="8.0.0-rc2" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Orleans.Streaming.Grains\Orleans.Streaming.Grains.csproj" />

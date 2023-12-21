@@ -31,8 +31,8 @@
     <PackageReference Include="StyleCop.Analyzers" Version="1.1.118" PrivateAssets="all" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.Orleans.Client" Version="8.0.0-rc1" PrivateAssets="all" />
-    <PackageReference Include="Microsoft.Orleans.Server" Version="8.0.0-rc1" PrivateAssets="all"  />
-    <PackageReference Include="Microsoft.Orleans.Streaming" Version="8.0.0-rc1" />
+    <PackageReference Include="Microsoft.Orleans.Client" Version="8.0.0-rc2" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.Orleans.Server" Version="8.0.0-rc2" PrivateAssets="all"  />
+    <PackageReference Include="Microsoft.Orleans.Streaming" Version="8.0.0-rc2" />
   </ItemGroup>
 </Project>
