@@ -7,7 +7,7 @@
   <PropertyGroup>
     <PackageId>Orleans.Streaming.Grains</PackageId>
     <PackageVersion>1.0</PackageVersion>
-    <PackageIconUrl>https://avatars.githubusercontent.com/u/61705681?s=200&v=4</PackageIconUrl>
+    <PackageIconUrl>https://avatars.githubusercontent.com/u/61705681?s=200&amp;v=4</PackageIconUrl>
     <PackageLicenseUrl>https://opensource.org/licenses/MIT</PackageLicenseUrl>
     <Authors>Surveily Spółka z Ograniczoną Odpowiedzialnością</Authors>
     <Description>Stream provider that uses Stateful Grains as Queues.</Description>
